@@ -1,5 +1,7 @@
 package com.sungardas.enhancedsnapshots.components;
 
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.MailConfigurationDocument;
+
 /**
  * Mediator pattern used for simplifying immediate update system properties in all dependant services
  */
@@ -48,5 +50,38 @@ public interface ConfigurationMediator {
 
     int getMaxWaitTimeToDetachVolume();
 
+    int getTaskHistoryTTS();
+
     String getVolumeSizeUnit();
+
+    boolean isSsoLoginMode();
+
+    String getSamlEntityId();
+
+    boolean isStoreSnapshot();
+
+    int getLogsBufferSize();
+
+    String getLogFileName();
+
+    String getDomain();
+
+    MailConfigurationDocument getMailConfiguration();
+
+    int getMinNodeNumberInCluster();
+
+    int getMaxNodeNumberInCluster();
+
+    boolean isClusterMode();
+
+    String getChunkStoreEncryptionKey();
+
+    String getChunkStoreIV();
+
+    String getSdfsCliPsw();
+
+
+    String getUUID();
+
+    boolean isSungardasSSO();
 }

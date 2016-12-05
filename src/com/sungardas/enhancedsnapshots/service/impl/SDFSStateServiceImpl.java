@@ -1,12 +1,5 @@
 package com.sungardas.enhancedsnapshots.service.impl;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
@@ -15,9 +8,9 @@ import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupState;
 import com.sungardas.enhancedsnapshots.components.ConfigurationMediator;
 import com.sungardas.enhancedsnapshots.exception.ConfigurationException;
+import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsException;
 import com.sungardas.enhancedsnapshots.exception.SDFSException;
 import com.sungardas.enhancedsnapshots.service.SDFSStateService;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +18,15 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 
 @Service
@@ -39,8 +41,12 @@ public class SDFSStateServiceImpl implements SDFSStateService {
     private static final String UNMOUNT_CMD = "--unmount";
     private static final String GET_SATE_CMD = "--state";
     private static final String CONFIGURE_CMD = "--configure";
+    private static final String CONFIGURE_CLUSTER_CMD = "--configurenode";
     private static final String EXPAND_VOLUME_CMD = "--expandvolume";
     private static final String CLOUD_SYNC_CMD = "--cloudsync";
+    private static final String SHOW_VOLUME_ID_CMD = "--showvolumes";
+    private static final String SYNC_CLUSTER_VOLUMES = "--syncvolumes";
+
 
     @Value("${enhancedsnapshots.default.sdfs.mount.time}")
     private int sdfsMountTime;
@@ -82,15 +88,6 @@ public class SDFSStateServiceImpl implements SDFSStateService {
         }
     }
 
-
-    @Override
-    public boolean containsSdfsMetadata(String sBucket) {
-        ListObjectsRequest request = new ListObjectsRequest()
-                .withBucketName(sBucket).withPrefix(configurationMediator.getSdfsBackupFileName());
-        return amazonS3.listObjects(request).getObjectSummaries().size() > 0;
-
-    }
-
     @Override
     public Long getBackupTime() {
         ListObjectsRequest request = new ListObjectsRequest()
@@ -121,7 +118,7 @@ public class SDFSStateServiceImpl implements SDFSStateService {
 
     private void startSDFS(Boolean restore) {
         try {
-            if (sdfsIsRunnig()){
+            if (sdfsIsRunnig()) {
                 LOG.info("SDFS is already running");
                 return;
             }
@@ -129,6 +126,7 @@ public class SDFSStateServiceImpl implements SDFSStateService {
                 configureSDFS();
             }
             String[] parameters = {getSdfsScriptFile(sdfsScript).getAbsolutePath(), MOUNT_CMD, restore.toString()};
+
             Process p = executeScript(parameters);
             switch (p.exitValue()) {
                 case 0:
@@ -137,6 +135,17 @@ public class SDFSStateServiceImpl implements SDFSStateService {
                 default:
                     throw new ConfigurationException("Failed to start SDFS");
             }
+            if (configurationMediator.isClusterMode()) {
+
+                p = executeScript(new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), SYNC_CLUSTER_VOLUMES, configurationMediator.getSdfsCliPsw()});
+                switch (p.exitValue()) {
+                    case 0:
+                        LOG.info("SDFS is synchronized");
+                        break;
+                    default:
+                        throw new ConfigurationException("Failed to synchronize SDFS");
+                }
+            }
         } catch (Exception e) {
             LOG.error(e);
             throw new ConfigurationException("Failed to start SDFS");
@@ -144,14 +153,23 @@ public class SDFSStateServiceImpl implements SDFSStateService {
     }
 
     @Override
-    public void startSDFS (){
+    public void startSDFS() {
         startSDFS(false);
     }
 
 
     private void configureSDFS() throws IOException, InterruptedException {
-        String[] parameters = {getSdfsScriptFile(sdfsScript).getAbsolutePath(), CONFIGURE_CMD, configurationMediator.getSdfsVolumeSize(), configurationMediator.getS3Bucket(),
-                getBucketLocation(configurationMediator.getS3Bucket()), configurationMediator.getSdfsLocalCacheSize()};
+        String[] parameters;
+        if (configurationMediator.isClusterMode()) {
+            LOG.info("Configuring SDFS in cluster mode...");
+            parameters = new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), CONFIGURE_CLUSTER_CMD, configurationMediator.getSdfsVolumeSize(), configurationMediator.getS3Bucket(),
+                    getBucketLocation(configurationMediator.getS3Bucket()), configurationMediator.getSdfsLocalCacheSize(), configurationMediator.getChunkStoreEncryptionKey(),
+                    configurationMediator.getChunkStoreIV(), configurationMediator.getSdfsCliPsw()};
+        } else {
+            LOG.info("Configuring SDFS in standalone mode...");
+            parameters = new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), CONFIGURE_CMD, configurationMediator.getSdfsVolumeSize(), configurationMediator.getS3Bucket(),
+                    getBucketLocation(configurationMediator.getS3Bucket()), configurationMediator.getSdfsLocalCacheSize()};
+        }
         Process p = executeScript(parameters);
         switch (p.exitValue()) {
             case 0:
@@ -165,7 +183,7 @@ public class SDFSStateServiceImpl implements SDFSStateService {
     @Override
     public void stopSDFS() {
         try {
-            if (!sdfsIsRunnig()){
+            if (!sdfsIsRunnig()) {
                 LOG.info("SDFS is already stopped");
                 return;
             }
@@ -314,6 +332,22 @@ public class SDFSStateServiceImpl implements SDFSStateService {
         }
         LOG.info("All backups restored.");
         return backupEntryList;
+    }
+
+    @Override
+    public long getSDFSVolumeId() {
+        try {
+            String[] parameters = new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), SHOW_VOLUME_ID_CMD, configurationMediator.getSdfsCliPsw()};
+            LOG.info("Executing script: {}", Arrays.toString(parameters));
+            Process p = Runtime.getRuntime().exec(parameters);
+            p.waitFor();
+            String line = new BufferedReader(new InputStreamReader(p.getInputStream())).lines().skip(3).findFirst().get();
+
+            return Long.parseLong(line);
+        } catch (Exception e) {
+            LOG.error(e);
+            throw new EnhancedSnapshotsException("Unable to get SDFS volumeId", e);
+        }
     }
 
     private BackupEntry getBackupFromFile(File file) {

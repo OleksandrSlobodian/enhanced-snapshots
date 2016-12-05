@@ -2,6 +2,8 @@ package com.sungardas.enhancedsnapshots.service;
 
 import com.sungardas.enhancedsnapshots.dto.SystemConfiguration;
 
+import javax.annotation.security.RolesAllowed;
+
 /**
  * Enhancedsnapshots system service interface main responsibilities: System backup & restore and configuration
  */
@@ -13,11 +15,6 @@ public interface SystemService {
     void backup(String taskId);
 
     /**
-     * Restore system state from backup {@link #backup(String)}
-     */
-    void restore();
-
-    /**
      * Get current system configuration from DB
      *
      * @return system configuration {@link SystemConfiguration}
@@ -26,6 +23,7 @@ public interface SystemService {
 
     /**
      * set new system configuration
+     *
      * @param systemConfiguration new system configuration {@link SystemConfiguration}
      */
     void setSystemConfiguration(SystemConfiguration systemConfiguration);
@@ -35,7 +33,13 @@ public interface SystemService {
      *
      * @param removeS3Bucket in case true S3 bucket will be removed as well
      */
+    @RolesAllowed("ROLE_ADMIN")
     void systemUninstall(boolean removeS3Bucket);
 
     String VOLUME_SIZE_UNIT = "GB";
+
+    /**
+     * synchronize system settings with DB
+     */
+    void refreshSystemConfiguration();
 }

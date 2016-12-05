@@ -1,16 +1,30 @@
 package com.sungardas.enhancedsnapshots.dto;
 
-
 public class SystemConfiguration {
 
     private S3 s3;
     private SDFS sdfs;
     private Long lastBackup;
+    private String systemId;
     private EC2Instance ec2Instance;
     private SystemProperties systemProperties;
     private String currentVersion;
     private String latestVersion;
+    private boolean ssoMode;
+    private String domain;
+    private MailConfigurationDto mailConfiguration;
+    private Cluster cluster;
+    private boolean clusterMode;
+    private String UUID;
 
+
+    public Cluster getCluster() {
+        return cluster;
+    }
+
+    public void setCluster(Cluster cluster) {
+        this.cluster = cluster;
+    }
 
     public String getCurrentVersion() {
         return currentVersion;
@@ -60,6 +74,13 @@ public class SystemConfiguration {
         this.s3 = s3;
     }
 
+    public String getSystemId() {
+        return systemId;
+    }
+
+    public void setSystemId(String systemId) {
+        this.systemId = systemId;
+    }
 
     public Long getLastBackup() {
         return lastBackup;
@@ -67,6 +88,46 @@ public class SystemConfiguration {
 
     public void setLastBackup(Long lastBackup) {
         this.lastBackup = lastBackup;
+    }
+
+    public boolean isSsoMode() {
+        return ssoMode;
+    }
+
+    public void setSsoMode(boolean ssoMode) {
+        this.ssoMode = ssoMode;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public boolean isClusterMode() {
+        return clusterMode;
+    }
+
+    public void setClusterMode(boolean clusterMode) {
+        this.clusterMode = clusterMode;
+    }
+
+    public MailConfigurationDto getMailConfiguration() {
+        return mailConfiguration;
+    }
+
+    public String getUUID() {
+        return UUID;
+    }
+
+    public void setUUID(String UUID) {
+        this.UUID = UUID;
+    }
+
+    public void setMailConfiguration(MailConfigurationDto mailConfiguration) {
+        this.mailConfiguration = mailConfiguration;
     }
 
     public static class S3 {
@@ -161,19 +222,18 @@ public class SystemConfiguration {
     }
 
     public static class EC2Instance {
-        private String instanceID;
+        private String[] instanceIDs;
 
-        public String getInstanceID() {
-            return instanceID;
+        public String[] getInstanceIDs() {
+            return instanceIDs;
         }
 
-        public void setInstanceID(String instanceID) {
-            this.instanceID = instanceID;
+        public void setInstanceIDs(String[] instanceID) {
+            this.instanceIDs = instanceID;
         }
     }
 
     public static class SystemProperties {
-
         private String tempVolumeType;
         private int tempVolumeIopsPerGb;
         private String restoreVolumeType;
@@ -182,6 +242,9 @@ public class SystemConfiguration {
         private int amazonRetryCount;
         private int amazonRetrySleep;
         private int maxQueueSize;
+        private int taskHistoryTTS;
+        private boolean storeSnapshots;
+        private int logsBuffer;
 
         public int getAmazonRetryCount() {
             return amazonRetryCount;
@@ -245,6 +308,30 @@ public class SystemConfiguration {
 
         public void setVolumeTypeOptions(String[] volumeTypeOptions) {
             this.volumeTypeOptions = volumeTypeOptions;
+        }
+
+        public int getTaskHistoryTTS() {
+            return taskHistoryTTS;
+        }
+
+        public void setTaskHistoryTTS(int taskHistoryTTS) {
+            this.taskHistoryTTS = taskHistoryTTS;
+        }
+
+        public boolean isStoreSnapshots() {
+            return storeSnapshots;
+        }
+
+        public void setStoreSnapshots(boolean storeSnapshots) {
+            this.storeSnapshots = storeSnapshots;
+        }
+
+        public int getLogsBuffer() {
+            return logsBuffer;
+        }
+
+        public void setLogsBuffer(int logsBuffer) {
+            this.logsBuffer = logsBuffer;
         }
     }
 }

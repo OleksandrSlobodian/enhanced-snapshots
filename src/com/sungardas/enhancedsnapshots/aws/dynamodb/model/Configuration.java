@@ -21,6 +21,9 @@ public class Configuration {
     private int restoreVolumeIopsPerGb;
     private int waitTimeBeforeNewSyncWithAWS;
     private int maxWaitTimeToDetachVolume;
+    private boolean ssoLoginMode;
+    //time to show
+    private int taskHistoryTTS;
 
     // sdfs settings
     private String sdfsVolumeName;
@@ -29,6 +32,9 @@ public class Configuration {
     private int sdfsSize;
     private String sdfsConfigPath;
     private String sdfsBackupFileName;
+    private String chunkStoreEncryptionKey;
+    private String chunkStoreIV;
+    private String sdfsCliPsw;
 
     // amazon settings
     private String region;
@@ -37,6 +43,54 @@ public class Configuration {
     // Nginx
     private String nginxCertPath;
     private String nginxKeyPath;
+    private boolean storeSnapshot;
+
+    // saml settings
+    private String entityId;
+
+    // logs watcher settings
+    private int logsBufferSize;
+    private String logFile;
+
+    // cluster info
+    private boolean clusterMode;
+    private int minNodeNumber;
+    private int maxNodeNumber;
+
+
+    @DynamoDBAttribute
+    private String domain;
+
+
+    public String getSdfsCliPsw() {
+        return sdfsCliPsw;
+    }
+
+    public void setSdfsCliPsw(String sdfsCliPsw) {
+        this.sdfsCliPsw = sdfsCliPsw;
+    }
+
+
+    @DynamoDBAttribute
+    private MailConfigurationDocument mailConfigurationDocument;
+
+    private String UUID;
+    private boolean sungardasSSO;
+
+    public MailConfigurationDocument getMailConfigurationDocument() {
+        return mailConfigurationDocument;
+    }
+
+    public void setMailConfigurationDocument(MailConfigurationDocument mailConfigurationDocument) {
+        this.mailConfigurationDocument = mailConfigurationDocument;
+    }
+    public boolean isClusterMode() {
+        return clusterMode;
+    }
+
+    public void setClusterMode(boolean clusterMode) {
+        this.clusterMode = clusterMode;
+    }
 
     public String getSdfsVolumeName() {
         return sdfsVolumeName;
@@ -215,5 +269,110 @@ public class Configuration {
 
     public void setNginxKeyPath(final String nginxKeyPath) {
         this.nginxKeyPath = nginxKeyPath;
+    }
+
+
+    public String getEntityId() {
+        return entityId;
+    }
+
+    public void setEntityId(String entityId) {
+        this.entityId = entityId;
+    }
+
+    public boolean isSsoLoginMode() {
+        return ssoLoginMode;
+    }
+
+    public void setSsoLoginMode(boolean ssoLoginMode) {
+        this.ssoLoginMode = ssoLoginMode;
+    }
+
+    public boolean isStoreSnapshot() {
+        return storeSnapshot;
+    }
+
+    public void setStoreSnapshot(boolean storeSnapshot) {
+        this.storeSnapshot = storeSnapshot;
+    }
+
+    public int getTaskHistoryTTS() {
+        return taskHistoryTTS;
+    }
+
+    public void setTaskHistoryTTS(int taskHistoryTTS) {
+        this.taskHistoryTTS = taskHistoryTTS;
+    }
+
+    public int getLogsBufferSize() {
+        return logsBufferSize;
+    }
+
+    public void setLogsBufferSize(int logsBufferSize) {
+        this.logsBufferSize = logsBufferSize;
+    }
+
+    public String getLogFile() {
+        return logFile;
+    }
+
+    public void setLogFile(String logFile) {
+        this.logFile = logFile;
+    }
+
+    public String getDomain() {
+        return domain;
+    }
+
+    public void setDomain(String domain) {
+        this.domain = domain;
+    }
+
+    public int getMinNodeNumber() {
+        return minNodeNumber;
+    }
+
+    public void setMinNodeNumber(int minNodeNumber) {
+        this.minNodeNumber = minNodeNumber;
+    }
+
+    public int getMaxNodeNumber() {
+        return maxNodeNumber;
+    }
+
+    public void setMaxNodeNumber(int maxNodeNumber) {
+        this.maxNodeNumber = maxNodeNumber;
+    }
+
+    public String getChunkStoreEncryptionKey() {
+        return chunkStoreEncryptionKey;
+    }
+
+    public void setChunkStoreEncryptionKey(String chunkStoreEncryptionKey) {
+        this.chunkStoreEncryptionKey = chunkStoreEncryptionKey;
+    }
+
+    public String getChunkStoreIV() {
+        return chunkStoreIV;
+    }
+
+    public void setChunkStoreIV(String chunkStoreIV) {
+        this.chunkStoreIV = chunkStoreIV;
+    }
+
+    public void setUUID(String UUID) {
+        this.UUID = UUID;
+    }
+
+    public String getUUID() {
+        return UUID;
+    }
+
+    public boolean isSungardasSSO() {
+        return sungardasSSO;
+    }
+
+    public void setSungardasSSO(boolean sungardasSSO) {
+        this.sungardasSSO = sungardasSSO;
     }
 }

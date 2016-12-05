@@ -1,40 +1,41 @@
 package com.sungardas.enhancedsnapshots.service.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import javax.annotation.PostConstruct;
-
 import com.amazonaws.services.ec2.model.VolumeType;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupEntry;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.EventEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.repository.BackupRepository;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.repository.TaskRepository;
+import com.sungardas.enhancedsnapshots.cluster.ClusterEventListener;
 import com.sungardas.enhancedsnapshots.components.ConfigurationMediator;
 import com.sungardas.enhancedsnapshots.dto.ExceptionDto;
 import com.sungardas.enhancedsnapshots.dto.TaskDto;
 import com.sungardas.enhancedsnapshots.dto.converter.TaskDtoConverter;
+import com.sungardas.enhancedsnapshots.enumeration.TaskProgress;
 import com.sungardas.enhancedsnapshots.exception.DataAccessException;
 import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsException;
 import com.sungardas.enhancedsnapshots.service.NotificationService;
 import com.sungardas.enhancedsnapshots.service.SchedulerService;
 import com.sungardas.enhancedsnapshots.service.Task;
 import com.sungardas.enhancedsnapshots.service.TaskService;
-import com.sungardas.enhancedsnapshots.tasks.executors.AWSRestoreVolumeTaskExecutor;
-
+import com.sungardas.enhancedsnapshots.tasks.executors.AWSRestoreVolumeStrategyTaskExecutor;
+import com.sungardas.enhancedsnapshots.util.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus.CANCELED;
+
 @Service
-public class TaskServiceImpl implements TaskService {
+public class TaskServiceImpl implements TaskService, ClusterEventListener {
 
     private static final Logger LOG = LogManager.getLogger(TaskServiceImpl.class);
-    private static final long TTL = 300000;
 
     @Autowired
     private TaskRepository taskRepository;
@@ -51,21 +52,30 @@ public class TaskServiceImpl implements TaskService {
     @Autowired
     private NotificationService notificationService;
 
+    private Set<String> canceledTasks = new HashSet<>();
+
     @PostConstruct
     private void init() {
+        List<TaskEntry> partiallyFinished = taskRepository.findByStatusAndRegularAndWorker(TaskEntry.TaskEntryStatus.RUNNING.getStatus(), Boolean.FALSE.toString(), SystemUtils.getInstanceId());
+        partiallyFinished.forEach(t -> t.setStatus(TaskEntry.TaskEntryStatus.PARTIALLY_FINISHED.getStatus()));
+
+        // method save(Iterable<S> var1) in spring-data-dynamodb 4.4.1 does not work correctly, that's why we have to save every taskEntry separately
+        // this should be changed once save(Iterable<S> var1) in spring-data-dynamodb is fixed
+        for(TaskEntry taskEntry: partiallyFinished){
+            taskRepository.save(taskEntry);
+        }
+
         schedulerService.addTask(new Task() {
             @Override
             public String getId() {
-                return "taskRetentionPolicy";
+                return "canceledTaskCheck";
             }
 
             @Override
             public void run() {
-                long currentTime = System.currentTimeMillis();
-                List<TaskEntry> list = taskRepository.findByExpirationDateLessThanEqual(currentTime + "");
-                taskRepository.delete(list);
+                updateCanceledTasks();
             }
-        }, "*/5 * * * *");
+        }, new CronTrigger("*/5 * * * * *"));
     }
 
     @Override
@@ -80,7 +90,9 @@ public class TaskServiceImpl implements TaskService {
                 notificationService.notifyAboutError(new ExceptionDto("Task creation error", "Task queue is full"));
                 break;
             }
-            taskEntry.setWorker(configurationId);
+            if (!configurationMediator.isClusterMode()) {
+                taskEntry.setWorker(configurationId);
+            }
             taskEntry.setStatus(TaskEntry.TaskEntryStatus.QUEUED.getStatus());
             taskEntry.setId(UUID.randomUUID().toString());
 
@@ -115,7 +127,11 @@ public class TaskServiceImpl implements TaskService {
             }
 
         }
-        taskRepository.save(validTasks);
+        // method save(Iterable<S> var1) in spring-data-dynamodb 4.4.1 does not work correctly, that's why we have to save every taskEntry separately
+        // this should be changed once save(Iterable<S> var1) in spring-data-dynamodb is fixed
+        for(TaskEntry taskEntry: validTasks){
+            taskRepository.save(taskEntry);
+        }
         return messages;
     }
 
@@ -133,7 +149,7 @@ public class TaskServiceImpl implements TaskService {
                     //TODO: add more messages
                     return "Unable to execute: backup history is empty";
                 } else {
-                    return AWSRestoreVolumeTaskExecutor.RESTORED_NAME_PREFIX + backupEntry.get(backupEntry.size() - 1).getFileName();
+                    return AWSRestoreVolumeStrategyTaskExecutor.RESTORED_NAME_PREFIX + backupEntry.get(backupEntry.size() - 1).getFileName();
                 }
             }
         }
@@ -143,7 +159,8 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public List<TaskDto> getAllTasks() {
         try {
-            return TaskDtoConverter.convert(taskRepository.findByRegular(Boolean.FALSE.toString()));
+            return TaskDtoConverter.convert(taskRepository.findByStatusNotAndRegular(TaskEntry.TaskEntryStatus.COMPLETE.toString(), Boolean.FALSE.toString()),
+                    taskRepository.findByRegularAndCompleteTimeGreaterThanEqual(Boolean.FALSE.toString(), System.currentTimeMillis() - configurationMediator.getTaskHistoryTTS()));
         } catch (RuntimeException e) {
             notificationService.notifyAboutError(new ExceptionDto("Getting tasks have failed", "Failed to get tasks."));
             LOG.error("Failed to get tasks.", e);
@@ -165,8 +182,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public void complete(TaskEntry taskEntry) {
-        long expirationDate = System.currentTimeMillis() + TTL;
-        taskEntry.setExpirationDate(expirationDate + "");
+        taskEntry.setCompleteTime(System.currentTimeMillis());
         taskEntry.setStatus(TaskEntry.TaskEntryStatus.COMPLETE.getStatus());
         taskRepository.save(taskEntry);
     }
@@ -174,6 +190,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     public boolean isQueueFull() {
         return getTasksInQueue() > configurationMediator.getMaxQueueSize();
+    }
+
+    @Override
+    public boolean isCanceled(final String taskId) {
+        return canceledTasks.remove(taskId);
     }
 
     @Override
@@ -193,7 +214,12 @@ public class TaskServiceImpl implements TaskService {
         if (taskRepository.exists(id)) {
             TaskEntry taskEntry = taskRepository.findOne(id);
             if (TaskEntry.TaskEntryStatus.RUNNING.getStatus().equals(taskEntry.getStatus())) {
-                throw new EnhancedSnapshotsException("Can`t remove task " + id + ", task in status: " + taskEntry.getStatus());
+                taskEntry.setStatus(CANCELED.toString());
+                taskRepository.save(taskEntry);
+                canceledTasks.add(id);
+                updateCanceledTasks();
+                notificationService.notifyAboutTaskProgress(id, "Canceling...", 0, CANCELED);
+                return;
             }
             taskRepository.delete(id);
             if (Boolean.valueOf(taskEntry.getRegular())) {
@@ -206,8 +232,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public boolean isCanceled(String id) {
-        return !taskRepository.exists(id);
+    public boolean exists(String id) {
+        return taskRepository.exists(id);
     }
 
     @Override
@@ -218,7 +244,9 @@ public class TaskServiceImpl implements TaskService {
 
     private int getTasksInQueue() {
         return (int) (taskRepository.countByRegularAndTypeAndStatus(Boolean.FALSE.toString(), TaskEntry.TaskEntryType.BACKUP.getType(), TaskEntry.TaskEntryStatus.QUEUED.getStatus()) +
-                taskRepository.countByRegularAndTypeAndStatus(Boolean.FALSE.toString(), TaskEntry.TaskEntryType.RESTORE.getType(), TaskEntry.TaskEntryStatus.QUEUED.getStatus()));
+                taskRepository.countByRegularAndTypeAndStatus(Boolean.FALSE.toString(), TaskEntry.TaskEntryType.RESTORE.getType(), TaskEntry.TaskEntryStatus.QUEUED.getStatus()) +
+                taskRepository.countByRegularAndTypeAndStatus(Boolean.FALSE.toString(), TaskEntry.TaskEntryType.BACKUP.getType(), TaskEntry.TaskEntryStatus.WAITING.getStatus()) +
+                taskRepository.countByRegularAndTypeAndStatus(Boolean.FALSE.toString(), TaskEntry.TaskEntryType.RESTORE.getType(), TaskEntry.TaskEntryStatus.WAITING.getStatus()));
     }
 
     // for restore and backup tasks we should specify temp volume type
@@ -238,6 +266,30 @@ public class TaskServiceImpl implements TaskService {
             if (configurationMediator.getRestoreVolumeType().equals(VolumeType.Io1.toString())) {
                 taskEntry.setRestoreVolumeIopsPerGb(configurationMediator.getRestoreVolumeIopsPerGb());
             }
+        }
+    }
+
+    private void updateCanceledTasks() {
+        canceledTasks = taskRepository.findByStatusAndRegular(CANCELED.toString(), Boolean.FALSE.toString())
+                .stream().map(t -> t.getId()).collect(Collectors.toSet());
+    }
+
+    @Override
+    public void launched(EventEntry eventEntry) {
+
+    }
+
+    @Override
+    public void terminated(EventEntry eventEntry) {
+        try {
+            List<TaskEntry> partiallyFinishedTasks = taskRepository.findByWorkerAndProgressNot(eventEntry.getInstanceId(), TaskProgress.DONE.name());
+            partiallyFinishedTasks.forEach(t -> {
+                t.setStatus(TaskEntry.TaskEntryStatus.PARTIALLY_FINISHED.toString());
+                t.setWorker(null);
+            });
+            taskRepository.save(partiallyFinishedTasks);
+        } catch (Exception e) {
+            LOG.error(e);
         }
     }
 }

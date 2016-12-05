@@ -1,19 +1,41 @@
 'use strict';
 
 angular.module('web')
-    .controller('LoginController', function ($scope, $state, $stateParams, $stomp, Auth, System, Storage, toastr) {
+    .controller('LoginController', ['$scope', '$state', '$stateParams', '$stomp', 'Auth', 'System', 'Storage', 'toastr', '$window', 'refreshUserResult',
+        function ($scope, $state, $stateParams, $stomp, Auth, System, Storage, toastr, $window, refreshUserResult) {
 
+        //LOGGING OUT ---------------------
         if ($stateParams.err && $stateParams.err == 'session') {
             toastr.warning('You were logged out. Please re-login', 'Session expired.');
         }
 
-        if (angular.isDefined(Storage.get("currentUser"))) {
+        var currentUser = Storage.get("currentUser");
+        var ssoMode = Storage.get("ssoMode");
+
+        if (currentUser !== null && currentUser !== undefined) {
+            if (ssoMode && ssoMode.ssoMode) {
+                $window.location.href = "/saml/logout";
+            }
             Auth.logOut();
         }
 
-        if (Storage.get("currentUser") && Storage.get("currentUser").length > 1) {
+        if (currentUser && currentUser.length > 1) {
+            if (ssoMode && ssoMode.ssoMode) {
+                $window.location.href = "/saml/logout";
+            }
             Auth.logOut();
         }
+        //------------------------------------
+
+        // Show loader instead of login page if ssoMode is true ----------
+            if (refreshUserResult) {
+                $scope.isLoading = true;
+                window.location = "/saml/login";
+            } else {
+                $scope.isLoading = !!(ssoMode && ssoMode.ssoMode);
+            }
+
+        //---------------------------------------------
 
         $scope.clearErr = function () {
             $scope.error = "";
@@ -39,4 +61,4 @@ angular.module('web')
                 $scope.password = "";
             });
         }
-    });
+    }]);

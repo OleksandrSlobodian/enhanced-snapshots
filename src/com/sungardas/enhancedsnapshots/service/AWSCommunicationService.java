@@ -1,12 +1,8 @@
 package com.sungardas.enhancedsnapshots.service;
 
-import java.util.List;
+import com.amazonaws.services.ec2.model.*;
 
-import com.amazonaws.services.ec2.model.AvailabilityZone;
-import com.amazonaws.services.ec2.model.Instance;
-import com.amazonaws.services.ec2.model.Snapshot;
-import com.amazonaws.services.ec2.model.Volume;
-import com.amazonaws.services.ec2.model.VolumeType;
+import java.util.List;
 
 public interface AWSCommunicationService {
 
@@ -20,7 +16,7 @@ public interface AWSCommunicationService {
 
     Snapshot syncSnapshot(String snapshotId);
 
-    Volume waitForAvailableState(Volume volume);
+    Volume waitForVolumeState(Volume volume, VolumeState expectedState);
 
     Volume syncVolume(Volume volume);
 
@@ -67,4 +63,6 @@ public interface AWSCommunicationService {
     //TODO: need to clarify whether we still need restart it
     //TODO: in case we need, it should be triggered by SystemService while restarting sdfs, not by SDFSStateService
     void restartAWSLogService();
+
+    String getDNSName(String instanceId);
 }

@@ -1,16 +1,5 @@
 package com.sungardas.init;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
@@ -23,35 +12,27 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBScanExpression;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Table;
-
-import com.amazonaws.services.dynamodbv2.model.AttributeValue;
-import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
-import com.amazonaws.services.dynamodbv2.model.ListTablesResult;
-import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.s3.AmazonS3;
-
-
 import com.amazonaws.services.s3.internal.BucketNameUtils;
 import com.amazonaws.services.s3.model.AmazonS3Exception;
 import com.amazonaws.services.s3.model.Bucket;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
-import com.amazonaws.util.EC2MetadataUtils;
+import com.amazonaws.services.s3.model.S3Object;
 import com.sungardas.enhancedsnapshots.aws.AmazonConfigProvider;
-import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupEntry;
-import com.sungardas.enhancedsnapshots.aws.dynamodb.model.Configuration;
-import com.sungardas.enhancedsnapshots.aws.dynamodb.model.RetentionEntry;
-import com.sungardas.enhancedsnapshots.aws.dynamodb.model.SnapshotEntry;
-import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry;
-import com.sungardas.enhancedsnapshots.aws.dynamodb.model.User;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.*;
 import com.sungardas.enhancedsnapshots.dto.InitConfigurationDto;
+import com.sungardas.enhancedsnapshots.dto.MailConfigurationDto;
 import com.sungardas.enhancedsnapshots.dto.UserDto;
 import com.sungardas.enhancedsnapshots.dto.converter.BucketNameValidationDTO;
+import com.sungardas.enhancedsnapshots.dto.converter.MailConfigurationDocumentConverter;
 import com.sungardas.enhancedsnapshots.dto.converter.UserDtoConverter;
 import com.sungardas.enhancedsnapshots.exception.ConfigurationException;
 import com.sungardas.enhancedsnapshots.exception.DataAccessException;
+import com.sungardas.enhancedsnapshots.service.CryptoService;
 import com.sungardas.enhancedsnapshots.service.SDFSStateService;
-
+import com.sungardas.enhancedsnapshots.util.EnhancedSnapshotSystemMetadataUtil;
+import com.sungardas.enhancedsnapshots.util.SystemUtils;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.PropertiesConfigurationLayout;
@@ -61,8 +42,26 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.support.CronSequenceGenerator;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Document;
+import org.xml.sax.SAXException;
+
+import javax.annotation.PostConstruct;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.*;
+import java.net.InetAddress;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static com.amazonaws.services.dynamodbv2.model.ComparisonOperator.EQ;
 
@@ -164,14 +163,47 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     @Value("${enhancedsnapshots.system.reserved.storage}")
     private int systemReservedStorage;
 
+    @Value("${enhancedsnapshots.saml.sp.cert.pem}")
+    private String samlCertPem;
+    @Value("${enhancedsnapshots.saml.sp.cert.jks}")
+    private String samlCertJks;
+    @Value("${enhancedsnapshots.saml.idp.metadata}")
+    private String samlIdpMetadata;
+    @Value("${enhancedsnapshots.cert.convert.script.path}")
+    private String pemToJksScript;
+    @Value("${enhancedsnapshots.saml.sp.cert.alias}")
+    private String samlCertAlias;
+    @Value("${enhancedsnapshots.system.task.history.tts}")
+    private int taskHistoryTTS;
+    @Value("${enhancedsnapshots.default.snapshot.store}")
+    private boolean storeSnapshot;
+
+    @Value("${CUSTOM_BUCKET_NAME:}")
+    private String customBucketName;
+
+    @Value("${enhancedsnapshots.logs.buffer.size}")
+    private int bufferSize;
+    @Value("${enhancedsnapshots.logs.file}")
+    private String logFile;
+
+    private static final String CUSTOM_BUCKET_NAME_DEFAULT_VALUE = "enhancedsnapshots";
 
     @Autowired
     private AmazonS3 amazonS3;
+    @Autowired
+    private ResourceLoader resourceLoader;
+    @Autowired
+    private ContextManager contextManager;
+    @Autowired
+    private SystemRestoreService systemRestoreService;
+
+    @Autowired
+    private CryptoService cryptoService;
 
     private AWSCredentialsProvider credentialsProvider;
-    private AmazonDynamoDB amazonDynamoDB;
-    private DynamoDBMapper mapper;
-    private String instanceId;
+    @Autowired
+    protected AmazonDynamoDB amazonDynamoDB;
+    protected DynamoDBMapper mapper;
     private Region region;
 
     private UserDto userDto;
@@ -180,22 +212,28 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     private List<String> tablesWithPrefix;
     private String dbPrefix;
 
+    protected static final String UUID = java.util.UUID.randomUUID().toString();
+
     @PostConstruct
-    private void init() {
+    protected void init() {
+        configureAWSLogAgent();
         credentialsProvider = new InstanceProfileCredentialsProvider();
-        instanceId = EC2MetadataUtils.getInstanceId();
         region = Regions.getCurrentRegion();
-        amazonDynamoDB = new AmazonDynamoDBClient(credentialsProvider);
         amazonDynamoDB.setRegion(region);
         dbPrefix = AmazonConfigProvider.getDynamoDbPrefix();
         DynamoDBMapperConfig config = new DynamoDBMapperConfig.Builder().withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.
                 withTableNamePrefix(dbPrefix)).build();
         mapper = new DynamoDBMapper(amazonDynamoDB, config);
         tablesWithPrefix = Arrays.stream(tables).map(s -> dbPrefix.concat(s)).collect(Collectors.toList());
+        if (customBucketName != null) {
+            customBucketName = customBucketName.toLowerCase();
+        }
+        if ((customBucketName.isEmpty() || CUSTOM_BUCKET_NAME_DEFAULT_VALUE.equals(customBucketName)) && !validateBucketName(customBucketName).isValid()) {
+            customBucketName = null;
+        }
     }
 
-    @Override
-    public void setUser(User user) {
+    private void setUser(User user) {
         if (user != null) {
             userDto = UserDtoConverter.convert(user);
             userDto.setRole("admin");
@@ -203,6 +241,102 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         }
     }
 
+    protected Configuration getConfiguration(){
+        return mapper.load(Configuration.class, SystemUtils.getSystemId());
+    }
+
+    @Override
+    public void configureSystem(ConfigDto config) {
+        if (systemIsConfigured()){
+            LOG.info("System is already configured");
+            if (getPropertyFile().exists()) {
+                syncSettingsInDbAndConfigFile();
+            } else {
+                storePropertiesEditableFromConfigFile();
+            }
+            Configuration conf = getConfiguration();
+            refreshContext(conf.isSsoLoginMode(), conf.getEntityId());
+            return;
+        }
+        if (EnhancedSnapshotSystemMetadataUtil.containsSdfsMetadata(config.getBucketName(), sdfsStateBackupFileName, amazonS3)) {
+            LOG.info("Restoring system  from bucket {}", config.getBucketName());
+            createDbStructure();
+            systemRestoreService.restore(config.getBucketName());
+            Configuration conf = mapper.load(Configuration.class, SystemUtils.getSystemId());
+            storePropertiesEditableFromConfigFile();
+            if (conf.isSsoLoginMode() && conf.isClusterMode()) {
+                downloadFromS3(conf.getS3Bucket(), samlCertPem, System.getProperty(catalinaHomeEnvPropName));
+                downloadFromS3(conf.getS3Bucket(), samlIdpMetadata, System.getProperty(catalinaHomeEnvPropName));
+            }
+            if (SystemUtils.clusterMode() && !conf.isClusterMode()) {
+                conf.setClusterMode(true);
+                conf.setMinNodeNumber(config.getCluster().getMinNodeNumber());
+                conf.setMaxNodeNumber(config.getCluster().getMaxNodeNumber());
+                mapper.save(conf);
+            }
+
+            refreshContext(conf.isSsoLoginMode(), conf.getEntityId());
+            LOG.info("System is successfully restored.");
+            return;
+        }
+
+        if (config.getMailConfiguration() != null) {
+            checkMailConfiguration(config.getMailConfiguration());
+        }
+
+        LOG.info("Configuring system");
+        if (!requiredTablesExist() && config.getUser() == null) {
+            LOG.warn("No user info was provided");
+            throw new ConfigurationException("Please create default user");
+        }
+
+        if (config.getUser() != null) {
+            setUser(config.getUser());
+        }
+        validateVolumeSize(config.getVolumeSize());
+        if (config.isSsoMode()) {
+            configureSSO(config.getSpEntityId());
+        }
+        try {
+            // we need to ensure before context refresh that provided bucket name is valid
+            createBucket(config.getBucketName());
+        } catch (IllegalArgumentException e) {
+            LOG.warn("Failed to create bucket {}", config.getBucketName());
+            throw new IllegalArgumentException("Failed to create bucket");
+        }
+        storePropertiesEditableFromConfigFile();
+        createDBAndStoreSettings(config);
+        if (config.isSsoMode()) {
+            //upload certificate and metadata to bucket
+            uploadToS3(config.getBucketName(), Paths.get(System.getProperty(catalinaHomeEnvPropName), samlIdpMetadata));
+            uploadToS3(config.getBucketName(), Paths.get(System.getProperty(catalinaHomeEnvPropName), samlCertPem));
+        }
+
+        refreshContext(config.isSsoMode(), config.getSpEntityId());
+        LOG.info("System is successfully configured");
+    }
+
+    @Override
+    public void checkMailConfiguration(MailConfigurationDto configuration) {
+        try {
+            InetAddress.getByName(configuration.getMailSMTPHost()).isReachable(1000);
+        } catch (Exception e) {
+            LOG.error(e);
+            throw new ConfigurationException("Mail server is not reachable");
+        }
+    }
+
+
+    private void refreshContext(boolean ssoMode, String entityId){
+        try {
+            contextManager.refreshContext(ssoMode, entityId);
+        } catch (Exception e) {
+            LOG.warn("Failed to refresh context: {}", e);
+            removeProperties();
+            contextManager.refreshInitContext();
+            throw e;
+        }
+    }
 
     /**
      *  Stores properties which can not be modified from UI to config file,
@@ -212,7 +346,58 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         storePropertiesEditableFromConfigFile(defaultRetentionCronExpression, defaultPollingRate, defaultWaitTimeBeforeNewSyncWithAWS, defaultMaxWaitTimeToDetachVolume);
     }
 
-    private void storePropertiesEditableFromConfigFile(String retentionCronExpression, int pollingRate, int waitTimeBeforeNewSync, int maxWaitTimeToDetachVolume) {
+    protected void configureSSO(String spEntityID) {
+        LOG.info("Configuring SSO");
+        // check whether all necessary files exists
+        if(!Files.exists(Paths.get(System.getProperty("catalina.home"), samlCertPem))){
+            throw new ConfigurationException("Certificate for service provider is not uploaded");
+        }
+        if(!Files.exists(Paths.get(System.getProperty("catalina.home"), samlIdpMetadata))){
+            throw new ConfigurationException("Metadata for identity provider is not uploaded");
+        }
+        try {
+            // convert pem to jks
+            File jksCert = Paths.get(System.getProperty(catalinaHomeEnvPropName), samlCertJks).toFile();
+            // delete previous jks if exists
+            if (jksCert.exists()) {
+                jksCert.delete();
+            }
+            File convertScript = resourceLoader.getResource(pemToJksScript).getFile();
+            convertScript.setExecutable(true);
+            String[] parameters = new String[]{convertScript.getAbsolutePath(), samlCertAlias, spEntityID,
+                    Paths.get(System.getProperty(catalinaHomeEnvPropName), samlCertPem).toString(),
+                    Paths.get(System.getProperty(catalinaHomeEnvPropName), samlCertJks).toString()};
+            ProcessBuilder builder = new ProcessBuilder(parameters);
+            LOG.info("Executing convert script: {}", Arrays.toString(parameters));
+            Process process = builder.start();
+            process.waitFor();
+            switch (process.exitValue()) {
+                case 0:
+                    LOG.info("Saml cert successfully converted to jks format");
+                    break;
+                default: {
+                    LOG.error("Failed to convert saml cert to jks format");
+                    try (BufferedReader input = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                        StringBuilder errorMessage = new StringBuilder();
+                        for (String line; (line = input.readLine()) != null; ) {
+                            errorMessage.append(line);
+                        }
+                        throw new ConfigurationException(errorMessage.toString());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to convert saml cert to jks format", e);
+            throw new ConfigurationException(e.toString());
+        }
+    }
+
+    /**
+     *  Stores properties which can not be modified from UI to config file,
+     *  changes in config file will be applied after system restart
+     */
+    private void storePropertiesEditableFromConfigFile(String retentionCronExpression, int pollingRate, int waitTimeBeforeNewSync,
+                                                       int maxWaitTimeToDetachVolume) {
         File file = Paths.get(System.getProperty(catalinaHomeEnvPropName), confFolderName, propFileName).toFile();
         try {
             PropertiesConfiguration propertiesConfiguration = new PropertiesConfiguration();
@@ -253,7 +438,7 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
      * Store configuration if required
      * @param config
      */
-    public void createDBAndStoreSettings(final InitController.ConfigDto config) {
+    protected void createDBAndStoreSettings(final ConfigDto config) {
         // create tables if they do not exist
         createDbStructure();
         storeAdminUserIfProvided();
@@ -261,13 +446,15 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         storeConfiguration(config);
     }
 
-    private void createDbStructure() throws ConfigurationException {
+    protected void createDbStructure() throws ConfigurationException {
         createTable(BackupEntry.class);
         createTable(Configuration.class);
         createTable(RetentionEntry.class);
         createTable(TaskEntry.class);
         createTable(SnapshotEntry.class);
         createTable(User.class);
+        createTable(NodeEntry.class);
+        createTable(EventEntry.class);
     }
 
     private void createTable(Class tableClass) {
@@ -291,26 +478,30 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         }
     }
 
-
     private void storeAdminUserIfProvided() {
-        if (userDto != null && adminPassword != null) {
+        if (userDto != null) {
             userDto.setEmail(userDto.getEmail().toLowerCase());
             User userToCreate = UserDtoConverter.convert(userDto);
-            userToCreate.setPassword(DigestUtils.sha512Hex(adminPassword));
             userToCreate.setRole("admin");
+            if (adminPassword != null) {
+                userToCreate.setPassword(DigestUtils.sha512Hex(adminPassword));
+            }
             mapper.save(userToCreate);
         }
     }
 
-    private void storeConfiguration(final InitController.ConfigDto config) {
+    private void storeConfiguration(final ConfigDto config) {
         Configuration configuration = new Configuration();
-        configuration.setConfigurationId(EC2MetadataUtils.getInstanceId());
+        configuration.setConfigurationId(SystemUtils.getSystemId());
         configuration.setEc2Region(Regions.getCurrentRegion().getName());
         configuration.setSdfsMountPoint(mountPoint);
         configuration.setSdfsVolumeName(volumeName);
         configuration.setS3Bucket(config.getBucketName());
         configuration.setSdfsSize(config.getVolumeSize());
-
+        configuration.setSsoLoginMode(config.isSsoMode());
+        configuration.setEntityId(config.getSpEntityId());
+        configuration.setMailConfigurationDocument(MailConfigurationDocumentConverter.toMailConfigurationDocument(config.getMailConfiguration(), cryptoService, configuration.getConfigurationId(), ""));
+        configuration.setDomain(config.getDomain());
         // set default properties
         configuration.setRestoreVolumeIopsPerGb(restoreVolumeIopsPerGb);
         configuration.setRestoreVolumeType(restoreVolumeType);
@@ -328,6 +519,24 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         configuration.setMaxWaitTimeToDetachVolume(defaultMaxWaitTimeToDetachVolume);
         configuration.setNginxCertPath(nginxCertPath);
         configuration.setNginxKeyPath(nginxKeyPath);
+        configuration.setTaskHistoryTTS(taskHistoryTTS);
+        configuration.setStoreSnapshot(storeSnapshot);
+        configuration.setLogFile(logFile);
+        configuration.setLogsBufferSize(bufferSize);
+        if (SystemUtils.clusterMode()) {
+            configuration.setClusterMode(SystemUtils.clusterMode());
+            configuration.setMaxNodeNumber(config.getCluster().getMaxNodeNumber());
+            configuration.setMinNodeNumber(config.getCluster().getMinNodeNumber());
+            configuration.setChunkStoreEncryptionKey(SDFSStateService.generateChunkStoreEncryptionKey());
+            configuration.setChunkStoreIV(SDFSStateService.generateChunkStoreIV());
+            configuration.setSdfsCliPsw(SystemUtils.getSystemId());
+        }
+        if (System.getenv("UUID") != null && !System.getenv("UUID").isEmpty()) {
+            configuration.setUUID(System.getenv("UUID"));
+        } else {
+            configuration.setUUID(UUID);
+        }
+        configuration.setSungardasSSO(config.isSungardasSSO());
         // saving configuration to DB
         mapper.save(configuration);
     }
@@ -338,7 +547,7 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     public void syncSettingsInDbAndConfigFile() {
         // sync properties in DB with conf file
         boolean configurationChanged = false;
-        Configuration loadedConf = mapper.load(Configuration.class, EC2MetadataUtils.getInstanceId());
+        Configuration loadedConf = mapper.load(Configuration.class, SystemUtils.getSystemId());
 
         if (cronExpressionIsValid(retentionCronExpression) && !retentionCronExpression.equals(loadedConf.getRetentionCronExpression())) {
             LOG.debug("Applying new cron expression {} for Retention policy.", retentionCronExpression);
@@ -375,8 +584,7 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     /**
      * Remove config file with properties
      */
-    @Override
-    public void removeProperties() {
+    protected void removeProperties() {
         File file = Paths.get(System.getProperty(catalinaHomeEnvPropName), confFolderName, propFileName).toFile();
         if (file.exists()) {
             file.delete();
@@ -384,21 +592,28 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     }
 
     @Override
-    public boolean propertyFileExists() {
-        return getPropertyFile().exists();
+    public boolean systemIsConfigured() {
+        if (!SystemUtils.clusterMode()) {
+            return getPropertyFile().exists();
+        } else {
+            return tableExists(mapper.generateCreateTableRequest(NodeEntry.class).getTableName());
+        }
     }
 
     @Override
     public boolean checkDefaultUser(String login, String password) {
-        return DEFAULT_LOGIN.equals(login.toLowerCase()) && password.equals(instanceId);
+        return DEFAULT_LOGIN.equals(login.toLowerCase()) && password.equals(SystemUtils.getSystemId());
     }
 
-    private List<InitConfigurationDto.S3> getBucketsWithSdfsMetadata() {
+    protected List<InitConfigurationDto.S3> getBucketsWithSdfsMetadata() {
         ArrayList<InitConfigurationDto.S3> result = new ArrayList<>();
 
         try {
             List<Bucket> allBuckets = amazonS3.listBuckets();
-            String bucketName = enhancedSnapshotBucketPrefix002 + instanceId;
+            if (customBucketName != null) {
+                result.add(new InitConfigurationDto.S3(customBucketName, false));
+            }
+            String bucketName = enhancedSnapshotBucketPrefix002 + SystemUtils.getSystemId();
             result.add(new InitConfigurationDto.S3(bucketName, false));
 
             String currentLocation = region.toString();
@@ -407,7 +622,6 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
             }
             for (Bucket bucket : allBuckets) {
                 try {
-
                     if (bucket.getName().startsWith(enhancedSnapshotBucketPrefix001) || bucket.getName().startsWith(enhancedSnapshotBucketPrefix002)) {
                         String location = amazonS3.getBucketLocation(bucket.getName());
 
@@ -462,10 +676,17 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         initConfigurationDto.setS3(getBucketsWithSdfsMetadata());
         initConfigurationDto.setSdfs(sdfs);
         initConfigurationDto.setImmutableBucketNamePrefix(enhancedSnapshotBucketPrefix002);
+        initConfigurationDto.setClusterMode(SystemUtils.clusterMode());
+
+        if (System.getenv("UUID") != null && !System.getenv("UUID").isEmpty()) {
+            initConfigurationDto.setUUID(System.getenv("UUID"));
+        } else {
+            initConfigurationDto.setUUID(UUID);
+        }
         return initConfigurationDto;
     }
 
-    private boolean requiredTablesExist() {
+    protected boolean requiredTablesExist() {
         AmazonDynamoDBClient amazonDynamoDB = new AmazonDynamoDBClient(credentialsProvider);
         amazonDynamoDB.setRegion(Regions.getCurrentRegion());
         try {
@@ -482,19 +703,12 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     }
 
     private boolean adminExist() {
-        AmazonDynamoDBClient client = new AmazonDynamoDBClient(credentialsProvider);
-        client.setRegion(Regions.getCurrentRegion());
-        DynamoDBMapper mapper = new DynamoDBMapper(client);
         DynamoDBScanExpression expression = new DynamoDBScanExpression()
                 .withFilterConditionEntry("role",
-                        new Condition().withComparisonOperator(EQ.toString()).withAttributeValueList(new AttributeValue("admin")))
-                .withFilterConditionEntry("instanceId",
-                        new Condition().withComparisonOperator(EQ.toString()).withAttributeValueList(new AttributeValue(instanceId)));
+                        new Condition().withComparisonOperator(EQ.toString()).withAttributeValueList(new AttributeValue("admin")));
         List<User> users = mapper.scan(User.class, expression);
-
         return !users.isEmpty();
     }
-
 
     private boolean sdfsAlreadyExists() {
         LOG.info("sdfs already exists...");
@@ -503,31 +717,26 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         return configf.exists() && mountPointf.exists();
     }
 
+
     private File getPropertyFile() {
         return Paths.get(System.getProperty(catalinaHomeEnvPropName), confFolderName, propFileName).toFile();
     }
 
-    @Override
-    public String getInstanceId() {
-        return instanceId;
-    }
-
-
-    @Override
-    public void configureAWSLogAgent() {
+    private void configureAWSLogAgent() {
         try {
-            replaceInFile(new File(awscliConfPath), "<region>", region.toString());
-            replaceInFile(new File(awslogsConfPath), "<instance-id>", instanceId);
+            replaceInFile(new File(awscliConfPath), "<region>", Regions.getCurrentRegion().toString());
+            replaceInFile(new File(awslogsConfPath), "<instance-id>", SystemUtils.getSystemId());
         } catch (Exception e) {
-            LOG.warn("Cant initialize AWS Log agent");
+            LOG.warn("Cant initialize AWS Log agent", e);
         }
     }
 
-    @Override
-    public void validateVolumeSize(final int volumeSize) {
+
+    protected void validateVolumeSize(final int volumeSize) {
         int min = Integer.parseInt(minVolumeSize);
         int max = SDFSStateService.getMaxVolumeSize(systemReservedRam, volumeSizePerGbOfRam,  sdfsReservedRam);
         if (volumeSize < min || volumeSize > max) {
+            LOG.warn("Invalid volume size: {}", volumeSize);
             throw new ConfigurationException("Invalid volume size");
         }
     }
@@ -595,7 +804,27 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     }
 
     @Override
-    public void createBucket(String bucketName) {
+    public void saveAndProcessSAMLFiles(MultipartFile spCertificate, MultipartFile idpMetadata) {
+        try {
+            DocumentBuilder builder = DocumentBuilderFactory.newInstance().newDocumentBuilder();
+            Document document = builder.parse(idpMetadata.getInputStream());
+            document.normalizeDocument();
+            saveFileOnServer(samlIdpMetadata, idpMetadata);
+            LOG.info("IDP metadata successfully stored");
+        } catch (ParserConfigurationException | SAXException | IOException e) {
+            LOG.error("IDP metadata processing failed", e);
+            throw new ConfigurationException(e);
+        }
+        try {
+            saveFileOnServer(samlCertPem, spCertificate);
+            LOG.info("SP certificate successfully stored");
+        } catch (IOException e) {
+            LOG.error("SP certificate processing failed", e);
+            throw new ConfigurationException(e);
+        }
+    }
+
+    protected void createBucket(String bucketName) {
         if (!bucketExists(bucketName)) {
             LOG.info("Creating bucket {} in {} region", bucketName, region);
             // AWS throws exception when trying create bucket in US_EAST_1
@@ -604,6 +833,42 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
                 return;
             }
             amazonS3.createBucket(bucketName, region.getName());
+        }
+    }
+
+
+    private void saveFileOnServer(String fileName, MultipartFile fileToSave) throws IOException {
+        fileToSave.transferTo(Paths.get(System.getProperty(catalinaHomeEnvPropName), fileName).toFile());
+    }
+
+
+    protected void uploadToS3(String bucketName, Path filePath) {
+        File file = filePath.toFile();
+        amazonS3.putObject(bucketName, file.getName(), file);
+    }
+
+    private void downloadFromS3(String bucket, String fileName, String destinationPath) {
+        S3Object object = amazonS3.getObject(bucket, fileName);
+        try {
+            FileUtils.copyInputStreamToFile(object.getObjectContent(), Paths.get(destinationPath, fileName).toFile());
+        } catch (IOException e) {
+            LOG.error("Download {} from {} failed", fileName, bucket, e);
+            throw new ConfigurationException(e);
+        }
+    }
+
+    public InitConfigurationDto.DB containsMetadata(final String bucketName) {
+        final InitConfigurationDto.DB db = new InitConfigurationDto.DB();
+        if (EnhancedSnapshotSystemMetadataUtil.isBucketExits(bucketName, amazonS3)) {
+            String version = EnhancedSnapshotSystemMetadataUtil.getBackupVersion(bucketName, sdfsStateBackupFileName, amazonS3);
+            if (version == null || "0.0.1".equals(version)) {
+                return db;
+            } else {
+                db.setAdminExist(true);
+            }
+            return db;
+        } else {
+            return db;
         }
     }
 
@@ -619,5 +884,4 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         }
         return result;
     }
-
 }

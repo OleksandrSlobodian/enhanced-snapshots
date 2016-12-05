@@ -1,39 +1,39 @@
 package com.sungardas.enhancedsnapshots.components;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
-
 import com.amazonaws.AmazonClientException;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.NodeEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.repository.NodeRepository;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.repository.TaskRepository;
 import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsInterruptedException;
+import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsTaskInterruptedException;
 import com.sungardas.enhancedsnapshots.service.NotificationService;
 import com.sungardas.enhancedsnapshots.service.SDFSStateService;
 import com.sungardas.enhancedsnapshots.service.SystemService;
 import com.sungardas.enhancedsnapshots.service.TaskService;
 import com.sungardas.enhancedsnapshots.tasks.executors.TaskExecutor;
-
+import com.sungardas.enhancedsnapshots.util.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.stereotype.Service;
 
-import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus.ERROR;
-import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus.RUNNING;
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus.*;
 
 
 @Service
-@DependsOn("SystemService")
+@DependsOn({"ConfigurationMediator", "MasterService"})
 public class WorkersDispatcher {
 
     private static final Comparator<TaskEntry> taskComparatorByTimeAndPriority = (o1, o2) -> {
@@ -65,18 +65,39 @@ public class WorkersDispatcher {
     private TaskRepository taskRepository;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private NodeRepository nodeRepository;
+
 
     private ExecutorService executor;
 
+    private ThreadPoolExecutor backupExecutor;
+    private ThreadPoolExecutor restoreExecutor;
+
+    @Value("${enhancedsnapshots.default.backup.threadPool.size}")
+    private int backupThreadPoolSize;
+
+    @Value("${enhancedsnapshots.default.restore.threadPool.size}")
+    private int restoreThreadPoolSize;
+
+    private String instanceId;
+
     @PostConstruct
     private void init() {
+        instanceId = SystemUtils.getInstanceId();
+        backupExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(backupThreadPoolSize);
+        restoreExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(restoreThreadPoolSize);
+
         executor = Executors.newSingleThreadExecutor();
         executor.execute(new TaskWorker());
+
     }
 
     @PreDestroy
     public void destroy() {
         executor.shutdownNow();
+        backupExecutor.shutdownNow();
+        restoreExecutor.shutdownNow();
     }
 
     private Set<TaskEntry> sortByTimeAndPriority(List<TaskEntry> list) {
@@ -97,52 +118,70 @@ public class WorkersDispatcher {
                 if (Thread.interrupted()) {
                     throw new EnhancedSnapshotsInterruptedException("Task interrupted");
                 }
+                if (configurationMediator.isClusterMode()) {
+                    NodeEntry nodeEntry = nodeRepository.findOne(instanceId);
+                    nodeEntry.setFreeBackupWorkers(backupThreadPoolSize - backupExecutor.getActiveCount());
+                    nodeEntry.setFreeRestoreWorkers(restoreThreadPoolSize - restoreExecutor.getActiveCount());
+                    nodeRepository.save(nodeEntry);
+                }
                 TaskEntry entry = null;
                 try {
-                    Set<TaskEntry> taskEntrySet = sortByTimeAndPriority(taskRepository.findByStatusAndRegular(TaskEntry.TaskEntryStatus.QUEUED.getStatus(), Boolean.FALSE.toString()));
+                    Set<TaskEntry> taskEntrySet = getAssignedTasks();
                     while (!taskEntrySet.isEmpty()) {
                         entry = taskEntrySet.iterator().next();
 
-                        if (!taskService.isCanceled(entry.getId())) {
-                            switch (TaskEntry.TaskEntryType.getType(entry.getType())) {
-                                case BACKUP:
-                                    //TODO remove when sdfscli will allow to expand cache size at runtime
-                                    if (!sdfsStateService.sdfsIsAvailable()) {
+                        try {
+                            if (taskService.exists(entry.getId())) {
+                                switch (TaskEntry.TaskEntryType.getType(entry.getType())) {
+                                    case BACKUP:
+                                        //TODO remove when sdfscli will allow to expand cache size at runtime
+                                        if (!sdfsStateService.sdfsIsAvailable()) {
+                                            break;
+                                        }
+                                        LOGtw.info("Task was identified as backup");
+                                        entry.setStatus(WAITING.getStatus());
+                                        taskRepository.save(entry);
+                                        TaskEntry backupTask = entry;
+                                        backupExecutor.submit(() -> awsBackupVolumeTaskExecutor.execute(backupTask));
+                                        break;
+                                    case DELETE: {
+                                        LOGtw.info("Task was identified as delete backup");
+                                        awsDeleteTaskExecutor.execute(entry);
                                         break;
                                     }
-                                    LOGtw.info("Task was identified as backup");
-                                    awsBackupVolumeTaskExecutor.execute(entry);
-                                    break;
-                                case DELETE: {
-                                    LOGtw.info("Task was identified as delete backup");
-                                    awsDeleteTaskExecutor.execute(entry);
-                                    break;
-                                }
-                                case RESTORE:
-                                    if (!sdfsStateService.sdfsIsAvailable()) {
+                                    case RESTORE:
+                                        if (!sdfsStateService.sdfsIsAvailable()) {
+                                            break;
+                                        }
+                                        LOGtw.info("Task was identified as restore");
+                                        entry.setStatus(WAITING.getStatus());
+                                        taskRepository.save(entry);
+                                        TaskEntry restoreTask = entry;
+                                        restoreExecutor.submit(() -> awsRestoreVolumeTaskExecutor.execute(restoreTask));
+                                        break;
+                                    case SYSTEM_BACKUP: {
+                                        LOGtw.info("Task was identified as system backup");
+                                        notificationService.notifyAboutRunningTaskProgress(entry.getId(), "System backup started", 0);
+                                        entry.setStatus(RUNNING.getStatus());
+                                        taskRepository.save(entry);
+                                        systemService.backup(entry.getId());
+                                        taskRepository.delete(entry);
+                                        notificationService.notifyAboutRunningTaskProgress(entry.getId(), "System backup finished", 100);
                                         break;
                                     }
-                                    LOGtw.info("Task was identified as restore");
-                                    awsRestoreVolumeTaskExecutor.execute(entry);
-                                    break;
-                                case SYSTEM_BACKUP: {
-                                    LOGtw.info("Task was identified as system backup");
-                                    notificationService.notifyAboutTaskProgress(entry.getId(), "System backup started", 0);
-                                    entry.setStatus(RUNNING.getStatus());
-                                    taskRepository.save(entry);
-                                    systemService.backup(entry.getId());
-                                    taskRepository.delete(entry);
-                                    notificationService.notifyAboutTaskProgress(entry.getId(), "System backup finished", 100);
-                                    break;
+                                    case UNKNOWN: {
+                                        LOGtw.warn("Executor for type {} is not implemented. Task {} is going to be removed.", entry.getType(), entry.getId());
+                                        taskService.removeTask(entry.getId());
+                                    }
                                 }
-                                case UNKNOWN:
-                                    LOGtw.warn("Executor for type {} is not implemented. Task {} is going to be removed.", entry.getType(), entry.getId());
-                                    taskService.removeTask(entry.getId());
+                            } else {
+                                LOGtw.debug("Task canceled: {}", entry);
                             }
-                        } else {
+                        } catch (EnhancedSnapshotsTaskInterruptedException e) {
+                            //skip if task canceled
                             LOGtw.debug("Task canceled: {}", entry);
                         }
-                        taskEntrySet = sortByTimeAndPriority(taskRepository.findByStatusAndRegular(TaskEntry.TaskEntryStatus.QUEUED.getStatus(), Boolean.FALSE.toString()));
+                        taskEntrySet = getAssignedTasks();
                     }
                     sleep();
                 } catch (AmazonClientException e) {
@@ -161,6 +200,13 @@ public class WorkersDispatcher {
                     }
                 }
             }
+        }
+
+        private Set<TaskEntry> getAssignedTasks() {
+            List<TaskEntry> taskEntries = new ArrayList<>();
+            taskEntries.addAll(taskRepository.findByStatusAndRegularAndWorker(TaskEntry.TaskEntryStatus.QUEUED.getStatus(), Boolean.FALSE.toString(), instanceId));
+            taskEntries.addAll(taskRepository.findByStatusAndRegularAndWorker(TaskEntry.TaskEntryStatus.PARTIALLY_FINISHED.getStatus(), Boolean.FALSE.toString(), instanceId));
+            return sortByTimeAndPriority(taskEntries);
         }
 
         private void sleep() {

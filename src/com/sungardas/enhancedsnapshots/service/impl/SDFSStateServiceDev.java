@@ -1,7 +1,5 @@
 package com.sungardas.enhancedsnapshots.service.impl;
 
-import com.sungardas.enhancedsnapshots.service.SDFSStateService;
-
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -12,13 +10,6 @@ public class SDFSStateServiceDev extends SDFSStateServiceImpl {
 
     public void expandSdfsVolume(String newVolumeSize) {
         System.out.println("Volume expanded to " + newVolumeSize);
-    }
-    
-
-    @Override
-    public boolean containsSdfsMetadata(String sBucket) {
-        return false;
-
     }
 
     @Override
@@ -51,4 +42,8 @@ public class SDFSStateServiceDev extends SDFSStateServiceImpl {
         return true;
     }
 
+    @Override
+    public long getSDFSVolumeId() {
+        return 1000000;
+    }
 }

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('web')
-    .controller('TasksController', function ($scope, $rootScope, $stateParams, $stomp, Tasks, Storage, $modal, $timeout) {
+    .controller('TasksController', ['$scope', '$rootScope', '$stateParams', '$stomp', 'Tasks', 'Storage', '$modal', '$timeout', function ($scope, $rootScope, $stateParams, $stomp, Tasks, Storage, $modal, $timeout) {
         $scope.typeColorClass = {
             backup: "primary",
             restore: "success",
@@ -22,6 +22,7 @@ angular.module('web')
 
         $scope.statusPriority = function (task) {
             var priorities = {
+                canceled: 5,
                 running: 4,
                 queued: 3,
                 error: 2,
@@ -42,7 +43,7 @@ angular.module('web')
             $rootScope.isLoading = true;
             Tasks.get($scope.volumeId).then(function (data) {
                 $scope.tasks = data;
-                updateTaskStatus(false);
+                applyTaskStatuses();
                 $rootScope.isLoading = false;
             }, function () {
                 $rootScope.isLoading = false;
@@ -54,31 +55,36 @@ angular.module('web')
             updateTaskStatus(d);
         });
 
-        var updateTaskStatus = function (msg) {
-            if (!msg) {
-                msg = Storage.get('lastTaskStatus') || {};
+        var applyTaskStatuses = function () {
+            for (var i = 0; i < $scope.tasks.length; i++) {
+                var task = $scope.tasks[i];
+                var msg = Storage.get('lastTaskStatus_' + task.id) || {};
+                task.progress = msg.progress;
+                task.message = msg.message;
             }
+        };
+
+        var updateTaskStatus = function (msg) {
             var task = $scope.tasks.filter(function (t) {
-                return t.id == msg.taskId && t.status != "complete" && t.status != "error";
+                return t.id == msg.taskId && msg.status != "complete";
             })[0];
+
             if (task) {
-                if (task.status != 'running' ) {
+                if (task.status == 'complete' || task.status == 'queued' || task.status == 'waiting') {
                     $scope.refresh();
                 } else {
                     $timeout(function() {
                         task.progress = msg.progress;
                         task.message = msg.message;
+                        task.status = msg.status;
                     }, 0);
 
                     if (msg.progress == 100) {
+                        Storage.remove('lastTaskStatus_' + task.id);
                         $scope.refresh();
                     }
                 }
             }
-        };
-
-        $scope.isRunning = function (task) {
-            return task.status == "running";
         };
 
         $scope.reject = function (task) {
@@ -96,6 +102,4 @@ angular.module('web')
                 });
             });
         };
-
-
-    });
+    }]);
