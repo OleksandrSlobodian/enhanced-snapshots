@@ -51,6 +51,8 @@ public interface AWSCommunicationService {
 
     void addTag(String resourceId, String name, String value);
 
+    void addTag(String resourceId, List<Tag> tags);
+
     boolean snapshotExists(String snapshotId);
 
     boolean volumeExists(String volumeId);

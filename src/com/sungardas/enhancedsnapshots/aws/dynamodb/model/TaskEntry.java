@@ -1,11 +1,11 @@
 package com.sungardas.enhancedsnapshots.aws.dynamodb.model;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBAttribute;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIgnore;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.util.json.Jackson;
 import com.sungardas.enhancedsnapshots.enumeration.TaskProgress;
+
+import java.util.List;
 
 
 @DynamoDBTable(tableName = "Tasks")
@@ -77,6 +77,10 @@ public class TaskEntry {
 
     @DynamoDBAttribute
     private String tempSnapshotId;
+
+    @DynamoDBAttribute
+    @DynamoDBTypeConvertedJson
+    private List<Tag> tags;
 
     public String getId() {
         return id;
@@ -287,6 +291,14 @@ public class TaskEntry {
 
     public TaskProgress progress() {
         return TaskProgress.valueOf(progress);
+    }
+
+    public void setTags(List<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public List<Tag> getTags() {
+        return tags;
     }
 
     public enum TaskEntryType {

@@ -292,6 +292,13 @@ public class AWSCommunicationServiceImpl implements AWSCommunicationService {
     }
 
     @Override
+    public void addTag(String resourceId, List<Tag> tags) {
+        CreateTagsRequest r = new CreateTagsRequest().withResources(resourceId)
+                .withTags(tags);
+        ec2client.createTags(r);
+    }
+
+    @Override
     public boolean snapshotExists(String snapshotId) {
         Snapshot snapshot = getSnapshot(snapshotId);
         if (snapshot != null) {
