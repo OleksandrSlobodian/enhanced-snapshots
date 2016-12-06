@@ -7,6 +7,7 @@ import com.sungardas.enhancedsnapshots.service.MailService;
 import com.sungardas.enhancedsnapshots.service.SDFSStateService;
 import com.sungardas.enhancedsnapshots.service.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,15 +24,14 @@ public class SystemController {
 
     @Autowired
     private SDFSStateService sdfsStateService;
-
     @Autowired
     private SystemService systemService;
-
     @Autowired
     private MailService mailService;
-
     @Autowired
     private ConfigurationMediator configurationMediator;
+    @Value("${enhancedsnapshots.default.maxIopsPerGb}")
+    private int maxIopsPerGb;
 
     @RolesAllowed("ROLE_ADMIN")
     @RequestMapping(value = "/delete", method = RequestMethod.POST)
@@ -136,7 +136,7 @@ public class SystemController {
     // iops per GB can not be less than 1 and more than 30
     private boolean checkIopsAreValid(SystemConfiguration.SystemProperties systemProperties) {
         boolean result = true;
-        if (systemProperties.getRestoreVolumeIopsPerGb() > 30 || systemProperties.getTempVolumeIopsPerGb() > 30) {
+        if (systemProperties.getRestoreVolumeIopsPerGb() > maxIopsPerGb || systemProperties.getTempVolumeIopsPerGb() > maxIopsPerGb) {
             result = false;
         }
         if (systemProperties.getRestoreVolumeIopsPerGb() < 1 || systemProperties.getTempVolumeIopsPerGb() < 1) {
