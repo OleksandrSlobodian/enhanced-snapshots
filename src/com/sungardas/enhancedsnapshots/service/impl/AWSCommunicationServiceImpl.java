@@ -119,8 +119,9 @@ public class AWSCommunicationServiceImpl implements AWSCommunicationService {
         LOG.info(format("Starting creating snapshot for %s", volumeId));
         CreateSnapshotRequest snapshotRequest = new CreateSnapshotRequest(
                 volumeId,
-                volumeId
-                        + "__"
+                "Created by Enhanced Snapshots_" +
+                        volumeId
+                        + "_"
                         + formatter.format(new Date(System.currentTimeMillis())));
         CreateSnapshotResult crSnapshotResult = ec2client
                 .createSnapshot(snapshotRequest);
