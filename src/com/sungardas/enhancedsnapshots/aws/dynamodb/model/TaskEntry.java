@@ -3,6 +3,7 @@ package com.sungardas.enhancedsnapshots.aws.dynamodb.model;
 import com.amazonaws.services.dynamodbv2.datamodeling.*;
 import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.util.json.Jackson;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.Marshaller.ListTagDynamoDBTypeConverter;
 import com.sungardas.enhancedsnapshots.enumeration.TaskProgress;
 
 import java.util.List;
@@ -79,7 +80,7 @@ public class TaskEntry {
     private String tempSnapshotId;
 
     @DynamoDBAttribute
-    @DynamoDBTypeConvertedJson
+    @DynamoDBTypeConverted(converter = ListTagDynamoDBTypeConverter.class)
     private List<Tag> tags;
 
     public String getId() {

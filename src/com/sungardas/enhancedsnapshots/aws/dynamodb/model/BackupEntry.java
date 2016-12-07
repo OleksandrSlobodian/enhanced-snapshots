@@ -2,8 +2,9 @@ package com.sungardas.enhancedsnapshots.aws.dynamodb.model;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConvertedJson;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
 import com.amazonaws.services.ec2.model.Tag;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.Marshaller.ListTagDynamoDBTypeConverter;
 
 import java.util.List;
 
@@ -21,7 +22,7 @@ final public class BackupEntry {
     private String volumeId;
     private String volumeName;
 
-    @DynamoDBTypeConvertedJson
+    @DynamoDBTypeConverted(converter = ListTagDynamoDBTypeConverter.class)
     private List<Tag> tags;
 
 
