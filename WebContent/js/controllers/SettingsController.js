@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('web')
-    .controller('SettingsController', ['$scope', 'System', 'Users', '$modal', 'Configuration', function ($scope, System, Users, $modal, Configuration) {
-        var currentUser = Users.getCurrent();
+    .controller('SettingsController', ['$scope', 'System', 'currentUser', '$modal', 'Configuration', function ($scope, System, currentUser, $modal, Configuration) {
+        //var currentUser = Users.getCurrent();
         $scope.isAdmin = currentUser.role === "admin";
 
         $scope.STRINGS = {
