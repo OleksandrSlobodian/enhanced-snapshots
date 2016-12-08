@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -232,6 +233,9 @@ class InitConfigurationServiceDev extends InitConfigurationServiceImpl {
 
     }
 
+    protected void uploadToS3(String bucketName, Path filePath) {
+
+    }
     @Override
     public InitConfigurationDto.DB containsMetadata(final String bucketName) {
         InitConfigurationDto.DB db = new InitConfigurationDto.DB();

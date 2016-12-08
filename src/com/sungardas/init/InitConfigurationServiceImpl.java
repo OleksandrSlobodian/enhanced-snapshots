@@ -842,7 +842,7 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     }
 
 
-    private void uploadToS3(String bucketName, Path filePath) {
+    protected void uploadToS3(String bucketName, Path filePath) {
         File file = filePath.toFile();
         amazonS3.putObject(bucketName, file.getName(), file);
     }
