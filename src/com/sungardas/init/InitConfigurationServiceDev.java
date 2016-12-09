@@ -214,7 +214,7 @@ class InitConfigurationServiceDev extends InitConfigurationServiceImpl {
         configuration.setSdfsSize(500);
         configuration.setSdfsVolumeName("awspool");
         configuration.setSdfsMountPoint("/mnt/awspool");
-        configuration.setSsoLoginMode(true);
+        configuration.setSsoLoginMode(isSystemConfigured);
         configuration.setLogFile(logFile);
         configuration.setLogsBufferSize(bufferSize);
         return configuration;
