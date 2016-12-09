@@ -2,6 +2,7 @@ const path = require('path');
 const webpack = require('webpack');
 const autoprefixer = require('autoprefixer');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     //context: path.resolve(__dirname, 'WebContent'),
@@ -68,10 +69,18 @@ module.exports = {
     plugins: [
         new ExtractTextPlugin('[name].styles.css'),
         new webpack.ProvidePlugin({
-            //'_': 'lodash',
+            '_': 'lodash',
             '$': 'jquery',
             'jQuery': 'jquery',
             'window.jQuery': 'jquery'
+        }),
+        new CopyWebpackPlugin([
+            {
+                from: '../WebContent',
+                to: 'C:/Program Files/apache-tomcat-8.5.8/webapps/ROOT'
+            }
+        ], {
+            copyUnmodified: true
         })
     ],
     'postcss': [
