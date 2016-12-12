@@ -1,10 +1,10 @@
 module.exports = function (app) {
-    require('./autoScroll')(app);
-    require('./checkPassword')(app);
-    require('./complexPassword')(app);
-    require('./emails')(app);
-    require('./jqCron')(app);
-    require('./stFilter')(app);
-    require('./tagFilter')(app);
-    require('./uploadedFile')(app);
+    require('./autoScroll.directive')(app);
+    require('./checkPassword.directive')(app);
+    require('./complexPassword.directive')(app);
+    require('./emails.directive')(app);
+    require('./jqCron.directive')(app);
+    require('./stFilter.directive')(app);
+    require('./tagFilter.directive')(app);
+    require('./uploadedFile.directive')(app);
 }

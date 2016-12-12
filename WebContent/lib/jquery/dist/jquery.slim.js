@@ -4686,7 +4686,7 @@ function buildFragment( elems, context, scripts, selection, ignored ) {
 		// Append to fragment
 		tmp = getAll( fragment.appendChild( elem ), "script" );
 
-		// Preserve script evaluation history
+		// Preserve script evaluation volume-history
 		if ( contains ) {
 			setGlobalEval( tmp );
 		}
@@ -5659,7 +5659,7 @@ jQuery.extend( {
 			}
 		}
 
-		// Preserve script evaluation history
+		// Preserve script evaluation volume-history
 		destElements = getAll( clone, "script" );
 		if ( destElements.length > 0 ) {
 			setGlobalEval( destElements, !inPage && getAll( elem, "script" ) );

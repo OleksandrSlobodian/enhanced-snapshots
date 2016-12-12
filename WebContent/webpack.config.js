@@ -1,8 +1,10 @@
 const path = require('path');
 const webpack = require('webpack');
 const autoprefixer = require('autoprefixer');
+const HtmlPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
-const CopyWebpackPlugin = require('copy-webpack-plugin');
+const ngAnnotatePlugin = require('ng-annotate-webpack-plugin');
+//const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     //context: path.resolve(__dirname, 'WebContent'),
@@ -13,7 +15,7 @@ module.exports = {
     devtool: 'inline-source-map',
     output: {
         path: path.resolve(__dirname, 'dist'),
-        publicPath: "/",
+        publicPath: "http://localhost:5000",
         filename: '[name].min.js'
     },
     node: {
@@ -23,18 +25,20 @@ module.exports = {
     },
 
     watchPoll: true,
-    watchOptions: {
-        ignored: /node_modules/,
-        aggregateTimeout: 300,
-        poll: 500
-    },
     devServer: {
         watchPoll: true,
         port: 5000,
+        inline: true,
         watchOptions: {
             ignored: /node_modules/,
-            aggregateTimeout: 300,
-            poll: 500
+            aggregateTimeout: 1500,
+            poll: 1000
+        },
+        proxy: {
+            '/rest/': {
+                target: 'http://localhost:8080',
+                secure: false
+            }
         }
     },
     resolve: {
@@ -50,7 +54,7 @@ module.exports = {
             {
                 test: /\.js$/,
                 exclude: /node_modules/,
-                loader: 'babel-loader'
+                loader: 'ng-annotate!babel-loader'
             },
             {
                 test: /\.html$/,
@@ -67,20 +71,26 @@ module.exports = {
         ]
     },
     plugins: [
-        new ExtractTextPlugin('[name].styles.css'),
+        new ExtractTextPlugin('[name].css'),
         new webpack.ProvidePlugin({
             '_': 'lodash',
             '$': 'jquery',
             'jQuery': 'jquery',
             'window.jQuery': 'jquery'
         }),
-        new CopyWebpackPlugin([
-            {
-                from: '../WebContent',
-                to: 'C:/Program Files/apache-tomcat-8.5.8/webapps/ROOT'
-            }
-        ], {
-            copyUnmodified: true
+        //new CopyWebpackPlugin([
+        //    {
+        //        from: '../WebContent',
+        //        to: 'C:/Program Files/apache-tomcat-8.5.8/webapps/ROOT'
+        //    }
+        //], {
+        //    copyUnmodified: true
+        //}),
+        new HtmlPlugin({
+            title: 'Sungard Availability Services | Enhanced Snapshots',
+            filename: 'index.html',
+            favicon: './favicon.ico',
+            template: './index.html'
         })
     ],
     'postcss': [

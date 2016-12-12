@@ -1,4 +1,4 @@
 module.exports = function (app) {
-    require('./sizeConvertion')(app);
-    require('./stAdvancedFilter')(app);
+    require('./sizeConvertion.filter')(app);
+    require('./stAdvanced.filter')(app);
 }

@@ -1,0 +1,84 @@
+<div class="header-page">
+    <div class="container">
+        <div class="sub-nav pull-right">
+            <div class="user">
+                <a ui-sref="login" title="logout">{{getUserName()}}&nbsp;<span
+                        class="glyphicon glyphicon-off text-danger"></span></a>
+            </div>
+            <div class="page-btns">
+
+            </div>
+        </div>
+        <div class="page-name">
+            <div class="go-back"><a ui-sref="app.volume.list">&lt;&nbsp;Back to Volumes</a></div>
+            <div class="current">Backup history of {{volumeId}}</div>
+        </div>
+    </div>
+</div>
+<div class="table-header-placeholder"></div>
+
+<div class="container app">
+<div class="row">
+    <div st-table="displayedBackups" st-safe-src="backups">
+        <div class="page-table">
+            <div class="thead container">
+                <div class="flex-container row">
+                    <div class="flex-1 flex-center th">
+                        <a ng-click="makeSelection()"
+                           title="Click to {{ textClass[isAllSelected]}} all">
+                            {{textClass[isAllSelected]}}&nbsp;All
+                        </a>
+                    </div>
+                    <div class="flex-3 flex-center th"><span st-sort="timeCreated"
+                                                             st-sort-default="reverse">Created</span></div>
+                    <div class="flex-5 flex-center th"><span st-sort="fileName">File Name</span></div>
+                    <div class="flex-3 flex-center th"><span st-sort="size">Size</span></div>
+                </div>
+            </div>
+
+            <div class="tr" st-select-row="backup" st-select-mode="multiple" ng-repeat="backup in displayedBackups"
+                 ng-click="checkSelection()">
+                <div class="row-hover">
+                    <div class="flex-container data-container">
+
+                        <div class="flex-1 flex-center row-menu">
+                            <a class="btn btn-link" title="Restore"
+                               ng-click="restore(backup); $event.stopPropagation();"><span
+                                    class="glyphicon glyphicon-cloud-upload"></span>&nbsp; Restore</a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flex-container data-container">
+                    <div class="flex-1 flex-center">
+                        <div>
+                            <span class="chb" ng-class="{'checked': backup.isSelected}"></span>
+                        </div>
+                    </div>
+                    <div class="flex-3 flex-center">{{backup.timeCreated | date: 'yyyy-MM-dd HH:mm:ss'}}</div>
+                    <div class="flex-5 flex-center">{{backup.fileName}}</div>
+                    <div class="flex-3 flex-center">{{backup.size | sizeConvertion}}</div>
+                </div>
+            </div>
+
+            <div class="text-center noitems-container" ng-hide="isLoading || displayedBackups.length">
+                <h2>No backups to display...</h2>
+            </div>
+
+            <div ng-show="displayedBackups.length">
+                <div class="pull-right">
+                    <button type="button" class="btn btn-danger pull-right" ng-disabled="!selectedAmount"
+                            ng-click="deleteSelection()">
+                        <span class="glyphicon glyphicon-remove" title="Delete selected backups"></span> Delete selected
+                    </button>
+                </div>
+
+                <div>
+                    <div st-pagination st-items-by-page="itemsByPage" st-displayed-pages="displayedPages"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+</div>

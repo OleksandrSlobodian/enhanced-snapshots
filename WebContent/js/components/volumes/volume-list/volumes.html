@@ -1,0 +1,124 @@
+<div class="header-page">
+    <div class="container">
+        <div class="sub-nav pull-right">
+            <div class="user">
+                <a ui-sref="login" title="logout">{{getUserName()}}&nbsp;<span
+                        class="glyphicon glyphicon-off text-danger"></span></a>
+            </div>
+            <div class="page-btns">
+                <a href ng-click="refresh()"><span class="glyphicon glyphicon-refresh"></span>&nbsp;Refresh</a>
+                <span class="separator"></span>
+                <a href ng-click="showFilter()"><span
+                        class="glyphicon glyphicon-filter"></span>&nbsp;Filter</a>
+            </div>
+        </div>
+        <div class="page-name">
+            <div class="go-back">&nbsp;</div>
+            <div class="current">EBS Volumes</div>
+        </div>
+    </div>
+</div>
+<div class="table-header-placeholder"></div>
+
+
+<div class="container app">
+    <div class="row">
+        <div st-table="displayedCollection" st-safe-src="volumes ">
+            <div class="page-table">
+                <div class="thead container">
+                    <div class="flex-container row">
+                        <div class="flex-2 flex-center th">
+                            <a ng-click="selectAll()" title="Click to {{ textClass[isAllSelected]}} all">
+                                {{textClass[isAllSelected]}}&nbsp;All
+                            </a>
+                        </div>
+                        <div class="flex-3 flex-center th"><span st-sort="volumeId">Volume ID</span></div>
+                        <div class="flex-3 flex-center th"><span st-sort="volumeName">Name</span></div>
+                        <div class="flex-3 flex-center th"><span st-sort="instanceID">Instance</span></div>
+                        <div class="flex-3 flex-center th"><span st-sort="size">Size</span></div>
+                        <div class="flex-3 flex-center th"><span st-sort="createTime">Created</span></div>
+                        <div class="flex-2 flex-center th"><span st-sort="scheduled">Scheduled</span></div>
+                    </div>
+                </div>
+
+                <div class="tr state-{{volume.state}}"
+                     ng-repeat="volume in filteredVolumes = (displayedCollection | stAdvancedFilter: stAdvancedFilter) track by $index"
+                     ng-class="{'row-disabled': isDisabled(volume)}">
+                    <div class="row-hover">
+                        <div class="flex-container data-container">
+                            <div class="flex-3 flex-center">
+                                <a ui-sref="app.volume.tasks({ volumeId: volume.volumeId })">
+                                    <span class="glyphicon glyphicon-tasks icon"></span>&nbsp;Tasks
+                                </a>
+                            </div>
+                            <div class="flex-3 flex-center">
+                                <a href ng-click="retentionRule(volume)">
+                                    <span class="glyphicon glyphicon-erase icon"></span>&nbsp;Retention
+                                </a>
+                            </div>
+                            <div class="flex-3 flex-center" ng-hide="isDisabled(volume)">
+                                <a ui-sref="app.volume.schedule({ volumeId: volume.volumeId })">
+                                    <span class="glyphicon glyphicon-time icon"></span>&nbsp;Schedule
+                                </a>
+                            </div>
+                            <div class="flex-3 flex-center">
+                                <a ui-sref="app.volume.history({ volumeId: volume.volumeId })">
+                                    <span class="glyphicon glyphicon-calendar icon"></span>&nbsp;Backup&nbsp;history
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-container data-container" ng-click="toggleSelection(volume)">
+                        <div class="flex-2 flex-center">
+                            <div>
+                                <span class="chb" ng-class="{'checked': volume.isSelected}"></span>
+                            </div>
+                        </div>
+                        <div class="flex-3 flex-center">{{volume.volumeId}}</div>
+                        <div class="flex-3 flex-center">{{volume.volumeName}}</div>
+                        <div class="flex-3 flex-center">{{volume.instanceID}}</div>
+                        <div class="flex-3 flex-center">{{volume.size}} GiB</div>
+                        <div class="flex-3 flex-center">{{volume.createTime | date: 'yyyy-MM-dd HH:mm:ss'}}</div>
+                        <div class="flex-2 flex-center">{{volume.scheduled ? 'Yes' : 'No'}}</div>
+                    </div>
+                    <div class="row-tags" ng-show="volume.tags && volume.tags.length">
+                        <div class="tags">
+                            <div ng-repeat="tag in volume.tags track by $index" class="tag label label-success">
+                                <div class="tag-value">{{tag.key}} : {{tag.value}}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center noitems-container" ng-hide="isLoading || filteredVolumes.length">
+                    <h2>No volumes to display...</h2>
+                </div>
+
+            </div>
+
+            <div ng-show="filteredVolumes.length">
+                <div class="pull-right">
+                    <button type="button" class="btn btn-warning" ng-disabled="!selectedAmount"
+                            ng-click="volumeAction('schedule')">
+                        <span class="glyphicon glyphicon-time" title="Add Schedule"></span> Add schedule
+                    </button>
+
+                    <button type="button" class="btn btn-primary" ng-disabled="!selectedAmount"
+                            ng-click="volumeAction('backup')">
+                        <span class="glyphicon glyphicon-cloud-download" title="Backup now"></span> Backup selected
+                    </button>
+
+                    <button type="button" class="btn btn-success" ng-disabled="!selectedAmount"
+                            ng-click="volumeAction('restore')">
+                        <span class="glyphicon glyphicon-cloud-upload" title="Restore now"></span> Restore selected
+                    </button>
+                </div>
+
+                <div>
+                    <div st-pagination st-items-by-page="itemsByPage" st-displayed-pages="displayedPages"></div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>

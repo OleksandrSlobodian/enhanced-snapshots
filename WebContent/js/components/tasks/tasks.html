@@ -1,0 +1,57 @@
+<div class="header-page">
+    <div class="container">
+        <div class="sub-nav pull-right">
+            <div class="user">
+                <a ui-sref="login" title="logout">{{getUserName()}}&nbsp;<span class="glyphicon glyphicon-off text-danger"></span></a>
+            </div>
+            <div class="page-btns">
+                <a href ng-click="refresh()"><span class="glyphicon glyphicon-refresh"></span>&nbsp;Refresh</a>
+            </div>
+        </div>
+        <div class="page-name">
+            <div class="go-back"><a ui-sref="app.volume.list">{{volumeId ? "&lt;&nbsp;Back to Volumes" : "&nbsp;"}}</a></div>
+            <div class="current">{{volumeId}} Task&nbsp;Queue</div>
+        </div>
+    </div>
+</div>
+<div class="table-header-placeholder"></div>
+
+
+<div class="container app">
+
+    <div class="card with-hover status-{{task.status}}" title="Status: '{{task.status | uppercase}}'"
+            ng-repeat="task in tasks | orderBy: [statusPriority,typePriority,'-schedulerTime']:true ">
+        <div class="task-progress" style="width: {{ 100 - (task.progress || 0) }}%">
+            &nbsp;
+        </div>
+        <div class="flex-container">
+            <div class="flex-1 flex-center">
+                <span class="icon glyphicon glyphicon-{{ typeIconClass[task.type] }} text-{{ typeColorClass[task.type] }}"
+                        title="{{task.type | uppercase}}"></span>
+            </div>
+
+            <div class="flex-5 card-content">
+                <p class="muted">{{task.schedulerTime | date: 'yyyy-MM-dd HH:mm:ss'}}</p>
+                <h3>{{task.volumes[0]}}</h3>
+                <p>Started by <span class="highlight"><span class="glyphicon glyphicon-{{ manualIconClass[task.schedulerManual] }}">
+                    </span>&nbsp;{{task.schedulerName}}</span>
+                </p>
+            </div>
+
+            <div class="flex-3 flex-center" ng-show="task.message">
+                <h4 class="muted">{{task.message}}</h4>
+            </div>
+
+            <div class="flex-1 flex-center show-on-hover">
+                <a class="lnk-danger" title="Reject" ng-click="reject(task)"><span class="glyphicon glyphicon-remove"></span></a>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="text-center noitems-container" ng-hide="isLoading || tasks.length">
+        <h2>No tasks to display...</h2>
+    </div>
+
+
+</div>

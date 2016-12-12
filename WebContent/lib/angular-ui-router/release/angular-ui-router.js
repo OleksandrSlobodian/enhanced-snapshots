@@ -3077,7 +3077,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory) {
      * @param {object=} options Options object. The options are:
      *
      * - **`location`** - {boolean=true|string=} - If `true` will update the url in the location bar, if `false`
-     *    will not. If string, must be `"replace"`, which will update url and also replace last history record.
+     *    will not. If string, must be `"replace"`, which will update url and also replace last volume-history record.
      * - **`inherit`** - {boolean=true}, If `true` will inherit url parameters from current url.
      * - **`relative`** - {object=$state.$current}, When transitioning with relative path (e.g '^'), 
      *    defines which state to be relative from.
@@ -3133,7 +3133,7 @@ function $StateProvider(   $urlRouterProvider,   $urlMatcherFactory) {
      * @param {object=} options Options object. The options are:
      *
      * - **`location`** - {boolean=true|string=} - If `true` will update the url in the location bar, if `false`
-     *    will not. If string, must be `"replace"`, which will update url and also replace last history record.
+     *    will not. If string, must be `"replace"`, which will update url and also replace last volume-history record.
      * - **`inherit`** - {boolean=false}, If `true` will inherit url parameters from current url.
      * - **`relative`** - {object=}, When transitioning with relative path (e.g '^'), 
      *    defines which state to be relative from.

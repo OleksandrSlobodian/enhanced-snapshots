@@ -261,7 +261,7 @@ jQuery.extend( {
 			}
 		}
 
-		// Preserve script evaluation history
+		// Preserve script evaluation volume-history
 		destElements = getAll( clone, "script" );
 		if ( destElements.length > 0 ) {
 			setGlobalEval( destElements, !inPage && getAll( elem, "script" ) );

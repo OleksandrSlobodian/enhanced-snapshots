@@ -2557,7 +2557,7 @@ function publishExternalAPI(angular) {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *     Any commits to this file should be reviewed with security in mind.  *
  *   Changes to this file can potentially create security vulnerabilities. *
- *          An approval from 2 Core members with history of modifying      *
+ *          An approval from 2 Core members with volume-history of modifying      *
  *                         this file is required.                          *
  *                                                                         *
  *  Does the change somehow allow for arbitrary javascript to be executed? *
@@ -5806,7 +5806,7 @@ function Browser(window, document, $log, $sniffer) {
    *
    * SETTER:
    * With at least one argument, this method sets url to new value.
-   * If html5 history api supported, pushState/replaceState is used, otherwise
+   * If html5 volume-history api supported, pushState/replaceState is used, otherwise
    * location.href/location.replace is used.
    * Returns its own instance to allow chaining
    *
@@ -5814,18 +5814,18 @@ function Browser(window, document, $log, $sniffer) {
    * {@link ng.$location $location service} to change url.
    *
    * @param {string} url New url (when used as setter)
-   * @param {boolean=} replace Should new url replace current history record?
+   * @param {boolean=} replace Should new url replace current volume-history record?
    * @param {object=} state object to use with pushState/replaceState
    */
   self.url = function(url, replace, state) {
-    // In modern browsers `history.state` is `null` by default; treating it separately
-    // from `undefined` would cause `$browser.url('/foo')` to change `history.state`
+    // In modern browsers `volume-history.state` is `null` by default; treating it separately
+    // from `undefined` would cause `$browser.url('/foo')` to change `volume-history.state`
     // to undefined via `pushState`. Instead, let's change `undefined` to `null` here.
     if (isUndefined(state)) {
       state = null;
     }
 
-    // Android Browser BFCache causes location, history reference to become stale.
+    // Android Browser BFCache causes location, volume-history reference to become stale.
     if (location !== window.location) location = window.location;
     if (history !== window.history) history = window.history;
 
@@ -5842,7 +5842,7 @@ function Browser(window, document, $log, $sniffer) {
       var sameBase = lastBrowserUrl && stripHash(lastBrowserUrl) === stripHash(url);
       lastBrowserUrl = url;
       lastHistoryState = state;
-      // Don't use history API if only the hash changed
+      // Don't use volume-history API if only the hash changed
       // due to a bug in IE10/IE11 which leads
       // to not firing a `hashchange` nor `popstate` event
       // in some cases (see #9143).
@@ -5883,7 +5883,7 @@ function Browser(window, document, $log, $sniffer) {
    * @description
    * This method is a getter.
    *
-   * Return history.state or null if history.state is undefined.
+   * Return volume-history.state or null if volume-history.state is undefined.
    *
    * @returns {object} state
    */
@@ -5911,7 +5911,7 @@ function Browser(window, document, $log, $sniffer) {
   // This variable should be used *only* inside the cacheState function.
   var lastCachedState = null;
   function cacheState() {
-    // This should be the only place in $browser where `history.state` is read.
+    // This should be the only place in $browser where `volume-history.state` is read.
     cachedState = getCurrentState();
     cachedState = isUndefined(cachedState) ? null : cachedState;
 
@@ -5942,7 +5942,7 @@ function Browser(window, document, $log, $sniffer) {
    *
    * It's only called when the url is changed from outside of angular:
    * - user types different url into address bar
-   * - user clicks on history (forward/back) button
+   * - user clicks on volume-history (forward/back) button
    * - user clicks on a link
    *
    * It's not called when url is changed by $browser.url() method
@@ -5962,7 +5962,7 @@ function Browser(window, document, $log, $sniffer) {
       // don't fire popstate when user change the address bar and don't fire hashchange when url
       // changed by push/replaceState
 
-      // html5 history api - popstate event
+      // html5 volume-history api - popstate event
       if ($sniffer.history) jqLite(window).on('popstate', cacheStateAndFireUrlChange);
       // hashchange event
       jqLite(window).on('hashchange', cacheStateAndFireUrlChange);
@@ -6469,7 +6469,7 @@ function $TemplateCacheProvider() {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *     Any commits to this file should be reviewed with security in mind.  *
  *   Changes to this file can potentially create security vulnerabilities. *
- *          An approval from 2 Core members with history of modifying      *
+ *          An approval from 2 Core members with volume-history of modifying      *
  *                         this file is required.                          *
  *                                                                         *
  *  Does the change somehow allow for arbitrary javascript to be executed? *
@@ -9880,7 +9880,7 @@ function $HttpProvider() {
    *
    * Defaults to false. If no value is specified, returns the current configured value.
    *
-   * @param {boolean=} value If true, when requests are loaded, they will schedule a deferred
+   * @param {boolean=} value If true, when requests are loaded, they will volume-schedule a deferred
    *    "apply" on the next tick, giving time for subsequent requests in a roughly ~10ms window
    *    to load and share the same digest cycle.
    *
@@ -11915,7 +11915,7 @@ function LocationHashbangUrl(appBase, appBaseNoFile, hashPrefix) {
 
 /**
  * LocationHashbangUrl represents url
- * This object is exposed as $location service when html5 history api is enabled but the browser
+ * This object is exposed as $location service when html5 volume-history api is enabled but the browser
  * does not support it.
  *
  * @constructor
@@ -12237,7 +12237,7 @@ var locationPrototype = {
    * @name $location#replace
    *
    * @description
-   * If called, all changes to $location during the current `$digest` will replace the current history
+   * If called, all changes to $location during the current `$digest` will replace the current volume-history
    * record, instead of adding a new one.
    */
   replace: function() {
@@ -12256,9 +12256,9 @@ forEach([LocationHashbangInHtml5Url, LocationHashbangUrl, LocationHtml5Url], fun
    * @description
    * This method is getter / setter.
    *
-   * Return the history state object when called without any parameter.
+   * Return the volume-history state object when called without any parameter.
    *
-   * Change the history state object when called with one parameter and return `$location`.
+   * Change the volume-history state object when called with one parameter and return `$location`.
    * The state object is later passed to `pushState` or `replaceState`.
    *
    * NOTE: This method is supported only in HTML5 mode and only in browsers supporting
@@ -12371,7 +12371,7 @@ function $LocationProvider() {
    * @param {(boolean|Object)=} mode If boolean, sets `html5Mode.enabled` to value.
    *   If object, sets `enabled`, `requireBase` and `rewriteLinks` to respective values. Supported
    *   properties:
-   *   - **enabled** – `{boolean}` – (default: false) If true, will rely on `history.pushState` to
+   *   - **enabled** – `{boolean}` – (default: false) If true, will rely on `volume-history.pushState` to
    *     change urls where supported. Will fall back to hash-prefixed paths in browsers that do not
    *     support `pushState`.
    *   - **requireBase** - `{boolean}` - (default: `true`) When html5Mode is enabled, specifies
@@ -12525,7 +12525,7 @@ function $LocationProvider() {
         if ($location.$$parseLinkUrl(absHref, relHref)) {
           // We do a preventDefault for all urls that are part of the angular application,
           // in html5mode and also without, so that we are able to abort navigation without
-          // getting double entries in the location history.
+          // getting double entries in the location volume-history.
           event.preventDefault();
           // update location manually
           if ($location.absUrl() != $browser.url()) {
@@ -12796,7 +12796,7 @@ function $LogProvider() {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *     Any commits to this file should be reviewed with security in mind.  *
  *   Changes to this file can potentially create security vulnerabilities. *
- *          An approval from 2 Core members with history of modifying      *
+ *          An approval from 2 Core members with volume-history of modifying      *
  *                         this file is required.                          *
  *                                                                         *
  *  Does the change somehow allow for arbitrary javascript to be executed? *
@@ -16391,7 +16391,7 @@ function $RootScopeProvider() {
        */
       $evalAsync: function(expr, locals) {
         // if we are outside of an $digest loop and this is the first time we are scheduling async
-        // task also schedule async auto-flush
+        // task also volume-schedule async auto-flush
         if (!$rootScope.$$phase && !asyncQueue.length) {
           $browser.defer(function() {
             if (asyncQueue.length) {
@@ -16855,7 +16855,7 @@ function $$SanitizeUriProvider() {
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *     Any commits to this file should be reviewed with security in mind.  *
  *   Changes to this file can potentially create security vulnerabilities. *
- *          An approval from 2 Core members with history of modifying      *
+ *          An approval from 2 Core members with volume-history of modifying      *
  *                         this file is required.                          *
  *                                                                         *
  *  Does the change somehow allow for arbitrary javascript to be executed? *
@@ -17965,13 +17965,13 @@ function $SnifferProvider() {
 
 
     return {
-      // Android has history.pushState, but it does not update location correctly
-      // so let's not use the history API at all.
+      // Android has volume-history.pushState, but it does not update location correctly
+      // so let's not use the volume-history API at all.
       // http://code.google.com/p/android/issues/detail?id=17471
       // https://github.com/angular/angular.js/issues/904
 
       // older webkit browser (533.9) on Boxee box has exactly the same problem as Android has
-      // so let's not use the history API also
+      // so let's not use the volume-history API also
       // We are purposefully using `!(android < 4)` to cover the case when `android` is undefined
       // jshint -W018
       history: !!($window.history && $window.history.pushState && !(android < 4) && !boxee),

@@ -1,15 +1,15 @@
 module.exports = function (app) {
-    require('./Auth')(app);
-    require('./Backups')(app);
-    require('./Configuration')(app);
-    require('./Exception')(app);
-    require('./Interceptor')(app);
-    require('./Regions')(app);
-    require('./Retention')(app);
-    require('./Storage')(app);
-    require('./System')(app);
-    require('./Tasks')(app);
-    require('./Users')(app);
-    require('./Volumes')(app);
-    require('./Zones')(app);
+    require('./auth.service.js')(app);
+    require('./backups.service.js')(app);
+    require('./configuration.service.js')(app);
+    require('./exception.service')(app);
+    //require('./interceptor.service')(app);
+    require('./regions.service')(app);
+    require('./retention.service')(app);
+    require('./storage.service')(app);
+    require('./system.service')(app);
+    require('./tasks.service')(app);
+    require('./users.service')(app);
+    require('./volumes.service')(app);
+    require('./zones.service')(app);
 }
