@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.sungardas.enhancedsnapshots.dto.converter.RetentionConverter.toDto;
 import static com.sungardas.enhancedsnapshots.dto.converter.RetentionConverter.toEntry;
@@ -88,11 +89,13 @@ public class RetentionServiceImpl implements RetentionService, MasterInitializat
         Map<String, Set<BackupEntry>> backups = getBackups();
         Map<String, RetentionEntry> retentions = getRetentions();
         Set<BackupEntry> backupsToRemove = new LinkedHashSet<>();
+        Set<String> existingVolumeIds = volumeService.getExistingVolumes()
+                .stream().map(volumeDto -> volumeDto.getVolumeId()).collect(Collectors.toSet());
 
         for (Map.Entry<String, Set<BackupEntry>> entry : backups.entrySet()) {
             RetentionEntry retentionEntry = retentions.get(entry.getKey());
             if (retentionEntry != null) {
-                if (isEmpty(retentionEntry)) {
+                if (isEmpty(retentionEntry) && !existingVolumeIds.contains(retentionEntry.getVolumeId())) {
                     retentionRepository.delete(retentionEntry.getVolumeId());
                 } else {
                     BackupEntry[] values = entry.getValue().toArray(new BackupEntry[entry.getValue().size()]);
@@ -104,7 +107,7 @@ public class RetentionServiceImpl implements RetentionService, MasterInitializat
         }
 
         for (Map.Entry<String, RetentionEntry> entry : retentions.entrySet()) {
-            if (!backups.containsKey(entry.getKey())) {
+            if (!backups.containsKey(entry.getKey()) && !existingVolumeIds.contains(entry.getValue().getVolumeId())) {
                 retentionRepository.delete(entry.getValue().getVolumeId());
             }
         }
