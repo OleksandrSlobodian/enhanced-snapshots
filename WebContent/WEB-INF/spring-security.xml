@@ -11,6 +11,7 @@
     <http pattern="/js/**" security="none"/>
     <http pattern="/img/**" security="none"/>
     <http pattern="/partials/**" security="none"/>
+    <http pattern="/fonts/**" security="none"/>
 
     <http name="initFilter" auto-config="false" use-expressions="true" >
         <intercept-url pattern="/**" access="hasAnyRole('ROLE_ADMIN', 'ROLE_CONFIGURATOR', 'ROLE_USER')"/>
