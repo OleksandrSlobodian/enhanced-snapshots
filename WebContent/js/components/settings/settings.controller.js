@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('SettingsController', SettingsController);
-
-function SettingsController ($scope, System, Users, $modal, Configuration) {
+export default function SettingsController ($scope, System, Users, $modal, Configuration) {
     "ngInject";
     var currentUser = Users.getCurrent();
     $scope.isAdmin = currentUser.role === "admin";

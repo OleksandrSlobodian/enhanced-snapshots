@@ -2,17 +2,20 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
     "ngInject";
     $urlRouterProvider.otherwise("/app/volumes");
 
-    var authenticated = ['$rootScope', function ($rootScope) {
+    const authenticated = ($rootScope) => {
+        "ngInject";
         if (angular.isUndefined($rootScope.getUserName())) throw "User not authorized!";
         return true;
-    }];
+    };
 
-    var isConfig = ['$rootScope', function ($rootScope) {
+    const isConfig = ($rootScope) => {
+        "ngInject";
         if (!$rootScope.isConfigState())  throw "System is not in configuration state!";
         return true;
-    }];
+    };
 
-    var ssoMode = ['System', '$q', '$rootScope', function (System, $q, $rootScope) {
+    const ssoMode = (System, $q, $rootScope) => {
+        "ngInject";
         $rootScope.isLoading = true;
         var deferred = $q.defer();
 
@@ -25,9 +28,10 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
         });
 
         return deferred.promise;
-    }];
+    };
 
-    var doRefresh = ['Users', '$q', 'Storage', function (Users, $q, Storage) {
+    const doRefresh = (Users, $q, Storage) => {
+        "ngInject";
         var deferred = $q.defer();
 
         Users.refreshCurrent().then(function (data) {
@@ -47,7 +51,7 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
         });
 
         return deferred.promise;
-    }];
+    };
 
     $stateProvider
         .state('app', {
@@ -57,7 +61,7 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
             resolve: {
                 authenticated: authenticated
             },
-            controller:['$scope', '$rootScope', 'Storage', 'toastr', function ($scope, $rootScope, Storage, toastr) {
+            controller: ($scope, $rootScope, Storage, toastr) => {
                 "ngInject";
                 $rootScope.$on('$stateChangeSuccess',
                     function(){
@@ -71,7 +75,7 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
                         }
                     });
                 $rootScope.isAdmin = (Storage.get("currentUser") || {}).role === 'admin';
-            }]
+            }
         })
         .state('app.volume', {
             abstract: true,
@@ -80,38 +84,38 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
         })
         .state('app.volume.list', {
             url: "/volumes",
-            templateUrl: "js/components/volumes/volume-list/volumes.html",
+            templateUrl: "volumes.html",
             controller: 'VolumesController'
         })
         .state('app.volume.schedule', {
             url: "/volume-schedule/:volumeId",
-            templateUrl: "js/components/volumes/volume-schedule/schedule.html",
+            templateUrl: "schedule.html",
             controller: 'ScheduleController'
         })
 
         .state('app.volume.history', {
             url: "/volume-history/:volumeId",
-            templateUrl: "js/components/volumes/volume-history/history.html",
+            templateUrl: "history.html",
             controller: 'HistoryController'
         })
         .state('app.volume.tasks', {
             url: "/tasks/:volumeId",
-            templateUrl: "js/components/tasks/tasks.html",
+            templateUrl: "tasks.html",
             controller: "TasksController"
         })
         .state('app.tasks', {
             url: "/tasks",
-            templateUrl: "js/components/tasks/tasks.html",
+            templateUrl: "tasks.html",
             controller: "TasksController"
         })
         .state('app.settings', {
             url: "/settings",
-            templateUrl: "js/components/settings/settings.html",
+            templateUrl: "settings.html",
             controller: "SettingsController"
         })
         .state('app.users', {
             url: "/users",
-            templateUrl: "js/components/users/users.html",
+            templateUrl: "users.html",
             controller: "UserController",
             resolve: {
                 ssoMode: ssoMode
@@ -119,13 +123,13 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
         })
         .state('app.logs', {
             url: "/logs",
-            templateUrl: "js/components/logs/logs.html",
+            templateUrl: "logs.html",
             controller: "LogsController"
         })
         //TODO: move to future feature folder
         .state('config', {
             url: "/config",
-            templateUrl: "partials/config.html",
+            templateUrl: "config.html",
             controller: "ConfigController",
             resolve: {
                 isConfig: isConfig
@@ -133,8 +137,8 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
         })
         //TODO: move to future feature folder
         .state('login', {
-            url: "/login?err",
-            templateUrl: "./rest/login.html",
+            url: "/auth?err",
+            templateUrl: "login.html",
             controller: "LoginController",
             resolve: {
                 refreshUserResult: doRefresh
@@ -143,7 +147,7 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
         //TODO: move to future feature folder
         .state('registration', {
             url: "/registration",
-            templateUrl: "partials/registration.html",
+            templateUrl: "registration.html",
             controller: "RegistrationController"
         });
 }

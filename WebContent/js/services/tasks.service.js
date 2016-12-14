@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Tasks', tasks);
-
-function tasks ($q, $http, Storage, BASE_URL) {
+export default function Tasks ($q, $http, Storage, BASE_URL) {
     "ngInject";
     var url = BASE_URL + './rest/task';
 

@@ -3,7 +3,7 @@ const webpack = require('webpack');
 const autoprefixer = require('autoprefixer');
 const HtmlPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
-const ngAnnotatePlugin = require('ng-annotate-webpack-plugin');
+//const ngAnnotatePlugin = require('ng-annotate-webpack-plugin');
 //const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
@@ -58,7 +58,8 @@ module.exports = {
             },
             {
                 test: /\.html$/,
-                loader: 'raw'
+                exclude: path.resolve(__dirname, 'index.html'),
+                loader: 'ng-cache'
             },
             {
                 test: /\.css$/,
@@ -90,7 +91,7 @@ module.exports = {
             title: 'Sungard Availability Services | Enhanced Snapshots',
             filename: 'index.html',
             favicon: './favicon.ico',
-            template: './index.html'
+            template: path.resolve(__dirname, 'index.html')
         })
     ],
     'postcss': [

@@ -1,14 +1,9 @@
-'use strict';
-
-angular.module('web')
-    .controller('LoginController', LoginController);
-
-function LoginController ($scope, $state, $stateParams, $stomp, Auth, System, Storage, toastr, $window, refreshUserResult) {
+export default function LoginController ($scope, $state, $stateParams, $stomp, Auth, System, Storage, toastr, $window, refreshUserResult) {
     "ngInject";
 
     //LOGGING OUT ---------------------
     if ($stateParams.err && $stateParams.err == 'session') {
-        toastr.warning('You were logged out. Please re-login', 'Session expired.');
+        toastr.warning('You were logged out. Please re-auth', 'Session expired.');
     }
 
     var currentUser = Storage.get("currentUser");
@@ -29,10 +24,10 @@ function LoginController ($scope, $state, $stateParams, $stomp, Auth, System, St
     }
     //------------------------------------
 
-    // Show loader instead of login page if ssoMode is true ----------
+    // Show loader instead of auth page if ssoMode is true ----------
     if (refreshUserResult) {
         $scope.isLoading = true;
-        window.location = "/saml/login";
+        window.location = "/saml/auth";
     } else {
         $scope.isLoading = !!(ssoMode && ssoMode.ssoMode);
     }

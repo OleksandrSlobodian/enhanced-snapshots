@@ -1,28 +1,23 @@
-'use strict';
-
-angular.module('web')
-    .directive('jqCron', jqCron);
-
-function jqCron (){
-    return {
-        restrict: 'E',
-        require: 'ngModel',
-        scope: {
+class JqCron {
+    constructor () {
+        this.restrict = 'E';
+        this.require = 'ngModel';
+        this.scope = {
             ngModel: '='
-        },
-        link:function(scope, ele, attr, ctrl){
-            var options = {
-                initial: scope.ngModel || "* * * * *",
-                onChange: function () {
-                    var value = $(this).cron("value");
-                    scope.ngModel = value;
-                    if(ctrl.$viewValue != value){
-                        ctrl.$setViewValue(value);
-                    }
+        };
+    }
+    link (scope, ele, attr, ctrl) {
+        var options = {
+            initial: scope.ngModel || "* * * * *",
+            onChange: ()  =>{
+                var value = $(this).cron("value");
+                scope.ngModel = value;
+                if(ctrl.$viewValue != value){
+                    ctrl.$setViewValue(value);
                 }
-            };
-            $(ele).cron(options);
-        }
-    };
-
+            }
+        };
+        $(ele).cron(options);
+    }
 }
+export default () => new JqCron();

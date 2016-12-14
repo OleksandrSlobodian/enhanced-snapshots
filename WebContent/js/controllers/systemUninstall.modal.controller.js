@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('modalSystemUninstallCtrl', ModalSystemUninstallCtrl);
-
-function ModalSystemUninstallCtrl ($scope, $modalInstance, System) {
+export default function ModalSystemUninstallCtrl ($scope, $modalInstance, System) {
     "ngInject";
     $scope.state = 'ask';
 

@@ -1,14 +1,9 @@
-module.exports = function () {
-    require('./settings-update.modal.html');
-    require('./settings.controller');
-    require('./settings.html');
-    require('./settings-update.modal.controller');
-};
+import SettingsController  from "./settings.controller";
+import ModalSettingsUpdateCtrl  from "./settings-update.modal.controller";
+import './settings-update.modal.html'
+import './settings.html'
 
-//import settingsCtrl from './settings.controller';
-//export default app => {
-//    app.component('settings', {
-//        templateUrl: 'settings.html',
-//        controller: settingsCtrl
-//    });
-//}
+export default angular.module('web.components', [])
+    .controller('SettingsController', SettingsController)
+    .controller('ModalSettingsUpdateCtrl', ModalSettingsUpdateCtrl)
+    .name;

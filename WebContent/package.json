@@ -19,19 +19,19 @@
     "file-loader": "^0.9.0",
     "html-webpack-plugin": "^2.24.1",
     "json-loader": "^0.5.4",
-    "ng-cache-loader": "0.0.21",
     "ng-annotate-loader": "^0.2.0",
+    "ng-cache-loader": "0.0.21",
     "node-libs-browser": "^0.5.2",
     "postcss-loader": "^1.1.0",
     "raw-loader": "^0.5.1",
+    "sockjs": "^0.3.18",
     "style-loader": "^0.12.4",
     "url-loader": "^0.5.7",
     "webpack": "^1.13.3",
-    "webpack-dev-server": "^1.14.1",
-    "sockjs": "^0.3.18"
+    "webpack-dev-server": "^1.14.1"
   },
   "dependencies": {
-    "angular": "1.6.0",
+    "angular": "1.5.8",
     "angular-awesome-slider": "~2.4.1",
     "angular-bootstrap": "^0.12.2",
     "angular-smart-table": "~2.1.1",

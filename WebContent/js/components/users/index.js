@@ -1,7 +1,9 @@
-module.exports = function () {
-    require('./user-added.modal.html');
-    require('./user-delete.modal.html');
-    require('./user-edit.modal.html');
-    require('./user.controller');
-    require('./users.html');
-}
+import UserController from "./user.controller";
+import './user-added.modal.html'
+import './user-delete.modal.html'
+import './user-edit.modal.html'
+import './users.html'
+
+export default angular.module('web.components', [])
+    .controller('UserController', UserController)
+    .name;

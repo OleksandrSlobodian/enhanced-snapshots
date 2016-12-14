@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Configuration', configuration);
-
-function configuration ($q, $http, BASE_URL) {
+export default function Configuration ($q, $http, BASE_URL) {
     "ngInject";
     var url = BASE_URL + 'rest/configuration';
 

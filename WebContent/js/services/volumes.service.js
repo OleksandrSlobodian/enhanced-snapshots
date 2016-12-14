@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Volumes', volumes);
-
-function volumes ($q, $http, Storage, BASE_URL) {
+export default function Volumes ($q, $http, Storage, BASE_URL) {
     "ngInject";
     var url = BASE_URL + './rest/volume';
 

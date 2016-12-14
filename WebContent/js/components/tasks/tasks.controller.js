@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('TasksController', TasksController);
-
-function TasksController ($scope, $rootScope, $stateParams, $stomp, Tasks, Storage, $modal, $timeout) {
+export default function TasksController ($scope, $rootScope, $stateParams, $stomp, Tasks, Storage, $modal, $timeout) {
     "ngInject";
     $scope.typeColorClass = {
         backup: "primary",

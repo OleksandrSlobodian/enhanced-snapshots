@@ -1,5 +1,7 @@
-module.exports = function () {
-    require('./history.controller');
-    require('./history-restore.modal.html');
-    require('./history.html')
-};
+import HistoryController  from "./history.controller";
+import './history.html'
+import './history-restore.modal.html'
+
+export default angular.module('web.components', [])
+    .controller('HistoryController', HistoryController)
+    .name;

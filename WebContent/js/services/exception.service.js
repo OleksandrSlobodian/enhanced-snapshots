@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Exception', exception);
-
-function exception (toastr) {
+export default function Exception (toastr) {
     "ngInject";
     return {
         handle: function (error){

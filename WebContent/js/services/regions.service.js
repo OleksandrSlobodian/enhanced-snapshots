@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Regions', regions);
-
-function regions ($q, $http, BASE_URL) {
+export default function Regions ($q, $http, BASE_URL) {
     "ngInject";
     var url = BASE_URL + './rest/regions';
 

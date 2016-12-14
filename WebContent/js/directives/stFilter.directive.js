@@ -1,21 +1,17 @@
-'use strict';
-
-angular.module('web')
-    .directive('stFilter', stFilter);
-
-function stFilter () {
-    return {
-        require: '^stTable',
-        scope: {
+class StFilter {
+    constructor () {
+        this.scope = {
             stFilter: '='
-        },
-        link: function (scope, ele, attr, ctrl) {
-            var table = ctrl;
+        };
+        this.require = '^stTable';
+    }
+    link (scope, ele, attr, ctrl) {
+        var table = ctrl;
 
-            scope.$watch('stFilter', function (val) {
-                ctrl.search(val, 'availabilityZone');
-            });
-
-        }
-    };
+        scope.$watch('stFilter', function (val) {
+            ctrl.search(val, 'availabilityZone');
+        });
+    }
 }
+
+export default () => new StFilter();

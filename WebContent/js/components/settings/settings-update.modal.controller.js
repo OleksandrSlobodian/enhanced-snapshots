@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('ModalSettingsUpdateCtrl', ModalSettingsUpdateCtrl);
-
-function ModalSettingsUpdateCtrl ($scope, $modalInstance, System, Tasks, $rootScope) {
+export default function ModalSettingsUpdateCtrl ($scope, $modalInstance, System, Tasks, $rootScope) {
     "ngInject";
     $scope.state = 'ask';
 

@@ -1,16 +1,16 @@
-app.directive('uploadedFile', uploadedFile);
-
-function uploadedFile (){
-    return {
-        scope: {
+class UploadedFile {
+    constructor () {
+        this.scope = {
             'uploadedFile': '='
-        },
-        link: function(scope, el, attrs){
-            el.bind('change', function(event){
-                var file = event.target.files[0];
-                scope.uploadedFile = file ? file : undefined;
-                scope.$apply();
-            });
-        }
-    };
+        };
+    }
+    link (scope, el, attrs){
+        el.bind('change', function(event){
+            var file = event.target.files[0];
+            scope.uploadedFile = file ? file : undefined;
+            scope.$apply();
+        });
+    }
 }
+
+export default () => new UploadedFile();

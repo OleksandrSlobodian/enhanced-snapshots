@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('UserController', UserController);
-
-function UserController ($scope, $rootScope, Users, ssoMode, Storage, toastr, $modal, ITEMS_BY_PAGE, DISPLAY_PAGES) {
+export default function UserController ($scope, $rootScope, Users, ssoMode, Storage, toastr, $modal, ITEMS_BY_PAGE, DISPLAY_PAGES) {
     "ngInject";
     $scope.itemsByPage = ITEMS_BY_PAGE;
     $scope.displayedPages = DISPLAY_PAGES;

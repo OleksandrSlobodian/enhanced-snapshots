@@ -1,6 +1,8 @@
-module.exports = function () {
-    require('./task-created.modal.html');
-    require('./task-reject.modal.html');
-    require('./tasks.controller');
-    require('./tasks.html');
-};
+import TasksController from "./tasks.controller";
+import './task-created.modal.html'
+import './task-reject.modal.html'
+import './tasks.html'
+
+export default angular.module('web.components', [])
+    .controller('TasksController', TasksController)
+    .name;

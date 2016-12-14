@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('modalVolumeFilterCtrl', modalVolumeFilterCtrl);
-
-function modalVolumeFilterCtrl ($scope, $modalInstance, Regions, Storage, tags, instances) {
+export default function ModalVolumeFilterCtrl ($scope, $modalInstance, Regions, Storage, tags, instances) {
     "ngInject";
     $scope.tags = tags;
     $scope.instances = instances;

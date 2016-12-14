@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('HistoryController', HistoryController);
-
-function HistoryController ($scope, $rootScope, $q, Storage, ITEMS_BY_PAGE, DISPLAY_PAGES, $stateParams, $state, $modal, $filter, Backups, Tasks, Zones) {
+export default function HistoryController ($scope, $rootScope, $q, Storage, ITEMS_BY_PAGE, DISPLAY_PAGES, $stateParams, $state, $modal, $filter, Backups, Tasks, Zones) {
     "ngInject";
     $scope.maxDeleteBackupDisplay = 5;
     $scope.itemsByPage = ITEMS_BY_PAGE;

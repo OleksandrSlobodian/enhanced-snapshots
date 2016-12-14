@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Retention', retention);
-
-function retention ($q, $http, BASE_URL) {
+export default function Retention ($q, $http, BASE_URL) {
     "ngInject";
     var url = BASE_URL + 'rest/retention';
 

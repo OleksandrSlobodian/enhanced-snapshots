@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Zones', zones);
-
-function zones ($q, $http, BASE_URL) {
+export default function zones ($q, $http, BASE_URL) {
     "ngInject";
     var url = BASE_URL + './rest/zones';
 

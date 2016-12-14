@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Backups', backups);
-
-function backups ($q, $http, BASE_URL) {
+export default function Backups ($q, $http, BASE_URL) {
     "ngInject";
     var url = BASE_URL + './rest/backup';
 

@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('modalSystemBackupCtrl', ModalSystemBackupCtrl);
-
-function ModalSystemBackupCtrl($scope, $modalInstance, Tasks, Storage) {
+export default function ModalSystemBackupCtrl($scope, $modalInstance, Tasks, Storage) {
     "ngInject";
     $scope.state = 'ask';
 

@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('LogsController', LogsController);
-
-function LogsController ($location, $anchorScroll, $stomp, $scope, $rootScope, $timeout, System) {
+export default function LogsController ($location, $anchorScroll, $stomp, $scope, $rootScope, $timeout, System) {
     "ngInject";
     $scope.followLogs = false;
     $scope.logs = [];

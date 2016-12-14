@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .filter('stAdvancedFilter', stAdvancedFilter);
-
-function stAdvancedFilter () {
+export default function StAdvancedFilter () {
 
     var filterMatch = function (base, filter, type) {
         var typeOptions = {
@@ -46,7 +41,7 @@ function stAdvancedFilter () {
         return true;
     };
 
-    return function stAdvancedFilter(array, filterObj) {
+    return (array, filterObj) => {
         if (!angular.isUndefined(array)
             && !angular.isUndefined(filterObj)
             && array.length > 0) {

@@ -1,15 +1,30 @@
-module.exports = function (app) {
-    require('./auth.service.js')(app);
-    require('./backups.service.js')(app);
-    require('./configuration.service.js')(app);
-    require('./exception.service')(app);
-    //require('./interceptor.service')(app);
-    require('./regions.service')(app);
-    require('./retention.service')(app);
-    require('./storage.service')(app);
-    require('./system.service')(app);
-    require('./tasks.service')(app);
-    require('./users.service')(app);
-    require('./volumes.service')(app);
-    require('./zones.service')(app);
-}
+import Auth from "./auth.service";
+import Backups from "./backups.service";
+import Configuration from "./configuration.service";
+import Exception from "./exception.service";
+import Interceptor from "./interceptor.service";
+import Regions from "./regions.service";
+import Storage from "./storage.service";
+import System from "./system.service";
+import Tasks from "./tasks.service";
+import Users from "./users.service";
+import Volumes from "./volumes.service";
+import Zones from "./zones.service";
+
+export default angular.module('web.services',
+    [
+
+    ])
+    .factory('Interceptor', Interceptor)
+    .service('Auth', Auth)
+    .service('Backups', Backups)
+    .service('Configuration', Configuration)
+    .service('Exception', Exception)
+    .service('Regions', Regions)
+    .service('Storage', Storage)
+    .service('System', System)
+    .service('Tasks', Tasks)
+    .service('Users', Users)
+    .service('Volumes', Volumes)
+    .service('Zones', Zones)
+    .name;

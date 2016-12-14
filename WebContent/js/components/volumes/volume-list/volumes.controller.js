@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('VolumesController', VolumesController);
-
-function VolumesController ($scope, $rootScope, $state, $q, Retention, $filter, Storage, Regions, ITEMS_BY_PAGE, DISPLAY_PAGES, $modal, Volumes, Tasks, Zones) {
+export default function VolumesController ($scope, $rootScope, $state, $q, Retention, $filter, Storage, Regions, ITEMS_BY_PAGE, DISPLAY_PAGES, $modal, Volumes, Tasks, Zones) {
     "ngInject";
     $scope.maxVolumeDisplay = 5;
     $scope.itemsByPage = ITEMS_BY_PAGE;

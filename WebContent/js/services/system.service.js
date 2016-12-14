@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('System', system);
-
-function system ($q, $http, BASE_URL) {
+export default function System ($q, $http, BASE_URL) {
     "ngInject";
     var url = BASE_URL + './rest/system';
 

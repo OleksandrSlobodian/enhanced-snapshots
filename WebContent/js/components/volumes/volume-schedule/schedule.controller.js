@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('ScheduleController', ScheduleController);
-
-function ScheduleController ($scope, $rootScope, $stateParams, $filter, Tasks, $modal) {
+export default function ScheduleController ($scope, $rootScope, $stateParams, $filter, Tasks, $modal) {
     "ngInject";
 
     $scope.volumeId = $stateParams.volumeId;

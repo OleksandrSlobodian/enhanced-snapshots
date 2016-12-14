@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('RegistrationController', RegistrationController);
-
-function RegistrationController ($scope, $state, Users, $modal) {
+export default function RegistrationController ($scope, $state, Users, $modal) {
     "ngInject";
     $scope.passwordError = "";
     $scope.userExists = "";

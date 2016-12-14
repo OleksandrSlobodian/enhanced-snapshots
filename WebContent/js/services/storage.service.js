@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Storage', storage);
-
-function storage () {
+export default function Storage () {
 
     return {
 

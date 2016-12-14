@@ -1,10 +1,3 @@
-/**
- * Created by avas on 31.07.2015.
- */
-//
-//angular.module('web')
-//    .factory('Interceptor', Interceptor);
-
 export default function Interceptor ($q, Exception) {
     "ngInject";
     return {

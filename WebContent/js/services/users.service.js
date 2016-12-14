@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .service('Users', users);
-
-function users ($q, $http, Storage, BASE_URL) {
+export default function Users ($q, $http, Storage, BASE_URL) {
     "ngInject";
     var url = BASE_URL + "rest/user";
     var storageKey = '_users';

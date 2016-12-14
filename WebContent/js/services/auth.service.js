@@ -1,12 +1,6 @@
-'use strict';
-
-angular
-    .module('web')
-    .service('Auth', auth);
-
-function auth (Storage, $q, $http, BASE_URL) {
+export default function Auth (Storage, $q, $http, BASE_URL) {
     "ngInject";
-    var sessionUrl = BASE_URL + "./rest/login";
+    var sessionUrl = BASE_URL + "./rest/auth";
     var logoutUrl = BASE_URL + "./rest/logout";
     var statuses = {
         404: "Service is unavailable",

@@ -1,9 +1,4 @@
-'use strict';
-
-angular.module('web')
-    .controller('ConfigController', ConfigController);
-
-function ConfigController ($scope, Volumes, Configuration, $modal, $state, Storage) {
+export default function ConfigController ($scope, Volumes, Configuration, $modal, $state, Storage) {
     "ngInject";
     var DELAYTIME = 600*1000;
     $scope.STRINGS = {
