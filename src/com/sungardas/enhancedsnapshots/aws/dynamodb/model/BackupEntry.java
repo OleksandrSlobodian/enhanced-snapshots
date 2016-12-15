@@ -1,10 +1,12 @@
 package com.sungardas.enhancedsnapshots.aws.dynamodb.model;
 
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
+import com.amazonaws.services.ec2.model.Tag;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.Marshaller.ListTagDynamoDBTypeConverter;
 
-import org.springframework.data.annotation.Id;
+import java.util.List;
 
 @DynamoDBTable(tableName = "BackupList")
 final public class BackupEntry {
@@ -20,8 +22,12 @@ final public class BackupEntry {
     private String volumeId;
     private String volumeName;
 
+    @DynamoDBTypeConverted(converter = ListTagDynamoDBTypeConverter.class)
+    private List<Tag> tags;
 
-	public BackupEntry() {}
+
+    public BackupEntry() {
+    }
 
 	public BackupEntry(String volumeId, String volumeName, String fileName, String timeCreated, String backupSize, BackupState state,
                        String snapshotId, String volumeType, String iops, String sizeGiB) {
@@ -134,5 +140,13 @@ final public class BackupEntry {
     @Override
     public int hashCode() {
         return fileName != null ? fileName.hashCode() : 0;
+    }
+
+    public void setTags(List<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public List<Tag> getTags() {
+        return tags;
     }
 }

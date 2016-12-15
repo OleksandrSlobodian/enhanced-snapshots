@@ -120,8 +120,9 @@ public class AWSCommunicationServiceImpl implements AWSCommunicationService {
         LOG.info(format("Starting creating snapshot for %s", volumeId));
         CreateSnapshotRequest snapshotRequest = new CreateSnapshotRequest(
                 volumeId,
-                volumeId
-                        + "__"
+                "Created by Enhanced Snapshots_" +
+                        volumeId
+                        + "_"
                         + formatter.format(new Date(System.currentTimeMillis())));
         CreateSnapshotResult crSnapshotResult = ec2client
                 .createSnapshot(snapshotRequest);
@@ -289,6 +290,13 @@ public class AWSCommunicationServiceImpl implements AWSCommunicationService {
     public void addTag(String resourceId, String name, String value) {
         CreateTagsRequest r = new CreateTagsRequest().withResources(resourceId)
                 .withTags(new Tag().withKey(name).withValue(value));
+        ec2client.createTags(r);
+    }
+
+    @Override
+    public void addTag(String resourceId, List<Tag> tags) {
+        CreateTagsRequest r = new CreateTagsRequest().withResources(resourceId)
+                .withTags(tags);
         ec2client.createTags(r);
     }
 

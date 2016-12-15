@@ -1,10 +1,7 @@
 package com.sungardas.enhancedsnapshots.tasks.executors;
 
 
-import com.amazonaws.services.ec2.model.Snapshot;
-import com.amazonaws.services.ec2.model.Volume;
-import com.amazonaws.services.ec2.model.VolumeState;
-import com.amazonaws.services.ec2.model.VolumeType;
+import com.amazonaws.services.ec2.model.*;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.repository.BackupRepository;
@@ -25,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus.RUNNING;
@@ -210,7 +208,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
                     notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Moving to target Zone", 80);
                     Volume volumeToRestore = moveToTargetZoneStep(taskEntry);
                     awsCommunication.setResourceName(volumeToRestore.getVolumeId(), RESTORED_NAME_PREFIX + backupEntry.getFileName());
-                    awsCommunication.addTag(volumeToRestore.getVolumeId(), "Created by", "Enhanced Snapshots");
+                    addTags(volumeToRestore.getVolumeId(), backupEntry);
                 }
                 case DELETING_TEMP_VOLUME: {
                     notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Deleting temp volume", 85);
@@ -225,7 +223,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
             //in case availability zone is the same we do not need temp volume
             awsCommunication.deleteTemporaryTag(tempVolume.getVolumeId());
             awsCommunication.setResourceName(tempVolume.getVolumeId(), RESTORED_NAME_PREFIX + backupEntry.getFileName());
-            awsCommunication.addTag(tempVolume.getVolumeId(), "Created by", "Enhanced Snapshots");
+            addTags(tempVolume.getVolumeId(), backupEntry);
         }
     }
 
@@ -379,5 +377,15 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         taskEntry.setStatus(TaskEntry.TaskEntryStatus.ERROR.getStatus());
         taskRepository.save(taskEntry);
         mailService.notifyAboutError(taskEntry, e);
+    }
+
+    private void addTags(String resourceId, BackupEntry backupEntry) {
+        List<Tag> tags = backupEntry.getTags();
+        if (tags != null) {
+            tags.add(new Tag("Created by", "Enhanced Snapshots"));
+            awsCommunication.addTag(resourceId, tags);
+        } else {
+            awsCommunication.addTag(resourceId, "Created by", "Enhanced Snapshots");
+        }
     }
 }
