@@ -18,7 +18,7 @@ angular.module('web')
             },
             volumeType: {
                empty: 'Volume size for io1 volume type cannot be empty.',
-               range: 'Volume size for io1 volume type must be in between 1 and 30.'
+               range: 'Volume size for io1 volume type must be in between 1 and 50.'
             },
             otherSettings: {
                 empty: 'All fields are required. Please fill in empty fields.'
