@@ -41,23 +41,23 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
 
     var doRefresh = ['Users', '$q', 'Storage', 'Auth', '$rootScope', 'System',
         function (Users, $q, Storage, Auth, $rootScope, System) {
-            $rootScope.isLoading = true;
-            var deferred = $q.defer();
+        $rootScope.isLoading = true;
+        var deferred = $q.defer();
 
-            var promises = [System.get(), Users.refreshCurrent()];
-            $q.all(promises).then(function (results) {
+        var promises = [System.get(), Users.refreshCurrent()];
+        $q.all(promises).then(function (results) {
 
-                if (results[0].ssoMode != undefined) {
-                    //response for System.get
-                    Storage.save("ssoMode", {"ssoMode": results[0].ssoMode});
-                }
+            if (results[0].ssoMode != undefined) {
+                //response for System.get
+                Storage.save("ssoMode", {"ssoMode": results[0].ssoMode});
+            }
 
-                if (results[1].status === 200) {
+            if (results[1].status === 200) {
                     deferred.resolve(results[1].status)
-                } else {
+            } else {
                     deferred.resolve(false)
-                }
-            }, function (rejection) {
+            }
+        }, function (rejection) {
                 if (rejection.status === 401) {
                     var isSso = rejection.data &&
                         rejection.data.loginMode &&
@@ -67,10 +67,10 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
                 }
 
                 deferred.resolve(false)
-            });
+        });
 
-            return deferred.promise;
-        }];
+        return deferred.promise;
+    }];
 
     $stateProvider
         .state('app', {
@@ -82,7 +82,7 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
             },
             controller: ['$scope', '$rootScope', 'Storage', 'toastr', function ($scope, $rootScope, Storage, toastr) {
                 $rootScope.$on('$stateChangeSuccess',
-                    function () {
+                    function(){
                         var notification = Storage.get("notification");
                         if (notification) {
                             toastr.info(notification, undefined, {
@@ -184,18 +184,18 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
         })
         .state('loader', {
             url: "/loader",
-            template: '<div class="loading">' +
+            template: '<div class="loading">'+
             '<div class="text-center spinner-container">' +
-            '<span class="glyphicon glyphicon-refresh text-muted spin"></span>' +
+            '<span class="glyphicon glyphicon-refresh text-muted spin"></span>'+
             '</div> </div>',
             controller: "LoaderController"
         })
         .state('logout', {
             url: "/logout",
-            template: '<div class="loading">' +
-            '<div class="text-center spinner-container">' +
-            '<span class="glyphicon glyphicon-refresh text-muted spin"></span>' +
-            '</div> </div>',
+            template: '<div class="loading">'+
+                        '<div class="text-center spinner-container">' +
+                        '<span class="glyphicon glyphicon-refresh text-muted spin"></span>'+
+                        '</div> </div>',
             controller: "LogoutController"
         })
         .state('registration', {
@@ -209,81 +209,79 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
 }])
     .run(['$rootScope', '$state', '$modal', '$stomp', 'toastr', 'Storage', 'Users', 'System', '$q',
         function ($rootScope, $state, $modal, $stomp, toastr, Storage, Users, System, $q) {
-            $rootScope.isLoading = true;
+        $rootScope.isLoading = true;
 
-            var isUserSaved = Storage.get("currentUser");
-            var isSsoSaved = Storage.get("ssoMode");
+        var isUserSaved = Storage.get("currentUser");
+        var isSsoSaved = Storage.get("ssoMode");
 
-            if (!isUserSaved || !isSsoSaved) {
-                var promises = [System.get(), Users.refreshCurrent()];
-                $q.all(promises).then(function (results) {
-                    if (results[0].ssoMode != undefined) {
-                        //response for System.get
-                        Storage.save("ssoMode", {"ssoMode": results[0].ssoMode});
-                    }
+        if (!isUserSaved || !isSsoSaved) {
+            var promises = [System.get(), Users.refreshCurrent()];
+            $q.all(promises).then(function (results) {
+                if (results[0].ssoMode != undefined) {
+                    //response for System.get
+                    Storage.save("ssoMode", {"ssoMode": results[0].ssoMode});
+                }
 
-                    //response for Users.refreshCurrent
-                    if (results[1].data && results[1].data.email) {
-                        $state.go('app.volume.list');
-                    } else {
-                        $state.go('login');
-                    }
-
-                    $rootScope.isLoading = false;
-                }, function (err) {
-                    console.log(err);
-                    $rootScope.isLoading = false;
-                });
-            }
-
-            $rootScope.getUserName = function () {
-                return (Storage.get("currentUser") || {}).email;
-            };
-
-            $rootScope.isConfigState = function () {
-                return (Storage.get("currentUser") || {}).role === 'configurator';
-            };
-
-            $rootScope.subscribeWS = function () {
-                $stomp.setDebug(function (args) {
-                    // console.log(args);
-                });
-
-                $stomp
-                    .connect('/rest/ws')
-                    .then(function (frame) {
-                        $rootScope.errorListener = $stomp.subscribe('/error', function (err) {
-                            toastr.error(err.message, err.title);
-                        });
-                        $rootScope.taskListener = $stomp.subscribe('/task', function (msg) {
-                            Storage.save('lastTaskStatus_' + msg.taskId, msg);
-                            $rootScope.$broadcast("task-status-changed", msg);
-                        });
-                    }, function (e) {
-                        console.log(e);
-                    });
-            };
-
-
-            $rootScope.$on('$stateChangeError', function (e) {
-                e.preventDefault();
-                if (Storage.get("ssoMode")) {
-                    $rootScope.isLoading = true;
+                //response for Users.refreshCurrent
+                if (results[1].data && results[1].data.email) {
+                    $state.go('app.volume.list');
                 } else {
                     $state.go('login');
                 }
+
+                $rootScope.isLoading = false;
+            }, function (err) {
+                console.log(err);
+                $rootScope.isLoading = false;
+            });
+        }
+
+        $rootScope.getUserName = function () {
+            return (Storage.get("currentUser") || {}).email;
+        };
+
+        $rootScope.isConfigState = function () {
+            return (Storage.get("currentUser") || {}).role === 'configurator';
+        };
+
+        $rootScope.subscribeWS = function () {
+            $stomp.setDebug(function (args) {
+                // console.log(args);
             });
 
-            $rootScope.errorListener = {};
-            $rootScope.taskListener = {};
-            if (angular.isDefined($rootScope.getUserName())) {
-                $rootScope.subscribeWS();
+            $stomp
+                .connect('/rest/ws')
+                .then(function (frame) {
+                    $rootScope.errorListener = $stomp.subscribe('/error', function (err) {
+                        toastr.error(err.message, err.title);
+                    });
+                    $rootScope.taskListener = $stomp.subscribe('/task', function (msg) {
+                        Storage.save('lastTaskStatus_' + msg.taskId, msg);
+                        $rootScope.$broadcast("task-status-changed", msg);
+                    });
+                }, function (e) {
+                    console.log(e);
+                });
+            };
+
+
+        $rootScope.$on('$stateChangeError', function (e) {
+            e.preventDefault();
+            if (Storage.get("ssoMode")) {
+                $rootScope.isLoading = true;
+            } else {
+                $state.go('login');
             }
-        }]);
+        });
+
+        $rootScope.errorListener = {};
+        $rootScope.taskListener = {};
+        if (angular.isDefined($rootScope.getUserName())) { $rootScope.subscribeWS(); }
+    }]);
 'use strict';
 angular.module('web')
     .controller('ConfigController', ['$scope', 'Volumes', 'Configuration', '$modal', '$state', 'Storage', function ($scope, Volumes, Configuration, $modal, $state, Storage) {
-        var DELAYTIME = 600 * 1000;
+        var DELAYTIME = 600*1000;
         $scope.STRINGS = {
             s3: {
                 empty: 'Bucket name field cannot be empty',
@@ -333,12 +331,10 @@ angular.module('web')
                 console.warn(err);
             });
         };
-
-        if (angular.isUndefined($scope.isSSO)) {
-            $scope.isSSO = false;
-        }
-
-        var wizardCreationProgress = function () {
+		
+		if (angular.isUndefined($scope.isSSO)) { $scope.isSSO = false; } 
+        
+		var wizardCreationProgress = function () {
             var modalInstance = $modal.open({
                 animation: true,
                 backdrop: false,
@@ -511,159 +507,151 @@ angular.module('web')
     .controller('HistoryController',
         ['$scope', '$rootScope', '$q', 'Storage', 'ITEMS_BY_PAGE', 'DISPLAY_PAGES', '$stateParams', '$state', '$modal', '$filter', 'Backups', 'Tasks', 'Zones',
             function ($scope, $rootScope, $q, Storage, ITEMS_BY_PAGE, DISPLAY_PAGES, $stateParams, $state, $modal, $filter, Backups, Tasks, Zones) {
-                $scope.maxDeleteBackupDisplay = 5;
-                $scope.itemsByPage = ITEMS_BY_PAGE;
-                $scope.displayedPages = DISPLAY_PAGES;
+        $scope.maxDeleteBackupDisplay = 5;
+        $scope.itemsByPage = ITEMS_BY_PAGE;
+        $scope.displayedPages = DISPLAY_PAGES;
 
-                $scope.volumeId = $stateParams.volumeId;
+        $scope.volumeId = $stateParams.volumeId;
 
-                $scope.textClass = {
-                    'false': 'Select',
-                    'true': 'Unselect'
-                };
+        $scope.textClass = {
+            'false': 'Select',
+            'true': 'Unselect'
+        };
 
-                $scope.iconClass = {
-                    'false': 'unchecked',
-                    'true': 'check'
-                };
+        $scope.iconClass = {
+            'false': 'unchecked',
+            'true': 'check'
+        };
 
-                $scope.selectZone = function (zone) {
-                    $scope.selectedZone = zone;
-                };
+        $scope.selectZone = function (zone) {
+            $scope.selectedZone = zone;
+        };
 
-                $scope.isAllSelected = false;
-                $scope.selectedAmount = 0;
+        $scope.isAllSelected = false;
+        $scope.selectedAmount = 0;
 
-                $scope.checkSelection = function () {
-                    $scope.selectedAmount = $scope.backups.filter(function (b) {
-                        return b.isSelected;
-                    }).length;
-                    $scope.isAllSelected = $scope.selectedAmount == $scope.backups.length;
-                };
+        $scope.checkSelection = function () {
+            $scope.selectedAmount = $scope.backups.filter(function (b) { return b.isSelected; }).length;
+            $scope.isAllSelected = $scope.selectedAmount == $scope.backups.length;
+        };
 
-                $scope.makeSelection = function () {
-                    $scope.backups.forEach(function (backup) {
-                        backup.isSelected = !$scope.isAllSelected;
-                    });
-                    $scope.checkSelection();
-                };
+        $scope.makeSelection = function () {
+            $scope.backups.forEach(function (backup) {
+                backup.isSelected = !$scope.isAllSelected;
+            });
+            $scope.checkSelection();
+        };
 
-                $scope.deleteSelection = function () {
-                    $scope.selectedBackups = $scope.backups.filter(function (b) {
-                        return b.isSelected;
-                    });
+        $scope.deleteSelection = function () {
+            $scope.selectedBackups = $scope.backups.filter(function (b) { return b.isSelected; });
 
-                    var confirmInstance = $modal.open({
-                        animation: true,
-                        templateUrl: './partials/modal.backup-delete.html',
-                        scope: $scope
-                    });
+            var confirmInstance = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.backup-delete.html',
+                scope: $scope
+            });
 
-                    confirmInstance.result.then(function () {
-                        $rootScope.isLoading = true;
-                        $scope.deleteErrors = [];
+            confirmInstance.result.then(function () {
+                $rootScope.isLoading = true;
+                $scope.deleteErrors = [];
 
-                        var fileNames = $scope.selectedBackups.map(function (b) {
-                            return b.fileName
+                var fileNames = $scope.selectedBackups.map(function (b) { return b.fileName });
+                var remaining = fileNames.length;
+
+                var checkDeleteFinished = function () {
+                    $rootScope.isLoading = remaining > 0;
+                    if (!$rootScope.isLoading){
+                        if ($scope.deleteErrors.length) { console.log($scope.deleteErrors); }
+                        var finishedInstance = $modal.open({
+                            animation: true,
+                            templateUrl: './partials/modal.backup-delete-result.html',
+                            scope: $scope
                         });
-                        var remaining = fileNames.length;
 
-                        var checkDeleteFinished = function () {
-                            $rootScope.isLoading = remaining > 0;
-                            if (!$rootScope.isLoading) {
-                                if ($scope.deleteErrors.length) {
-                                    console.log($scope.deleteErrors);
-                                }
-                                var finishedInstance = $modal.open({
-                                    animation: true,
-                                    templateUrl: './partials/modal.backup-delete-result.html',
-                                    scope: $scope
-                                });
-
-                                finishedInstance.result.then(function () {
-                                    $state.go('app.tasks');
-                                }, function () {
-                                    loadBackups();
-                                });
-                            }
-                        };
-
-                        for (var i = 0; i < fileNames.length; i++) {
-                            Backups.delete(fileNames[i]).then(function () {
-                                remaining--;
-                                checkDeleteFinished();
-                            }, function (e) {
-                                $scope.deleteErrors.push(e);
-                                remaining--;
-                                checkDeleteFinished();
-                            })
-                        }
-                    })
+                        finishedInstance.result.then(function () {
+                            $state.go('app.tasks');
+                        }, function () {
+                            loadBackups();
+                        });
+                    }
                 };
 
+                for (var i = 0; i < fileNames.length; i++) {
+                    Backups.delete(fileNames[i]).then(function () {
+                        remaining--;
+                        checkDeleteFinished();
+                    }, function (e) {
+                        $scope.deleteErrors.push(e);
+                        remaining--;
+                        checkDeleteFinished();
+                    })
+                }
+            })
+        };
+
+        $rootScope.isLoading = false;
+        $scope.backups = [];
+        var loadBackups = function () {
+            $rootScope.isLoading = true;
+            Backups.getForVolume($scope.volumeId).then(function (data) {
+                data.forEach(function (backup) {
+                    backup.isSelected = false;
+                });
+                $scope.backups = data;
                 $rootScope.isLoading = false;
-                $scope.backups = [];
-                var loadBackups = function () {
-                    $rootScope.isLoading = true;
-                    Backups.getForVolume($scope.volumeId).then(function (data) {
-                        data.forEach(function (backup) {
-                            backup.isSelected = false;
-                        });
-                        $scope.backups = data;
-                        $rootScope.isLoading = false;
-                    }, function () {
-                        $rootScope.isLoading = false;
-                    })
+            }, function () {
+                $rootScope.isLoading = false;
+            })
+        };
+        loadBackups();
+
+        $scope.restore = function (backup) {
+            $rootScope.isLoading = true;
+            $q.all([Zones.get(), Zones.getCurrent()])
+                .then(function (results) {
+                    $scope.zones = results[0];
+                    $scope.selectedZone = results[1]["zone-name"] || "";
+                })
+                .finally(function () {
+                    $rootScope.isLoading = false;
+                });
+
+            $scope.objectToProcess = backup;
+            var confirmInstance = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.history-restore.html',
+                scope: $scope
+            });
+
+            confirmInstance.result.then(function () {
+                var newTask = {
+                    id: "",
+                    priority: "",
+                    volumes: [$scope.objectToProcess.volumeId],
+                    backupFileName: $scope.objectToProcess.fileName,
+                    type: "restore",
+                    zone: $scope.selectedZone,
+                    status: "waiting",
+                    schedulerManual: true,
+                    schedulerName: Storage.get('currentUser').email,
+                    schedulerTime: Date.now()
                 };
-                loadBackups();
-
-                $scope.restore = function (backup) {
-                    $rootScope.isLoading = true;
-                    $q.all([Zones.get(), Zones.getCurrent()])
-                        .then(function (results) {
-                            $scope.zones = results[0];
-                            $scope.selectedZone = results[1]["zone-name"] || "";
-                        })
-                        .finally(function () {
-                            $rootScope.isLoading = false;
-                        });
-
-                    $scope.objectToProcess = backup;
-                    var confirmInstance = $modal.open({
+                Tasks.insert(newTask).then(function () {
+                    var successInstance = $modal.open({
                         animation: true,
-                        templateUrl: './partials/modal.history-restore.html',
+                        templateUrl: './partials/modal.task-created.html',
                         scope: $scope
                     });
 
-                    confirmInstance.result.then(function () {
-                        var newTask = {
-                            id: "",
-                            priority: "",
-                            volumes: [$scope.objectToProcess.volumeId],
-                            backupFileName: $scope.objectToProcess.fileName,
-                            type: "restore",
-                            zone: $scope.selectedZone,
-                            status: "waiting",
-                            schedulerManual: true,
-                            schedulerName: Storage.get('currentUser').email,
-                            schedulerTime: Date.now()
-                        };
-                        Tasks.insert(newTask).then(function () {
-                            var successInstance = $modal.open({
-                                animation: true,
-                                templateUrl: './partials/modal.task-created.html',
-                                scope: $scope
-                            });
-
-                            successInstance.result.then(function () {
-                                $state.go('app.tasks');
-                            });
-                        });
+                    successInstance.result.then(function () {
+                        $state.go('app.tasks');
                     });
+                });
+            });
 
-                };
+        };
 
-            }]);
+    }]);
 'use strict';
 
 angular.module('web')
@@ -685,32 +673,32 @@ angular.module('web')
                 }
             }, function (err) {
             });
-        }]);
+    }]);
 'use strict';
 
 angular.module('web')
     .controller('LoginController', ['$rootScope', '$scope', '$state', '$stateParams', '$stomp', 'Auth', 'System', 'Storage', 'toastr', '$window', 'refreshUserResult',
         function ($rootScope, $scope, $state, $stateParams, $stomp, Auth, System, Storage, toastr, $window, refreshUserResult) {
 
-            $rootScope.isLoading = true;
+        $rootScope.isLoading = true;
 
-            //LOGGING OUT ---------------------
-            if ($stateParams.err && $stateParams.err == 'session') {
-                toastr.warning('You were logged out. Please re-login', 'Session expired.');
+        //LOGGING OUT ---------------------
+        if ($stateParams.err && $stateParams.err == 'session') {
+            toastr.warning('You were logged out. Please re-login', 'Session expired.');
+        }
+
+        var currentUser = Storage.get("currentUser");
+        var ssoMode = Storage.get("ssoMode");
+
+        if (currentUser && currentUser.length > 1) {
+            if (ssoMode && ssoMode.ssoMode) {
+                $window.location.href = "/saml/logout";
             }
+            Auth.logOut();
+        }
+        //------------------------------------
 
-            var currentUser = Storage.get("currentUser");
-            var ssoMode = Storage.get("ssoMode");
-
-            if (currentUser && currentUser.length > 1) {
-                if (ssoMode && ssoMode.ssoMode) {
-                    $window.location.href = "/saml/logout";
-                }
-                Auth.logOut();
-            }
-            //------------------------------------
-
-            // Show loader instead of login page if ssoMode is true ----------
+        // Show loader instead of login page if ssoMode is true ----------
             if (refreshUserResult === true) {
                 $rootScope.isLoading = true;
                 window.location = "/saml/login";
@@ -722,174 +710,174 @@ angular.module('web')
                 }
             }
 
-            //---------------------------------------------
+        //---------------------------------------------
 
-            $scope.clearErr = function () {
-                $scope.error = "";
-            };
+        $scope.clearErr = function () {
+            $scope.error = "";
+        };
 
-            $scope.login = function () {
-                Auth.logIn($scope.email, $scope.password).then(function (data) {
+        $scope.login = function () {
+            Auth.logIn($scope.email, $scope.password).then(function (data) {
 
-                    if (data.role === 'configurator') {
-                        $state.go('config');
-                    } else {
-                        System.get().then(function (data) {
-                            if (data.currentVersion < data.latestVersion) {
-                                Storage.save("notification", "Newer version is available! Please, create a new instance from the latest AMI.");
-                            }
-                            $scope.subscribeWS();
-                        }).finally(function () {
-                            $state.go('app.volume.list');
-                        });
-                    }
-                }, function (res) {
-                    $scope.error = res;
-                    $scope.password = "";
-                });
-            };
+                if (data.role === 'configurator') {
+                    $state.go('config');
+                } else {
+                    System.get().then(function (data) {
+                        if (data.currentVersion < data.latestVersion) {
+                            Storage.save("notification", "Newer version is available! Please, create a new instance from the latest AMI.");
+                        }
+                        $scope.subscribeWS();
+                    }).finally(function () {
+                        $state.go('app.volume.list');
+                    });
+                }
+            }, function (res) {
+                $scope.error = res;
+                $scope.password = "";
+            });
+        };
 
 
-        }]);
+    }]);
 'use strict';
 
 angular.module('web')
     .controller('LogoutController', ['$state', 'Auth', 'Storage', '$window',
         function ($state, Auth, Storage, $window) {
 
-            var currentUser = Storage.get("currentUser");
-            var ssoMode = Storage.get("ssoMode");
+        var currentUser = Storage.get("currentUser");
+        var ssoMode = Storage.get("ssoMode");
 
-            if (ssoMode && ssoMode.ssoMode) {
+        if (ssoMode && ssoMode.ssoMode) {
 
-                $window.location.href = "/saml/logout";
-            } else {
-                Auth.logOut();
-                $state.go('login');
-            }
+            $window.location.href = "/saml/logout";
+        } else {
+            Auth.logOut();
+            $state.go('login');
+        }
 
-        }]);
+    }]);
 'use strict';
 
 angular.module('web')
-    .controller('LogsController', ['$location', '$anchorScroll', '$stomp', '$scope', '$rootScope', '$state', '$timeout', '$q', 'System',
+    .controller('LogsController', ['$location', '$anchorScroll','$stomp', '$scope', '$rootScope', '$state', '$timeout', '$q', 'System',
         function ($location, $anchorScroll, $stomp, $scope, $rootScope, $state, $timeout, $q, System) {
-            $scope.followLogs = false;
-            $scope.logs = [];
+        $scope.followLogs = false;
+        $scope.logs = [];
 
-            var maxLogs;
-            $rootScope.isLoading = true;
-            var collection = [];
-            var subCollection = [];
-            var initSubCollectionLength = 0;
-            var logTypes = {
-                warn: "warning",
-                info: "info",
-                error: "error",
-                debug: ""
-            };
-            var counterStarted = false;
+        var maxLogs;
+        $rootScope.isLoading = true;
+        var collection = [];
+        var subCollection = [];
+        var initSubCollectionLength = 0;
+        var logTypes = {
+            warn: "warning",
+            info: "info",
+            error: "error",
+            debug: ""
+        };
+        var counterStarted = false;
 
-            System.get().then(function (settings) {
-                // hack for handling 302 status
-                if (typeof settings === 'string' && settings.indexOf('<html lang="en" ng-app="web"') > -1) {
-                    $state.go('loader');
+        System.get().then(function (settings) {
+            // hack for handling 302 status
+            if (typeof settings === 'string' && settings.indexOf('<html lang="en" ng-app="web"')>-1) {
+                $state.go('loader');
+            }
+
+            maxLogs = settings.systemProperties.logsBuffer;
+            $stomp
+                .connect('/rest/ws')
+                .then(function (frame) {
+                    $rootScope.isLoading = false;
+                    $scope.logsListener = $stomp.subscribe('/logs', function (payload, headers, res) {
+                        updateLogs(res);
+                        if ($scope.followLogs) {
+                            var lastLogId = 'log-' + ($scope.logs.length ? $scope.logs.length - 1 : 0);
+                            $location.hash(lastLogId);
+                            $anchorScroll();
+                        }
+                    });
+
+                }, function (e) {
+                    $rootScope.isLoading = false;
+                    console.log(e);
                 }
+            );
 
-                maxLogs = settings.systemProperties.logsBuffer;
-                $stomp
-                    .connect('/rest/ws')
-                    .then(function (frame) {
-                            $rootScope.isLoading = false;
-                            $scope.logsListener = $stomp.subscribe('/logs', function (payload, headers, res) {
-                                updateLogs(res);
-                                if ($scope.followLogs) {
-                                    var lastLogId = 'log-' + ($scope.logs.length ? $scope.logs.length - 1 : 0);
-                                    $location.hash(lastLogId);
-                                    $anchorScroll();
-                                }
-                            });
+            function updateLogs(msg) {
+                msg.body = JSON.parse(msg.body);
+                // get log type, which can be error, info, etc.
+                var getType = function (log) {
+                    var logTypeRaw = (log.split(']')[0]).split('[').reverse()[0];
+                    var logType = logTypeRaw.toLowerCase().trim();
+                    return logTypes[logType]
+                };
 
-                        }, function (e) {
-                            $rootScope.isLoading = false;
-                            console.log(e);
-                        }
-                    );
+                var saveLogs = function (log) {
+                    subCollection.push(log);
+                    if (!counterStarted) {
+                        counterStarted = true;
+                        $timeout(function () {
+                            var logsAdded = subCollection.length - initSubCollectionLength;
+                            counterStarted = false;
+                            updateLogsCollection(subCollection, logsAdded);
+                        }, 500);
+                    }
+                };
 
-                function updateLogs(msg) {
-                    msg.body = JSON.parse(msg.body);
-                    // get log type, which can be error, info, etc.
-                    var getType = function (log) {
-                        var logTypeRaw = (log.split(']')[0]).split('[').reverse()[0];
-                        var logType = logTypeRaw.toLowerCase().trim();
-                        return logTypes[logType]
-                    };
-
-                    var saveLogs = function (log) {
-                        subCollection.push(log);
-                        if (!counterStarted) {
-                            counterStarted = true;
-                            $timeout(function () {
-                                var logsAdded = subCollection.length - initSubCollectionLength;
-                                counterStarted = false;
-                                updateLogsCollection(subCollection, logsAdded);
-                            }, 500);
-                        }
-                    };
-
-                    function updateLogsCollection(logsCollection, logsAdded) {
-                        // yes, it's a magic number :) Logs are guaranteed to be displayed smoothly at
-                        // this speed of 15 logs/half-sec
-                        if (logsAdded < 15) {
-                            sendToView(logsCollection);
-                        } else {
-                            // if speed of logs is more than 30 log/sec (15 logs/half-sec) => update view
-                            // once per second 'till logs finished
-                            if (logsCollection.length) {
-                                $timeout(function () {
-                                    sendToView(logsCollection);
-                                }, 1000)
-                            }
-
+                function updateLogsCollection(logsCollection, logsAdded) {
+                    // yes, it's a magic number :) Logs are guaranteed to be displayed smoothly at
+                    // this speed of 15 logs/half-sec
+                    if (logsAdded < 15) {
+                        sendToView(logsCollection);
+                    } else {
+                        // if speed of logs is more than 30 log/sec (15 logs/half-sec) => update view
+                        // once per second 'till logs finished
+                        if (logsCollection.length) {
+                            $timeout( function () {
+                                sendToView(logsCollection);
+                            }, 1000)
                         }
 
-                        //reduces array length if total logs are more than user wants
-                        function checkLength() {
-                            if (collection.length > (maxLogs)) {
-                                collection = collection.slice(-maxLogs);
-                            }
-                        }
+                    }
 
-                        function sendToView(logsCollection) {
-                            collection = collection.concat(logsCollection);
-                            checkLength();
-
-                            subCollection = [];
-                            initSubCollectionLength = 0;
-                            $scope.$apply(function () {
-                                $scope.logs = collection;
-                            });
+                    //reduces array length if total logs are more than user wants
+                    function checkLength() {
+                        if (collection.length > (maxLogs)) {
+                            collection = collection.slice(-maxLogs);
                         }
                     }
 
-                    for (var i = 0; i < msg.body.length; i++) {
-                        var logObject = {
-                            type: getType(msg.body[i]),
-                            message: msg.body[i]
-                        };
-                        saveLogs(logObject);
+                    function sendToView(logsCollection) {
+                        collection = collection.concat(logsCollection);
+                        checkLength();
+
+                        subCollection = [];
+                        initSubCollectionLength = 0;
+                        $scope.$apply(function () {
+                            $scope.logs = collection;
+                        });
                     }
                 }
-            });
 
-            $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams, options) {
-                $rootScope.isLoading = false;
-                //check is needed for cases when user comes to LOGS tab, which will also trigger this event
-                if (fromState.name === 'app.logs' && $scope.logsListener) {
-                    $scope.logsListener.unsubscribe();
+                for (var i = 0; i < msg.body.length; i++) {
+                    var logObject = {
+                        type: getType(msg.body[i]),
+                        message: msg.body[i]
+                    };
+                    saveLogs(logObject);
                 }
-            })
-        }]);
+            }
+        });
+
+        $rootScope.$on('$stateChangeStart', function (event, toState, toParams, fromState, fromParams, options) {
+            $rootScope.isLoading = false;
+            //check is needed for cases when user comes to LOGS tab, which will also trigger this event
+            if (fromState.name === 'app.logs' && $scope.logsListener) {
+                $scope.logsListener.unsubscribe();
+            }
+        })
+    }]);
 'use strict';
 
 angular.module('web')
@@ -941,6 +929,9 @@ angular.module('web')
             }
         };
     }]);
+
+
+
 
 
 'use strict';
@@ -1049,676 +1040,668 @@ angular.module('web')
 angular.module('web')
     .controller('SettingsController', ['$rootScope', '$state', '$scope', 'System', 'currentUser', 'Users', '$modal', 'Configuration',
         function ($rootScope, $state, $scope, System, currentUser, Users, $modal, Configuration) {
+        $rootScope.isLoading = false;
+        var currentUser = Users.getCurrent();
+        $scope.isAdmin = currentUser.role === "admin";
+
+        $scope.STRINGS = {
+            sdfs: {
+                sdfsLocalCacheSize: {
+                  empty: 'Local Cache Size field cannot be empty.'
+                } ,
+                volumeSize: {
+                 empty: 'Volume Size field cannot be empty.'
+                }
+            },
+            volumeType: {
+               empty: 'Volume size for io1 volume type cannot be empty.',
+               range: 'Volume size for io1 volume type must be in between 1 and 50.'
+            },
+            otherSettings: {
+                empty: 'All fields are required. Please fill in empty fields.'
+            }
+        };
+
+        $rootScope.isLoading = true;
+        System.get().then(function (data) {
+            // hack for handling 302 status
+            if (typeof data === 'string' && data.indexOf('<html lang="en" ng-app="web"')>-1) {
+                $state.go('loader');
+            }
+            data.ec2Instance.instanceIDs = data.ec2Instance.instanceIDs.join(", ");
+            $scope.settings = data;
+            if (!$scope.settings.mailConfiguration) {
+                $scope.emails = [];
+                $scope.settings.mailConfiguration = {
+                    events: {
+                        "error": false,
+                        "info": false,
+                        "success": false
+                    }
+                }
+            } else {
+                $scope.emails = $scope.settings.mailConfiguration.recipients || [];
+            }
+
+            $scope.initialSettings = angular.copy(data);
             $rootScope.isLoading = false;
-            var currentUser = Users.getCurrent();
-            $scope.isAdmin = currentUser.role === "admin";
+        }, function (e) {
+            console.log(e);
+            $rootScope.isLoading = false;
+        });
 
-            $scope.STRINGS = {
-                sdfs: {
-                    sdfsLocalCacheSize: {
-                        empty: 'Local Cache Size field cannot be empty.'
-                    },
-                    volumeSize: {
-                        empty: 'Volume Size field cannot be empty.'
-                    }
-                },
-                volumeType: {
-                    empty: 'Volume size for io1 volume type cannot be empty.',
-                    range: 'Volume size for io1 volume type must be in between 1 and 30.'
-                },
-                otherSettings: {
-                    empty: 'All fields are required. Please fill in empty fields.'
-                }
-            };
+        $scope.backup = function () {
+            var modalScope = $scope.$new(true);
+            $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.system-backup.html',
+                scope: modalScope,
+                controller: 'modalSystemBackupCtrl'
+            });
+        };
 
-            $rootScope.isLoading = true;
-            System.get().then(function (data) {
-                // hack for handling 302 status
-                if (typeof data === 'string' && data.indexOf('<html lang="en" ng-app="web"') > -1) {
-                    $state.go('loader');
-                }
-                data.ec2Instance.instanceIDs = data.ec2Instance.instanceIDs.join(", ");
-                $scope.settings = data;
-                if (!$scope.settings.mailConfiguration) {
-                    $scope.emails = [];
-                    $scope.settings.mailConfiguration = {
-                        events: {
-                            "error": false,
-                            "info": false,
-                            "success": false
-                        }
-                    }
-                } else {
-                    $scope.emails = $scope.settings.mailConfiguration.recipients || [];
-                }
-
-                $scope.initialSettings = angular.copy(data);
-                $rootScope.isLoading = false;
-            }, function (e) {
-                console.log(e);
-                $rootScope.isLoading = false;
+        $scope.uninstall = function () {
+            $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.system-uninstall.html',
+                controller: 'modalSystemUninstallCtrl'
             });
 
-            $scope.backup = function () {
-                var modalScope = $scope.$new(true);
-                $modal.open({
-                    animation: true,
-                    templateUrl: './partials/modal.system-backup.html',
-                    scope: modalScope,
-                    controller: 'modalSystemBackupCtrl'
-                });
+        };
+
+        $scope.updateSettings = function () {
+
+            var settingsUpdateModal = $modal.open({
+                animation: true,
+                scope: $scope,
+                templateUrl: './partials/modal.settings-update.html',
+                controller: 'modalSettingsUpdateCtrl'
+            });
+
+            settingsUpdateModal.result.then(function () {
+                $scope.initialSettings = angular.copy($scope.settings);
+            }, function () {
+                $scope.initialSettings = angular.copy($scope.settings);
+            });
+        };
+
+        $scope.emailNotifications = function () {
+            $scope.connectionStatus = null;
+            var emailNotificationsModalInstance = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.email-notifications.html',
+                scope: $scope
+            });
+
+            emailNotificationsModalInstance.result.then(function () {
+                $scope.settings.mailConfiguration.recipients = $scope.emails;
+            }, function () {
+                $scope.settings = angular.copy($scope.initialSettings);
+            })
+        };
+
+        $scope.testConnection = function () {
+            var testData = {
+                testEmail: $scope.testEmail,
+                domain: $scope.settings.domain,
+                mailConfiguration: $scope.settings.mailConfiguration
             };
 
-            $scope.uninstall = function () {
-                $modal.open({
-                    animation: true,
-                    templateUrl: './partials/modal.system-uninstall.html',
-                    controller: 'modalSystemUninstallCtrl'
-                });
+            Configuration.check(testData).then(function (response) {
+                $scope.connectionStatus = response.status;
+            }, function (error) {
+                $scope.connectionStatus = error.status;
+            });
+        };
 
-            };
+        $scope.isNewValues = function () {
+           return JSON.stringify($scope.settings) !== JSON.stringify($scope.initialSettings);
+        };
 
-            $scope.updateSettings = function () {
-
-                var settingsUpdateModal = $modal.open({
-                    animation: true,
-                    scope: $scope,
-                    templateUrl: './partials/modal.settings-update.html',
-                    controller: 'modalSettingsUpdateCtrl'
-                });
-
-                settingsUpdateModal.result.then(function () {
-                    $scope.initialSettings = angular.copy($scope.settings);
-                }, function () {
-                    $scope.initialSettings = angular.copy($scope.settings);
-                });
-            };
-
-            $scope.emailNotifications = function () {
-                $scope.connectionStatus = null;
-                var emailNotificationsModalInstance = $modal.open({
-                    animation: true,
-                    templateUrl: './partials/modal.email-notifications.html',
-                    scope: $scope
-                });
-
-                emailNotificationsModalInstance.result.then(function () {
-                    $scope.settings.mailConfiguration.recipients = $scope.emails;
-                }, function () {
-                    $scope.settings = angular.copy($scope.initialSettings);
-                })
-            };
-
-            $scope.testConnection = function () {
-                var testData = {
-                    testEmail: $scope.testEmail,
-                    domain: $scope.settings.domain,
-                    mailConfiguration: $scope.settings.mailConfiguration
-                };
-
-                Configuration.check(testData).then(function (response) {
-                    $scope.connectionStatus = response.status;
-                }, function (error) {
-                    $scope.connectionStatus = error.status;
-                });
-            };
-
-            $scope.isNewValues = function () {
-                return JSON.stringify($scope.settings) !== JSON.stringify($scope.initialSettings);
-            };
-
-        }]);
+    }]);
 'use strict';
 
 angular.module('web')
     .controller('TasksController', ['$scope', '$rootScope', '$stateParams', '$stomp', 'Tasks', 'Storage', '$modal', '$timeout', '$state',
         function ($scope, $rootScope, $stateParams, $stomp, Tasks, Storage, $modal, $timeout, $state) {
-            $scope.typeColorClass = {
-                backup: "primary",
-                restore: "success",
-                delete: "danger",
-                system_backup: "danger"
+        $scope.typeColorClass = {
+            backup: "primary",
+            restore: "success",
+            delete: "danger",
+            system_backup: "danger"
 
-            };
-            $scope.typeIconClass = {
-                backup: "cloud-download",
-                restore: "cloud-upload",
-                delete: "remove",
-                system_backup: "cog"
-            };
-            $scope.manualIconClass = {
-                true: "user",
-                false: "time"
-            };
+        };
+        $scope.typeIconClass = {
+            backup: "cloud-download",
+            restore: "cloud-upload",
+            delete: "remove",
+            system_backup: "cog"
+        };
+        $scope.manualIconClass = {
+            true: "user",
+            false: "time"
+        };
 
-            $scope.statusPriority = function (task) {
-                var priorities = {
-                    canceled: 5,
-                    running: 4,
-                    queued: 3,
-                    error: 2,
-                    waiting: 1
-                };
-                return priorities[task.status] || 0;
+        $scope.statusPriority = function (task) {
+            var priorities = {
+                canceled: 5,
+                running: 4,
+                queued: 3,
+                error: 2,
+                waiting: 1
             };
+            return priorities[task.status] || 0;
+        };
 
-            $scope.typePriority = function (task) {
-                return parseInt(task.priority) || 0;
-            };
+        $scope.typePriority = function (task) {
+            return parseInt(task.priority) || 0;
+        };
 
-            $scope.volumeId = $stateParams.volumeId;
+        $scope.volumeId = $stateParams.volumeId;
 
-            $scope.tasks = [];
-            $rootScope.isLoading = false;
-            $scope.refresh = function () {
-                $rootScope.isLoading = true;
-                Tasks.get($scope.volumeId).then(function (data) {
-                    // hack for handling 302 status
-                    if (typeof data === 'string' && data.indexOf('<html lang="en" ng-app="web"') > -1) {
-                        $state.go('logout');
+        $scope.tasks = [];
+        $rootScope.isLoading = false;
+        $scope.refresh = function () {
+            $rootScope.isLoading = true;
+            Tasks.get($scope.volumeId).then(function (data) {
+                // hack for handling 302 status
+                if (typeof data === 'string' && data.indexOf('<html lang="en" ng-app="web"')>-1) {
+                    $state.go('logout');
+                }
+
+                $scope.tasks = data;
+                applyTaskStatuses();
+                $rootScope.isLoading = false;
+            }, function () {
+                $rootScope.isLoading = false;
+            });
+        };
+        $scope.refresh();
+
+        $scope.$on("task-status-changed", function (e, d) {
+            updateTaskStatus(d);
+        });
+
+        var applyTaskStatuses = function () {
+            for (var i = 0; i < $scope.tasks.length; i++) {
+                var task = $scope.tasks[i];
+                var msg = Storage.get('lastTaskStatus_' + task.id) || {};
+                task.progress = msg.progress;
+                task.message = msg.message;
+            }
+        };
+
+        var updateTaskStatus = function (msg) {
+            var task = $scope.tasks.filter(function (t) {
+                return t.id == msg.taskId && msg.status != "complete";
+            })[0];
+
+            if (task) {
+                if (task.status == 'complete' || task.status == 'queued' || task.status == 'waiting') {
+                    $scope.refresh();
+                } else {
+                    $timeout(function() {
+                        task.progress = msg.progress;
+                        task.message = msg.message;
+                        task.status = msg.status;
+                    }, 0);
+
+                    if (msg.progress == 100) {
+                        Storage.remove('lastTaskStatus_' + task.id);
+                        $scope.refresh();
                     }
+                }
+            }
+        };
 
-                    $scope.tasks = data;
-                    applyTaskStatuses();
-                    $rootScope.isLoading = false;
-                }, function () {
-                    $rootScope.isLoading = false;
-                });
-            };
-            $scope.refresh();
+        $scope.reject = function (task) {
+            $scope.taskToReject = task;
 
-            $scope.$on("task-status-changed", function (e, d) {
-                updateTaskStatus(d);
+            var rejectInstance = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.task-reject.html',
+                scope: $scope
             });
 
-            var applyTaskStatuses = function () {
-                for (var i = 0; i < $scope.tasks.length; i++) {
-                    var task = $scope.tasks[i];
-                    var msg = Storage.get('lastTaskStatus_' + task.id) || {};
-                    task.progress = msg.progress;
-                    task.message = msg.message;
-                }
-            };
-
-            var updateTaskStatus = function (msg) {
-                var task = $scope.tasks.filter(function (t) {
-                    return t.id == msg.taskId && msg.status != "complete";
-                })[0];
-
-                if (task) {
-                    if (task.status == 'complete' || task.status == 'queued' || task.status == 'waiting') {
-                        $scope.refresh();
-                    } else {
-                        $timeout(function () {
-                            task.progress = msg.progress;
-                            task.message = msg.message;
-                            task.status = msg.status;
-                        }, 0);
-
-                        if (msg.progress == 100) {
-                            Storage.remove('lastTaskStatus_' + task.id);
-                            $scope.refresh();
-                        }
-                    }
-                }
-            };
-
-            $scope.reject = function (task) {
-                $scope.taskToReject = task;
-
-                var rejectInstance = $modal.open({
-                    animation: true,
-                    templateUrl: './partials/modal.task-reject.html',
-                    scope: $scope
+            rejectInstance.result.then(function () {
+                Tasks.delete(task.id).then(function () {
+                    $scope.refresh();
                 });
-
-                rejectInstance.result.then(function () {
-                    Tasks.delete(task.id).then(function () {
-                        $scope.refresh();
-                    });
-                });
-            };
-        }]);
+            });
+        };
+    }]);
 'use strict';
 
 angular.module('web')
     .controller('UserController', ['$state', '$scope', '$rootScope', 'Users', 'ssoMode', 'Storage', 'toastr', '$modal', 'ITEMS_BY_PAGE', 'DISPLAY_PAGES',
         function ($state, $scope, $rootScope, Users, ssoMode, Storage, toastr, $modal, ITEMS_BY_PAGE, DISPLAY_PAGES) {
-            $scope.itemsByPage = ITEMS_BY_PAGE;
-            $scope.displayedPages = DISPLAY_PAGES;
-            $scope.users = [];
-            $scope.ssoMode = ssoMode.ssoMode;
+        $scope.itemsByPage = ITEMS_BY_PAGE;
+        $scope.displayedPages = DISPLAY_PAGES;
+        $scope.users = [];
+        $scope.ssoMode = ssoMode.ssoMode;
 
-            var currentUser = Users.getCurrent();
-            $scope.isAdmin = currentUser.role === "admin";
-            $scope.isCurrentUser = function (email) {
-                return currentUser.email === email;
-            };
+        var currentUser = Users.getCurrent();
+        $scope.isAdmin = currentUser.role === "admin";
+        $scope.isCurrentUser = function (email) {
+            return currentUser.email === email;
+        };
 
-            var updateCurrentUser = function () {
-                if ($scope.isCurrentUser($scope.userToEdit.email)) {
-                    var user = angular.copy($scope.userToEdit);
-                    delete user.isNew;
-                    delete user.password;
-                    delete user.admin;
-                    user.role = $scope.userToEdit.admin ? 'admin' : 'user';
-                    Storage.save("currentUser", user);
-                }
-            };
+        var updateCurrentUser = function () {
+            if ($scope.isCurrentUser($scope.userToEdit.email)) {
+                var user = angular.copy($scope.userToEdit);
+                delete user.isNew;
+                delete user.password;
+                delete user.admin;
+                user.role = $scope.userToEdit.admin ? 'admin' : 'user';
+                Storage.save("currentUser", user);
+            }
+        };
 
-            $scope.editUser = function (user) {
-                $scope.userToEdit = angular.copy(user);
-                $scope.userToEdit.isNew = false;
-                var editUserModal = $modal.open({
-                    animation: true,
-                    templateUrl: './partials/modal.user-edit.html',
-                    scope: $scope
-                });
-
-                editUserModal.result.then(function () {
-                    $rootScope.isLoading = true;
-                    $scope.userToEdit.password = $scope.userToEdit.password || "";
-
-                    Users.update($scope.userToEdit).then(function () {
-                        $scope.refreshUsers();
-                        updateCurrentUser();
-                        var confirmModal = $modal.open({
-                            animation: true,
-                            templateUrl: './partials/modal.user-added.html',
-                            scope: $scope
-                        });
-                        $rootScope.isLoading = false;
-                    }, function (e) {
-                        $rootScope.isLoading = false;
-                    });
-                });
-            };
-
-            $scope.addUser = function () {
-                $scope.userToEdit = {};
-                $scope.userToEdit.isNew = true;
-                $scope.userToEdit.admin = false;
-                var modalInstance = $modal.open({
-                    animation: true,
-                    templateUrl: './partials/modal.user-edit.html',
-                    scope: $scope
-                });
-
-                modalInstance.result.then(function () {
-                    $rootScope.isLoading = true;
-
-                    Users.insert($scope.userToEdit).then(function () {
-                        var modalInstance = $modal.open({
-                            animation: true,
-                            templateUrl: './partials/modal.user-added.html',
-                            scope: $scope
-                        }, function (e) {
-                            console.log(e);
-                        });
-
-                        modalInstance.result.then(function () {
-                            $scope.refreshUsers();
-                        });
-                        $rootScope.isLoading = false;
-                    }, function (e) {
-                        $rootScope.isLoading = false;
-                    });
-                });
-            };
-
-            Users.getAll().then(function (data) {
-                // hack for handling 302 status
-                if (typeof data === 'string' && data.indexOf('<html lang="en" ng-app="web"') > -1) {
-                    $state.go('loader');
-                }
-
-                $scope.users = data;
+        $scope.editUser = function (user) {
+            $scope.userToEdit = angular.copy(user);
+            $scope.userToEdit.isNew = false;
+            var editUserModal = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.user-edit.html',
+                scope: $scope
             });
 
-            $scope.refreshUsers = function () {
+            editUserModal.result.then(function () {
                 $rootScope.isLoading = true;
-                $scope.users = [];
-                Users.getAll().then(function (data) {
-                    $scope.users = data;
+                $scope.userToEdit.password = $scope.userToEdit.password || "";
+
+                Users.update($scope.userToEdit).then(function () {
+                    $scope.refreshUsers();
+                    updateCurrentUser();
+                    var confirmModal = $modal.open({
+                        animation: true,
+                        templateUrl: './partials/modal.user-added.html',
+                        scope: $scope
+                    });
+                    $rootScope.isLoading = false;
+                }, function (e) {
+                    $rootScope.isLoading = false;
+                });
+            });
+        };
+
+        $scope.addUser = function () {
+            $scope.userToEdit = {};
+            $scope.userToEdit.isNew = true;
+            $scope.userToEdit.admin = false;
+            var modalInstance = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.user-edit.html',
+                scope: $scope
+            });
+
+            modalInstance.result.then(function () {
+                $rootScope.isLoading = true;
+
+                Users.insert($scope.userToEdit).then(function () {
+                    var modalInstance = $modal.open({
+                        animation: true,
+                        templateUrl: './partials/modal.user-added.html',
+                        scope: $scope
+                    }, function (e) {
+                        console.log(e);
+                    });
+
+                    modalInstance.result.then(function () {
+                        $scope.refreshUsers();
+                    });
+                    $rootScope.isLoading = false;
+                }, function (e) {
+                    $rootScope.isLoading = false;
+                });
+            });
+        };
+
+        Users.getAll().then(function (data) {
+            // hack for handling 302 status
+            if (typeof data === 'string' && data.indexOf('<html lang="en" ng-app="web"')>-1) {
+                $state.go('loader');
+            }
+
+            $scope.users = data;
+        });
+
+        $scope.refreshUsers = function () {
+            $rootScope.isLoading = true;
+            $scope.users = [];
+            Users.getAll().then(function (data) {
+                $scope.users = data;
+                $rootScope.isLoading = false;
+            }, function () {
+                $rootScope.isLoading = false;
+            })
+        };
+
+        $scope.deleteUser = function (user) {
+            $scope.userToDelete = user;
+            var modalInstance = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.user-delete.html',
+                scope: $scope
+            });
+
+            modalInstance.result.then(function () {
+                $rootScope.isLoading = true;
+                Users.delete(user.email).then(function () {
+                    $scope.refreshUsers();
                     $rootScope.isLoading = false;
                 }, function () {
                     $rootScope.isLoading = false;
-                })
-            };
-
-            $scope.deleteUser = function (user) {
-                $scope.userToDelete = user;
-                var modalInstance = $modal.open({
-                    animation: true,
-                    templateUrl: './partials/modal.user-delete.html',
-                    scope: $scope
                 });
-
-                modalInstance.result.then(function () {
-                    $rootScope.isLoading = true;
-                    Users.delete(user.email).then(function () {
-                        $scope.refreshUsers();
-                        $rootScope.isLoading = false;
-                    }, function () {
-                        $rootScope.isLoading = false;
-                    });
-                })
-            };
-        }]);
+            })
+        };
+    }]);
 'use strict';
 
 angular.module('web')
     .controller('VolumesController', ['$scope', '$rootScope', '$state', '$q', 'Retention', '$filter', 'Storage', 'Regions', 'ITEMS_BY_PAGE', 'DISPLAY_PAGES', '$modal', 'Volumes', 'Tasks', 'Zones',
         function ($scope, $rootScope, $state, $q, Retention, $filter, Storage, Regions, ITEMS_BY_PAGE, DISPLAY_PAGES, $modal, Volumes, Tasks, Zones) {
-            $scope.maxVolumeDisplay = 5;
-            $scope.itemsByPage = ITEMS_BY_PAGE;
-            $scope.displayedPages = DISPLAY_PAGES;
+        $scope.maxVolumeDisplay = 5;
+        $scope.itemsByPage = ITEMS_BY_PAGE;
+        $scope.displayedPages = DISPLAY_PAGES;
 
-            $scope.stateColorClass = {
-                "in-use": "success",
-                "creating": "error",
-                "available": "info",
-                "deleting": "error",
-                "deleted": "error",
-                "error": "error",
-                "removed": "danger"
-            };
+        $scope.stateColorClass = {
+            "in-use": "success",
+            "creating": "error",
+            "available": "info",
+            "deleting": "error",
+            "deleted": "error",
+            "error": "error",
+            "removed": "danger"
+        };
 
-            $scope.textClass = {
-                'false': 'Select',
-                'true': 'Unselect'
-            };
+        $scope.textClass = {
+            'false': 'Select',
+            'true': 'Unselect'
+        };
 
-            $scope.iconClass = {
-                'false': 'unchecked',
-                'true': 'check'
-            };
+        $scope.iconClass = {
+            'false': 'unchecked',
+            'true': 'check'
+        };
 
-            var actions = {
-                backup: {
-                    type: 'backup',
-                    bgClass: 'primary',
-                    modalTitle: 'Backup Volume',
-                    iconClass: 'cloud-download',
-                    description: 'start backup task',
-                    buttonText: 'Add backup task'
-                },
-                restore: {
-                    type: 'restore',
-                    bgClass: 'success',
-                    modalTitle: 'Restore Backup',
-                    iconClass: 'cloud-upload',
-                    description: 'start restore task',
-                    buttonText: 'Add restore task'
+        var actions = {
+            backup: {
+                type: 'backup',
+                bgClass: 'primary',
+                modalTitle: 'Backup Volume',
+                iconClass: 'cloud-download',
+                description: 'start backup task',
+                buttonText: 'Add backup task'
+            },
+            restore: {
+                type: 'restore',
+                bgClass: 'success',
+                modalTitle: 'Restore Backup',
+                iconClass: 'cloud-upload',
+                description: 'start restore task',
+                buttonText: 'Add restore task'
 
-                },
-                schedule: {
-                    type: 'schedule',
-                    bgClass: 'warning',
-                    modalTitle: 'Add Schedule',
-                    iconClass: 'time',
-                    description: 'add schedule',
-                    buttonText: 'Add schedule'
+            },
+            schedule: {
+                type: 'schedule',
+                bgClass: 'warning',
+                modalTitle: 'Add Schedule',
+                iconClass: 'time',
+                description: 'add schedule',
+                buttonText: 'Add schedule'
+            }
+        };
+
+        $scope.isAllSelected = false;
+        $scope.selectedAmount = 0;
+
+        $scope.checkAllSelection = function () {
+            var disabledAmount = $scope.volumes.filter(function (v) { return $scope.isDisabled(v)}).length;
+            $scope.selectedAmount = $scope.volumes.filter(function (v) { return v.isSelected}).length;
+            $scope.isAllSelected = ($scope.selectedAmount + disabledAmount == $scope.volumes.length);
+        };
+
+        $scope.selectAll = function () {
+            $scope.volumes.forEach(function (volume) {
+                doSelection(volume, !$scope.isAllSelected);
+            });
+            $scope.checkAllSelection();
+        };
+
+        $scope.toggleSelection = function (volume) {
+            doSelection(volume, !volume.isSelected);
+            $scope.checkAllSelection();
+        };
+
+        var doSelection = function (volume, value) {
+            if(volume.hasOwnProperty('isSelected')) {
+                volume.isSelected = value;
+            }
+        };
+
+        $scope.isDisabled = function (volume) {
+            return volume.state === 'removed'
+        };
+
+        // ---------filtering------------
+
+        $scope.showFilter = function () {
+            var filterInstance = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.volume-filter.html',
+                controller: 'modalVolumeFilterCtrl',
+                resolve: {
+                    tags: function () {
+                        return $scope.tags;
+                    },
+                    instances: function () {
+                        return $scope.instances;
+                    }
                 }
-            };
+            });
 
+            filterInstance.result.then(function (filter) {
+                $scope.stAdvancedFilter = filter;
+            });
+        };
+
+        var processVolumes = function (data) {
+            $scope.tags = {};
+            $scope.instances = [""];
+            for (var i = 0; i < data.length; i++){
+                for (var j = 0; j < data[i].tags.length; j++){
+                    var tag = data[i].tags[j];
+                    if (!$scope.tags.hasOwnProperty(tag.key)){
+                        $scope.tags[tag.key] = [tag.value];
+                    } else {
+                        if ($scope.tags[tag.key].indexOf(tag.value) == -1){
+                            $scope.tags[tag.key].push(tag.value);
+                        }
+                    }
+                }
+
+                var instance = data[i].instanceID;
+                if (instance && $scope.instances.indexOf(instance) == -1){
+                    $scope.instances.push(instance);
+                }
+                if (data[i].state !== 'removed') data[i].isSelected = false;
+            }
             $scope.isAllSelected = false;
-            $scope.selectedAmount = 0;
+            return data;
+        };
 
-            $scope.checkAllSelection = function () {
-                var disabledAmount = $scope.volumes.filter(function (v) {
-                    return $scope.isDisabled(v)
-                }).length;
-                $scope.selectedAmount = $scope.volumes.filter(function (v) {
-                    return v.isSelected
-                }).length;
-                $scope.isAllSelected = ($scope.selectedAmount + disabledAmount == $scope.volumes.length);
-            };
+        //----------filtering-end-----------
 
-            $scope.selectAll = function () {
-                $scope.volumes.forEach(function (volume) {
-                    doSelection(volume, !$scope.isAllSelected);
-                });
-                $scope.checkAllSelection();
-            };
+        //-----------Volumes-get/refresh-------------
 
-            $scope.toggleSelection = function (volume) {
-                doSelection(volume, !volume.isSelected);
-                $scope.checkAllSelection();
-            };
+        $scope.changeRegion = function (region) {
+            $scope.selectedRegion = region;
+        };
 
-            var doSelection = function (volume, value) {
-                if (volume.hasOwnProperty('isSelected')) {
-                    volume.isSelected = value;
+        $scope.refresh = function () {
+            $rootScope.isLoading = true;
+            $scope.volumes = [];
+            Volumes.get().then(function (data) {
+                // hack for handling 302 status
+                if (typeof data === 'string' && data.indexOf('<html lang="en" ng-app="web"')>-1) {
+                    $state.go('loader');
                 }
-            };
+                $scope.volumes = processVolumes(data);
+                $rootScope.isLoading = false;
+            }, function () {
+                $rootScope.isLoading = false;
+            });
+        };
 
-            $scope.isDisabled = function (volume) {
-                return volume.state === 'removed'
-            };
+        $scope.refresh();
+        //-----------Volumes-get/refresh-end------------
 
-            // ---------filtering------------
+        //-----------Volume-backup/restore/retention-------------
+        $scope.selectZone = function (zone) {
+            $scope.selectedZone = zone;
+        };
 
-            $scope.showFilter = function () {
-                var filterInstance = $modal.open({
-                    animation: true,
-                    templateUrl: './partials/modal.volume-filter.html',
-                    controller: 'modalVolumeFilterCtrl',
-                    resolve: {
-                        tags: function () {
-                            return $scope.tags;
-                        },
-                        instances: function () {
-                            return $scope.instances;
-                        }
-                    }
-                });
-
-                filterInstance.result.then(function (filter) {
-                    $scope.stAdvancedFilter = filter;
-                });
-            };
-
-            var processVolumes = function (data) {
-                $scope.tags = {};
-                $scope.instances = [""];
-                for (var i = 0; i < data.length; i++) {
-                    for (var j = 0; j < data[i].tags.length; j++) {
-                        var tag = data[i].tags[j];
-                        if (!$scope.tags.hasOwnProperty(tag.key)) {
-                            $scope.tags[tag.key] = [tag.value];
-                        } else {
-                            if ($scope.tags[tag.key].indexOf(tag.value) == -1) {
-                                $scope.tags[tag.key].push(tag.value);
-                            }
-                        }
-                    }
-
-                    var instance = data[i].instanceID;
-                    if (instance && $scope.instances.indexOf(instance) == -1) {
-                        $scope.instances.push(instance);
-                    }
-                    if (data[i].state !== 'removed') data[i].isSelected = false;
-                }
-                $scope.isAllSelected = false;
-                return data;
-            };
-
-            //----------filtering-end-----------
-
-            //-----------Volumes-get/refresh-------------
-
-            $scope.changeRegion = function (region) {
-                $scope.selectedRegion = region;
-            };
-
-            $scope.refresh = function () {
-                $rootScope.isLoading = true;
-                $scope.volumes = [];
-                Volumes.get().then(function (data) {
-                    // hack for handling 302 status
-                    if (typeof data === 'string' && data.indexOf('<html lang="en" ng-app="web"') > -1) {
-                        $state.go('loader');
-                    }
-                    $scope.volumes = processVolumes(data);
-                    $rootScope.isLoading = false;
-                }, function () {
+        $scope.volumeAction = function (actionType) {
+            $rootScope.isLoading = true;
+            $q.all([Zones.get(), Zones.getCurrent()])
+                .then(function (results) {
+                    $scope.zones = results[0];
+                    $scope.selectedZone = results[1]["zone-name"] || "";
+                 })
+                .finally(function () {
                     $rootScope.isLoading = false;
                 });
-            };
 
-            $scope.refresh();
-            //-----------Volumes-get/refresh-end------------
 
-            //-----------Volume-backup/restore/retention-------------
-            $scope.selectZone = function (zone) {
-                $scope.selectedZone = zone;
-            };
+            $scope.selectedVolumes = $scope.volumes.filter(function (v) { return v.isSelected; });
+            $scope.actionType = actionType;
+            $scope.action = actions[actionType];
+            $scope.schedule = { name: '', cron: '', enabled: true };
 
-            $scope.volumeAction = function (actionType) {
+            var confirmInstance = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.volumeAction.html',
+                scope: $scope
+            });
+
+            confirmInstance.result.then(function () {
                 $rootScope.isLoading = true;
-                $q.all([Zones.get(), Zones.getCurrent()])
-                    .then(function (results) {
-                        $scope.zones = results[0];
-                        $scope.selectedZone = results[1]["zone-name"] || "";
-                    })
-                    .finally(function () {
-                        $rootScope.isLoading = false;
-                    });
+                var volList = $scope.selectedVolumes.map(function (v) { return v.volumeId; });
 
+                var getNewTask = function(){
+                    var newTask = {
+                        id: "",
+                        priority: "",
+                        volumes: volList,
+                        status: "waiting"
+                    };
 
-                $scope.selectedVolumes = $scope.volumes.filter(function (v) {
-                    return v.isSelected;
+                    switch (actionType) {
+                        case 'restore':
+                            newTask.backupFileName = "";
+                            newTask.zone = $scope.selectedZone;
+                        case 'backup':
+                            newTask.type = actionType;
+                            newTask.schedulerManual = true;
+                            newTask.schedulerName = Storage.get('currentUser').email;
+                            newTask.schedulerTime = Date.now();
+                            break;
+                        case 'schedule':
+                            newTask.type = 'backup';
+                            newTask.regular = true;
+                            newTask.schedulerManual = false;
+                            newTask.schedulerName = $scope.schedule.name;
+                            newTask.cron = $scope.schedule.cron;
+                            newTask.enabled = $scope.schedule.enabled;
+                            break;
+                    }
+
+                    return newTask;
+                };
+
+                var t = getNewTask();
+                Tasks.insert(t).then(function () {
+                    $rootScope.isLoading = false;
+                    if (actionType != 'schedule') {
+                        var successInstance = $modal.open({
+                            animation: true,
+                            templateUrl: './partials/modal.task-created.html',
+                            scope: $scope
+                        });
+
+                        successInstance.result.then(function () {
+                            $state.go('app.tasks');
+                        });
+                    }
+                }, function (e) {
+                    $rootScope.isLoading = false;
+                    console.log(e);
                 });
-                $scope.actionType = actionType;
-                $scope.action = actions[actionType];
-                $scope.schedule = {name: '', cron: '', enabled: true};
 
-                var confirmInstance = $modal.open({
+            });
+
+        };
+
+        var getShowRule = function (rule) {
+            var showRules = {};
+            angular.forEach($scope.rule, function (value, key) {
+                showRules[key] = value > 0;
+            });
+            Object.defineProperty(showRules, 'never', {
+                get: function() {
+                    return !$scope.showRetentionRule.size && !$scope.showRetentionRule.count && !$scope.showRetentionRule.days;
+                },
+                set: function(value) {
+                    if (value){
+                        $scope.showRetentionRule.size = false;
+                        $scope.showRetentionRule.count = false;
+                        $scope.showRetentionRule.days = false;
+                    }
+                }
+            });
+            return showRules;
+        };
+        $scope.retentionRule = function (volume) {
+            $rootScope.isLoading = true;
+            Retention.get(volume.volumeId).then(function (data) {
+
+                $scope.rule = {
+                    size: data.size,
+                    count: data.count,
+                    days: data.days
+                };
+                $scope.showRetentionRule = getShowRule($scope.rule);
+
+                $rootScope.isLoading = false;
+
+                var retentionModalInstance = $modal.open({
                     animation: true,
-                    templateUrl: './partials/modal.volumeAction.html',
+                    templateUrl: './partials/modal.retention-edit.html',
                     scope: $scope
                 });
 
-                confirmInstance.result.then(function () {
+                retentionModalInstance.result.then(function () {
                     $rootScope.isLoading = true;
-                    var volList = $scope.selectedVolumes.map(function (v) {
-                        return v.volumeId;
+                    var rule = angular.copy($scope.rule);
+                    angular.forEach(rule, function (value, key) {
+                        rule[key] = $scope.showRetentionRule[key] ? rule[key] : 0
                     });
+                    rule.volumeId = data.volumeId;
 
-                    var getNewTask = function () {
-                        var newTask = {
-                            id: "",
-                            priority: "",
-                            volumes: volList,
-                            status: "waiting"
-                        };
-
-                        switch (actionType) {
-                            case 'restore':
-                                newTask.backupFileName = "";
-                                newTask.zone = $scope.selectedZone;
-                            case 'backup':
-                                newTask.type = actionType;
-                                newTask.schedulerManual = true;
-                                newTask.schedulerName = Storage.get('currentUser').email;
-                                newTask.schedulerTime = Date.now();
-                                break;
-                            case 'schedule':
-                                newTask.type = 'backup';
-                                newTask.regular = true;
-                                newTask.schedulerManual = false;
-                                newTask.schedulerName = $scope.schedule.name;
-                                newTask.cron = $scope.schedule.cron;
-                                newTask.enabled = $scope.schedule.enabled;
-                                break;
-                        }
-
-                        return newTask;
-                    };
-
-                    var t = getNewTask();
-                    Tasks.insert(t).then(function () {
+                    Retention.update(rule).then(function () {
                         $rootScope.isLoading = false;
-                        if (actionType != 'schedule') {
-                            var successInstance = $modal.open({
-                                animation: true,
-                                templateUrl: './partials/modal.task-created.html',
-                                scope: $scope
-                            });
-
-                            successInstance.result.then(function () {
-                                $state.go('app.tasks');
-                            });
-                        }
-                    }, function (e) {
+                    }, function () {
                         $rootScope.isLoading = false;
-                        console.log(e);
-                    });
-
+                    })
                 });
 
-            };
+            }, function () {
+                $rootScope.isLoading = false;
+            });
 
-            var getShowRule = function (rule) {
-                var showRules = {};
-                angular.forEach($scope.rule, function (value, key) {
-                    showRules[key] = value > 0;
-                });
-                Object.defineProperty(showRules, 'never', {
-                    get: function () {
-                        return !$scope.showRetentionRule.size && !$scope.showRetentionRule.count && !$scope.showRetentionRule.days;
-                    },
-                    set: function (value) {
-                        if (value) {
-                            $scope.showRetentionRule.size = false;
-                            $scope.showRetentionRule.count = false;
-                            $scope.showRetentionRule.days = false;
-                        }
-                    }
-                });
-                return showRules;
-            };
-            $scope.retentionRule = function (volume) {
-                $rootScope.isLoading = true;
-                Retention.get(volume.volumeId).then(function (data) {
-
-                    $scope.rule = {
-                        size: data.size,
-                        count: data.count,
-                        days: data.days
-                    };
-                    $scope.showRetentionRule = getShowRule($scope.rule);
-
-                    $rootScope.isLoading = false;
-
-                    var retentionModalInstance = $modal.open({
-                        animation: true,
-                        templateUrl: './partials/modal.retention-edit.html',
-                        scope: $scope
-                    });
-
-                    retentionModalInstance.result.then(function () {
-                        $rootScope.isLoading = true;
-                        var rule = angular.copy($scope.rule);
-                        angular.forEach(rule, function (value, key) {
-                            rule[key] = $scope.showRetentionRule[key] ? rule[key] : 0
-                        });
-                        rule.volumeId = data.volumeId;
-
-                        Retention.update(rule).then(function () {
-                            $rootScope.isLoading = false;
-                        }, function () {
-                            $rootScope.isLoading = false;
-                        })
-                    });
-
-                }, function () {
-                    $rootScope.isLoading = false;
-                });
-
-            }
-        }]);
+        }
+    }]);
 /**
  * Created by Administrator on 21.07.2015.
  */
@@ -1902,7 +1885,7 @@ angular.module('web')
 
             System.delete(deletionData).then(function () {
                 $scope.state = "done";
-            }, function (e) {
+            }, function(e){
                 $scope.delError = e;
                 $scope.state = "failed";
             });
@@ -1997,7 +1980,8 @@ app.directive('autoScroll', function () {
         link: function (scope, element, attr) {
 
             scope.$watchCollection('autoScroll', function (newValue) {
-                if (newValue && JSON.parse(attr.enableScroll)) {
+                if (newValue && JSON.parse(attr.enableScroll))
+                {
                     $(element).scrollTop($(element)[0].scrollHeight + $(element)[0].clientHeight);
                 }
             });
@@ -2019,11 +2003,11 @@ app.directive('checkPassword', [function () {
         }
     }
 }]);
-app.directive('complexPassword', function () {
+app.directive('complexPassword', function() {
     return {
         require: 'ngModel',
-        link: function (scope, elm, attrs, ctrl) {
-            ctrl.$parsers.unshift(function (password) {
+        link: function(scope, elm, attrs, ctrl) {
+            ctrl.$parsers.unshift(function(password) {
                 var hasUpperCase = /[A-Z]/.test(password);
                 var hasLowerCase = /[a-z]/.test(password);
                 var hasNumbers = /\d/.test(password);
@@ -2046,27 +2030,28 @@ app.directive('complexPassword', function () {
 "use strict";
 
 angular.module('web')
-    .directive('emails', function () {
+    .directive('emails', function() {
         return {
             restrict: 'E',
-            scope: {emails: '='},
-            template: '<div class="input-group" style="clear: both;">' +
-            '<input type="email" class="form-control" ng-model="newEmail" placeholder="email"/>' +
-            '<span class="input-group-btn" style="width:0px;"></span>' +
-            '<span class="input-group-btn"><button class="btn btn-primary" ng-click="add()" ng-disabled="!newEmail"><span class="glyphicon glyphicon-plus"></span></button></span>' +
+            scope: { emails: '='},
+            template:
+            '<div class="input-group" style="clear: both;">' +
+                '<input type="email" class="form-control" ng-model="newEmail" placeholder="email"/>' +
+                '<span class="input-group-btn" style="width:0px;"></span>' +
+                '<span class="input-group-btn"><button class="btn btn-primary" ng-click="add()" ng-disabled="!newEmail"><span class="glyphicon glyphicon-plus"></span></button></span>' +
             '</div>' +
             '<div class="tags" style="margin-top: 5px">' +
-            '<div ng-repeat="mail in emails track by $index" class="tag label label-success" ng-click="remove($index)">' +
-            '<span class="glyphicon glyphicon-remove"></span>' +
-            '<div class="tag-value">{{mail}}</div>' +
-            '</div>' +
+                '<div ng-repeat="mail in emails track by $index" class="tag label label-success" ng-click="remove($index)">' +
+                    '<span class="glyphicon glyphicon-remove"></span>' +
+                    '<div class="tag-value">{{mail}}</div>' +
+                '</div>' +
             '</div>',
-            link: function ($scope, $element) {
+            link: function ( $scope, $element ) {
                 $scope.newEmail = "";
-                var inputs = angular.element($element[0].querySelectorAll('input'));
+                var inputs = angular.element( $element[0].querySelectorAll('input') );
 
                 // This adds the new tag to the tags array
-                $scope.add = function () {
+                $scope.add = function() {
                     if ($scope.newEmail) {
                         $scope.emails.push($scope.newEmail);
                         $scope.newEmail = "";
@@ -2075,16 +2060,16 @@ angular.module('web')
                 };
 
                 // This is the ng-click handler to remove an item
-                $scope.remove = function (idx) {
-                    $scope.emails.splice(idx, 1);
+                $scope.remove = function ( idx ) {
+                    $scope.emails.splice( idx , 1 );
                 };
 
                 // Capture all keypresses
-                inputs.bind('keypress', function (event) {
+                inputs.bind( 'keypress', function ( event ) {
                     // But we only care when Enter was pressed
-                    if ($scope.newEmail && ( event.keyCode == 13 )) {
+                    if ( $scope.newEmail && ( event.keyCode == 13 ) ) {
                         event.preventDefault();
-                        $scope.$apply($scope.add);
+                        $scope.$apply( $scope.add );
                     }
                 });
             }
@@ -2093,20 +2078,20 @@ angular.module('web')
 'use strict';
 
 angular.module('web')
-    .directive('jqCron', function () {
+    .directive('jqCron',function(){
         return {
             restrict: 'E',
             require: 'ngModel',
             scope: {
                 ngModel: '='
             },
-            link: function (scope, ele, attr, ctrl) {
+            link:function(scope, ele, attr, ctrl){
                 var options = {
                     initial: scope.ngModel || "* * * * *",
                     onChange: function () {
                         var value = $(this).cron("value");
                         scope.ngModel = value;
-                        if (ctrl.$viewValue != value) {
+                        if(ctrl.$viewValue != value){
                             ctrl.$setViewValue(value);
                         }
                     }
@@ -2138,33 +2123,34 @@ angular.module('web')
 "use strict";
 
 angular.module('web')
-    .directive('tagFilter', function () {
+    .directive('tagFilter', function() {
         return {
             restrict: 'E',
-            scope: {tags: '=', src: '=', keyph: '@', valueph: '@'},
-            template: '<div class="input-group tag-input" style="clear: both;">' +
-            '<input type="text" class="form-control" ng-model="newTag.key" placeholder="{{keyph}}" typeahead="key for key in srcKeys | filter:$viewValue" typeahead-editable="false"/>' +
-            '<span class="input-group-btn" style="width:0px;"></span>' +
-            '<input type="text" class="form-control" ng-model="newTag.value" placeholder="{{valueph}}" style="border-left: 0" typeahead="val for val in src[newTag.key] | filter:$viewValue" typeahead-editable="false" />' +
-            '<span class="input-group-btn"><button class="btn btn-primary" ng-click="add()"><span class="glyphicon glyphicon-plus"></span></button></span>' +
+            scope: { tags: '=', src: '=', keyph: '@', valueph: '@'},
+            template:
+            '<div class="input-group tag-input" style="clear: both;">' +
+                '<input type="text" class="form-control" ng-model="newTag.key" placeholder="{{keyph}}" typeahead="key for key in srcKeys | filter:$viewValue" typeahead-editable="false"/>' +
+                '<span class="input-group-btn" style="width:0px;"></span>' +
+                '<input type="text" class="form-control" ng-model="newTag.value" placeholder="{{valueph}}" style="border-left: 0" typeahead="val for val in src[newTag.key] | filter:$viewValue" typeahead-editable="false" />' +
+                '<span class="input-group-btn"><button class="btn btn-primary" ng-click="add()"><span class="glyphicon glyphicon-plus"></span></button></span>' +
             '</div>' +
             '<div class="tags">' +
-            '<div ng-repeat="tag in tags track by $index" class="tag label label-success" ng-click="remove($index)">' +
-            '<span class="glyphicon glyphicon-remove"></span>' +
-            '<div class="tag-value">{{tag.key}} : {{tag.value}}</div>' +
-            '</div>' +
+                '<div ng-repeat="tag in tags track by $index" class="tag label label-success" ng-click="remove($index)">' +
+                    '<span class="glyphicon glyphicon-remove"></span>' +
+                    '<div class="tag-value">{{tag.key}} : {{tag.value}}</div>' +
+                '</div>' +
             '</div>',
-            link: function ($scope, $element, $attrs) {
+            link: function ( $scope, $element, $attrs ) {
                 $scope.newTag = {};
                 $scope.srcKeys = [];
-                var inputs = angular.element($element[0].querySelectorAll('input'));
+                var inputs = angular.element( $element[0].querySelectorAll('input') );
 
                 $scope.$watch("src", function (v) {
                     $scope.srcKeys = Object.keys(v) || [];
                 });
 
                 // This adds the new tag to the tags array
-                $scope.add = function () {
+                $scope.add = function() {
                     if ($scope.newTag.hasOwnProperty('key') && $scope.newTag.hasOwnProperty('value')) {
                         $scope.tags.push($scope.newTag);
                         $scope.newTag = {};
@@ -2173,28 +2159,28 @@ angular.module('web')
                 };
 
                 // This is the ng-click handler to remove an item
-                $scope.remove = function (idx) {
-                    $scope.tags.splice(idx, 1);
+                $scope.remove = function ( idx ) {
+                    $scope.tags.splice( idx , 1 );
                 };
 
                 // Capture all keypresses
-                inputs.bind('keypress', function (event) {
+                inputs.bind( 'keypress', function ( event ) {
                     // But we only care when Enter was pressed
-                    if ($scope.newTag.key != "" && $scope.newTag.value != "" && ( event.keyCode == 13 )) {
+                    if ( $scope.newTag.key != "" &&  $scope.newTag.value != "" && ( event.keyCode == 13 ) ) {
                         event.preventDefault();
-                        $scope.$apply($scope.add);
+                        $scope.$apply( $scope.add );
                     }
                 });
             }
         };
     });
-app.directive('uploadedFile', function () {
+app.directive('uploadedFile', function(){
     return {
         scope: {
             'uploadedFile': '='
         },
-        link: function (scope, el, attrs) {
-            el.bind('change', function (event) {
+        link: function(scope, el, attrs){
+            el.bind('change', function(event){
                 var file = event.target.files[0];
                 scope.uploadedFile = file ? file : undefined;
                 scope.$apply();
@@ -2236,23 +2222,23 @@ angular.module('web')
                     return filter.length == 0 || (base.length > 0 && (function () {
                             for (var i = 0; i < filter.length; i++) {
                                 var tagToFilter = filter[i];
-                                for (var j = 0; j < base.length; j++) {
+                                for (var j = 0; j < base.length; j++){
                                     var tagFromBase = base[j];
-                                    if (tagFromBase.key === tagToFilter.key && tagFromBase.value === tagToFilter.value) {
+                                    if (tagFromBase.key === tagToFilter.key && tagFromBase.value === tagToFilter.value){
                                         return true;
                                     }
                                 }
                             }
                             return false;
-                        })());
+                    })());
                 }
             };
             return typeOptions[type]();
         };
 
         var volumeMatch = function (item, filterObj) {
-            var filterKeys = Object.keys(filterObj);
-            for (var i = 0; i < filterKeys.length; i++) {
+            var filterKeys =  Object.keys(filterObj);
+            for (var i = 0; i < filterKeys.length; i++){
                 var key = filterKeys[i];
                 if (!filterMatch(item[key], filterObj[key].value, filterObj[key].type)) {
                     return false;
@@ -2268,7 +2254,7 @@ angular.module('web')
                 && array.length > 0) {
                 var result = [];
                 array.forEach(function (item) {
-                    if (volumeMatch(item, filterObj)) {
+                    if (volumeMatch(item, filterObj)){
                         result.push(item);
                     }
                 });
@@ -2298,23 +2284,23 @@ angular.module('web')
                 method: 'POST',
                 url: sessionUrl,
                 headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-                transformRequest: function (obj) {
+                transformRequest: function(obj) {
                     var str = [];
-                    for (var p in obj)
+                    for(var p in obj)
                         str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
                     return str.join("&");
                 },
-                data: {email: email, password: pass}
+                data: {email: email, password: pass }
             }).then(function (response) {
-                Storage.save("currentUser", response.data);
-                deferred.resolve(response.data);
-            }, function (err, status) {
-                deferred.reject(statuses[status]);
-            });
+                    Storage.save("currentUser", response.data);
+                    deferred.resolve(response.data);
+                }, function (err, status) {
+                    deferred.reject(statuses[status]);
+                });
 
             return deferred.promise;
         };
-
+        
         var _logout = function () {
             Storage.remove("ssoMode");
             Storage.remove("currentUser");
@@ -2363,7 +2349,7 @@ angular.module('web')
             getForVolume: function (volume) {
                 return _getForVolume(volume);
             },
-            delete: function (fileName) {
+            delete: function (fileName){
                 return _delete(fileName);
             }
         }
@@ -2403,9 +2389,7 @@ angular.module('web')
                 method: "POST",
                 data: item || {}
             };
-            if (timeout) {
-                request.timeout = timeout;
-            }
+            if (timeout) {request.timeout = timeout;}
 
             $http(request).then(function () {
                 deferred.resolve()
@@ -2481,7 +2465,7 @@ angular.module('web')
 angular.module('web')
     .service('Exception', ['toastr', function (toastr) {
         return {
-            handle: function (error) {
+            handle: function (error){
                 toastr.error((error.data || {}).localizedMessage || "Error occurred!");
                 console.log(error);
             }
@@ -2583,7 +2567,7 @@ angular.module('web')
                 sessionStorage.removeItem(key);
             },
 
-            clearAll: function () {
+            clearAll : function () {
                 sessionStorage.clear();
             }
         };
@@ -2721,7 +2705,7 @@ angular.module('web')
                 method: 'GET'
             }).then(function (result) {
                 deferred.resolve(result.data);
-            }, function (e) {
+            },function (e) {
                 deferred.reject(e);
             });
             return deferred.promise;
@@ -2735,7 +2719,7 @@ angular.module('web')
                 data: user
             }).then(function (result) {
                 deferred.resolve(result.data);
-            }, function (e) {
+            },function (e) {
                 deferred.reject(e);
             });
             return deferred.promise;
