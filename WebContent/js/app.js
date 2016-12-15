@@ -34,6 +34,11 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
         return deferred.promise;
     }];
 
+    var currentUser = ['$q', 'Users', function ($q, Users) {
+        var currentUser = Users.getCurrent();
+        return Boolean(currentUser) ? $q.resolve(currentUser) : $q.reject();
+    }];
+
     var doRefresh = ['Users', '$q', 'Storage', 'Auth', '$rootScope', 'System',
         function (Users, $q, Storage, Auth, $rootScope, System) {
         $rootScope.isLoading = true;
@@ -98,46 +103,68 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
         .state('app.volume.list', {
             url: "/volumes",
             templateUrl: "partials/volumes.html",
-            controller: 'VolumesController'
+            controller: 'VolumesController',
+            resolve: {
+                currentUser: currentUser
+            }
         })
         .state('app.volume.schedule', {
             url: "/schedule/:volumeId",
             templateUrl: "partials/schedule.html",
-            controller: 'ScheduleController'
+            controller: 'ScheduleController',
+            resolve: {
+                currentUser: currentUser
+            }
         })
 
         .state('app.volume.history', {
             url: "/history/:volumeId",
             templateUrl: "partials/history.html",
-            controller: 'HistoryController'
+            controller: 'HistoryController',
+            resolve: {
+                currentUser: currentUser
+            }
         })
         .state('app.volume.tasks', {
             url: "/tasks/:volumeId",
             templateUrl: "partials/tasks.html",
-            controller: "TasksController"
+            controller: "TasksController",
+            resolve: {
+                currentUser: currentUser
+            }
         })
         .state('app.tasks', {
             url: "/tasks",
             templateUrl: "partials/tasks.html",
-            controller: "TasksController"
+            controller: "TasksController",
+            resolve: {
+                currentUser: currentUser
+            }
         })
         .state('app.settings', {
             url: "/settings",
             templateUrl: "partials/settings.html",
-            controller: "SettingsController"
+            controller: "SettingsController",
+            resolve: {
+                currentUser: currentUser
+            }
         })
         .state('app.users', {
             url: "/users",
             templateUrl: "partials/users.html",
             controller: "UserController",
             resolve: {
-                ssoMode: ssoMode
+                ssoMode: ssoMode,
+                currentUser: currentUser
             }
         })
         .state('app.logs', {
             url: "/logs",
             templateUrl: "partials/logs.html",
-            controller: "LogsController"
+            controller: "LogsController",
+            resolve: {
+                currentUser: currentUser
+            }
         })
         .state('config', {
             url: "/config",
@@ -236,6 +263,7 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
                     console.log(e);
                 });
             };
+
 
         $rootScope.$on('$stateChangeError', function (e) {
             e.preventDefault();

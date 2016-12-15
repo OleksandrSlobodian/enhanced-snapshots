@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('web')
-    .controller('SettingsController', ['$rootScope', '$state', '$scope', 'System', 'Users', '$modal', 'Configuration',
-        function ($rootScope, $state, $scope, System, Users, $modal, Configuration) {
+    .controller('SettingsController', ['$rootScope', '$state', '$scope', 'System', 'currentUser', 'Users', '$modal', 'Configuration',
+        function ($rootScope, $state, $scope, System, currentUser, Users, $modal, Configuration) {
         $rootScope.isLoading = false;
         var currentUser = Users.getCurrent();
         $scope.isAdmin = currentUser.role === "admin";
@@ -18,7 +18,7 @@ angular.module('web')
             },
             volumeType: {
                empty: 'Volume size for io1 volume type cannot be empty.',
-               range: 'Volume size for io1 volume type must be in between 1 and 30.'
+               range: 'Volume size for io1 volume type must be in between 1 and 50.'
             },
             otherSettings: {
                 empty: 'All fields are required. Please fill in empty fields.'
