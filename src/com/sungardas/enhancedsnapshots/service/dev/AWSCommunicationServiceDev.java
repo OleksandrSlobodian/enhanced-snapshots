@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 
 
 @Service
@@ -112,6 +113,11 @@ public class AWSCommunicationServiceDev extends AWSCommunicationServiceImpl {
     @Override
     public void addTag(final String resourceId, final String name, final String value) {
 
+    }
+
+    @Override
+    public void addTag(String resourceId, List<Tag> tags) {
+        super.addTag(resourceId, tags);
     }
 
     @Override
