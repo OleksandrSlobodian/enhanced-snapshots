@@ -47,7 +47,7 @@ angular.module('web')
                     $state.go('config');
                 } else {
                     System.get().then(function (data) {
-                        if (data.currentVersion != data.latestVersion) {
+                        if (data.currentVersion < data.latestVersion) {
                             Storage.save("notification", "Newer version is available! Please, create a new instance from the latest AMI.");
                         }
                         $scope.subscribeWS();

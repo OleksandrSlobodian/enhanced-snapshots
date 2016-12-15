@@ -238,6 +238,7 @@ public class SystemConfiguration {
         private int tempVolumeIopsPerGb;
         private String restoreVolumeType;
         private int restoreVolumeIopsPerGb;
+        private int maxIopsPerGb;
         private String[] volumeTypeOptions;
         private int amazonRetryCount;
         private int amazonRetrySleep;
@@ -245,6 +246,14 @@ public class SystemConfiguration {
         private int taskHistoryTTS;
         private boolean storeSnapshots;
         private int logsBuffer;
+
+        public int getMaxIopsPerGb() {
+            return maxIopsPerGb;
+        }
+
+        public void setMaxIopsPerGb(int maxIopsPerGb) {
+            this.maxIopsPerGb = maxIopsPerGb;
+        }
 
         public int getAmazonRetryCount() {
             return amazonRetryCount;
