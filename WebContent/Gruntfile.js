@@ -24,6 +24,26 @@ module.exports = function(grunt) {
             }
         },
 
+        watch: {
+            scripts: {
+                files: 'js/**/*.js',
+                tasks: ['default'],
+                options: {
+                    spawn:false,
+                    event:['all']
+                }
+            }
+        },
+
+        copy: {
+            main: {
+                files: [
+                    // includes files within path
+                    {expand: true, cwd: '../WebContent/', src: ['**'], dest: 'C:/Program Files/apache-tomcat-8.5.8/webapps/ROOT/'}
+                ]
+            }
+        },
+
         uglify: {
             build: {
                 src: 'js/esnap.js',
@@ -123,7 +143,10 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-contrib-concat');
     grunt.loadNpmTasks('grunt-contrib-uglify');
     grunt.loadNpmTasks('grunt-bower-concat');
+    grunt.loadNpmTasks('grunt-contrib-watch');
+    grunt.loadNpmTasks('grunt-contrib-copy');
 
+    grunt.registerTask( 'default', [ 'dev', 'copy' ] );
     grunt.registerTask('prod', ['concat', 'uglify', 'bower_concat:all']);
     grunt.registerTask('dev', ['concat:dev', 'bower_concat:dev']);
 };
