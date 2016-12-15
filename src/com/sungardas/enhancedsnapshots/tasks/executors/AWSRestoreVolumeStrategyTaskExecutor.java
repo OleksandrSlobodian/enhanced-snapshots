@@ -235,13 +235,25 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         LOG.info("Used backup record: {}", backupEntry.getFileName());
         int size = Integer.parseInt(backupEntry.getSizeGiB());
         checkThreadInterruption(taskEntry);
-        // creating temporary volume
-        if (taskEntry.getTempVolumeType().equals(VolumeType.Io1.toString())) {
-            tempVolume = awsCommunication.createIO1Volume(size, taskEntry.getTempVolumeIopsPerGb());
+
+        String volumeType;
+        int volumeIopsPerGb;
+
+        if (SystemUtils.getAvailabilityZone().equals(taskEntry.getAvailabilityZone())) {
+            volumeType = taskEntry.getRestoreVolumeType();
+            volumeIopsPerGb = taskEntry.getRestoreVolumeIopsPerGb();
         } else {
-            tempVolume = awsCommunication.createVolume(size, VolumeType.fromValue(taskEntry.getTempVolumeType()));
+            volumeType = taskEntry.getTempVolumeType();
+            volumeIopsPerGb = taskEntry.getTempVolumeIopsPerGb();
         }
-        LOG.info("Created {} volume:{}", taskEntry.getTempVolumeType(), tempVolume.toString());
+
+        // creating temporary volume
+        if (volumeType.equals(VolumeType.Io1.toString())) {
+            tempVolume = awsCommunication.createIO1Volume(size, volumeIopsPerGb);
+        } else {
+            tempVolume = awsCommunication.createVolume(size, VolumeType.fromValue(volumeType));
+        }
+        LOG.info("Created {} volume:{}", volumeType, tempVolume.toString());
         checkThreadInterruption(taskEntry);
         awsCommunication.createTemporaryTag(tempVolume.getVolumeId(), backupEntry.getFileName());
         taskEntry.setTempVolumeId(tempVolume.getVolumeId());

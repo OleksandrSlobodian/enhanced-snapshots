@@ -2,6 +2,7 @@ package com.sungardas.enhancedsnapshots.service.impl;
 
 import com.amazonaws.services.ec2.AmazonEC2;
 import com.amazonaws.services.ec2.model.*;
+import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
 import com.sungardas.enhancedsnapshots.components.ConfigurationMediator;
