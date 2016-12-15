@@ -34,11 +34,12 @@ angular.module('web')
             return deferred.promise;
         };
         
-        var _logout= function () {
-            Storage.remove("ssoMode")
+        var _logout = function () {
+            Storage.remove("ssoMode");
             Storage.remove("currentUser");
-            return $http.get(logoutUrl)
-            };
+
+            return $http.get(logoutUrl);
+        };
 
         return {
             logIn: function (email, pass) {
