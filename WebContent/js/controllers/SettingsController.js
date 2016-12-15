@@ -1,8 +1,8 @@
 'use strict';
 
 angular.module('web')
-    .controller('SettingsController', ['$rootScope', '$state', '$scope', 'System', 'Users', '$modal', 'Configuration',
-        function ($rootScope, $state, $scope, System, Users, $modal, Configuration) {
+    .controller('SettingsController', ['$rootScope', '$state', '$scope', 'System', 'currentUser', 'Users', '$modal', 'Configuration',
+        function ($rootScope, $state, $scope, System, currentUser, Users, $modal, Configuration) {
         $rootScope.isLoading = false;
         var currentUser = Users.getCurrent();
         $scope.isAdmin = currentUser.role === "admin";
