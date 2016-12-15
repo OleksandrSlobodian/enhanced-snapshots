@@ -129,7 +129,6 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
                     break;
                 }
 
-
                 case NONE: {
                     // check volume exists
                     if (!volumeService.volumeExists(taskEntry.getVolume())) {
@@ -256,6 +255,7 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
     private void creatingSnapshotStep(TaskEntry taskEntry) {
         setProgress(taskEntry, TaskProgress.CREATING_SNAPSHOT);
         Volume volumeSrc = awsCommunication.getVolume(taskEntry.getVolume());
+        taskEntry.setTags(volumeSrc.getTags());
         if (volumeSrc == null) {
             LOG.error("Can't get access to {} volume", taskEntry.getVolume());
             throw new AWSBackupVolumeException(MessageFormat.format("Can't get access to {} volume", taskEntry.getVolume()));
@@ -354,6 +354,7 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
         LOG.info("Put backup entry to the Backup List: {}", backup.getFileName());
         backup.setState(BackupState.COMPLETED.getState());
         backup.setSize(String.valueOf(backupSize));
+        backup.setTags(taskEntry.getTags());
         backupRepository.save(backup);
 
         LOG.info(format("Backup process for volume %s finished successfully ", taskEntry.getVolume()));
