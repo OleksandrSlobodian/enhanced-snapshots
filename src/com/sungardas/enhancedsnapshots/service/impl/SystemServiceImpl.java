@@ -83,23 +83,20 @@ public class SystemServiceImpl implements SystemService {
     @Autowired
     @Qualifier("amazonDynamoDbMapper")
     private IDynamoDBMapper dynamoDBMapper;
-
     @Autowired
     private AmazonS3 amazonS3;
-
     @Autowired
     private ConfigurationRepository configurationRepository;
     @Autowired
     private NodeRepository nodeRepository;
-
     @Autowired
     private ConfigurationMediatorConfigurator configurationMediator;
-
     @Autowired
     private SDFSStateService sdfsStateService;
-
     @Autowired
     private NotificationService notificationService;
+    @Value("${enhancedsnapshots.default.maxIopsPerGb}")
+    private int maxIopsPerGb;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -278,6 +275,7 @@ public class SystemServiceImpl implements SystemService {
         systemProperties.setStoreSnapshots(configurationMediator.isStoreSnapshot());
         systemProperties.setTaskHistoryTTS(configurationMediator.getTaskHistoryTTS());
         systemProperties.setLogsBuffer(configurationMediator.getLogsBufferSize());
+        systemProperties.setMaxIopsPerGb(maxIopsPerGb);
         configuration.setSystemProperties(systemProperties);
         configuration.setSsoMode(configurationMediator.isSsoLoginMode());
         configuration.setDomain(configurationMediator.getDomain());
