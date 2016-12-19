@@ -1,4 +1,5 @@
 import './components/auth/login.html';
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 import WebServices from './services';
 import WebFilters from './filters';
@@ -63,7 +64,7 @@ export default angular.module('web',
 
         $rootScope.subscribeWS = function () {
             $stomp.setDebug(function (args) {
-                // console.log(args);
+                console.log(args);
             });
 
             $stomp
@@ -79,7 +80,7 @@ export default angular.module('web',
                 }, function (e) {
                     console.log(e);
                 });
-            };
+        };
 
 
         $rootScope.$on('$stateChangeError', function (e) {

@@ -48,7 +48,7 @@ export default function LoginController ($scope, $state, $stateParams, $stomp, A
                     if (data.currentVersion != data.latestVersion) {
                         Storage.save("notification", "Newer version is available! Please, create a new instance from the latest AMI.");
                     }
-                    $scope.subscribeWS();
+                    //$scope.subscribeWS();
                 }).finally(function () {
                     $state.go('app.volume.list');
                 });

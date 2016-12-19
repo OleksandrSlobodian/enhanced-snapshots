@@ -63,12 +63,20 @@ module.exports = {
             },
             {
                 test: /\.css$/,
-                loader: ExtractTextPlugin.extract('style', 'css-loader!postcss-loader')
+                loader: ExtractTextPlugin.extract('style', 'css-loader'),
+                //loader: "style-loader!css-loader",
+                exclude: path.resolve(__dirname, 'index.css'),
             },
             {
-                test: /\.png$/,
-                loader: "url-loader?mimetype=image/png"
+                test: /\.(ttf|eot|woff|woff2|png|ico|jpg|jpeg|gif|svg)$/i,
+                loaders: [
+                    "url-loader?mimetype=image/png"
+                ]
             }
+            //{
+            //    test: /\.png$/,
+            //    loader: "url-loader?mimetype=image/png"
+            //}
         ]
     },
     plugins: [
@@ -79,6 +87,7 @@ module.exports = {
             'jQuery': 'jquery',
             'window.jQuery': 'jquery'
         }),
+
         //new CopyWebpackPlugin([
         //    {
         //        from: '../WebContent',
@@ -87,6 +96,7 @@ module.exports = {
         //], {
         //    copyUnmodified: true
         //}),
+
         new HtmlPlugin({
             title: 'Sungard Availability Services | Enhanced Snapshots',
             filename: 'index.html',
