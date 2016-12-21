@@ -1247,3 +1247,23 @@ div.tr.state-removed {
 
 /* end of view-specific styling*/
 /* end of Color scheme */
+
+
+
+/* Settings */
+.settings-sub-menu {
+    color: #263f66;
+}
+.settings-sub-menu li {
+    font-weight: bold;
+    color: #263f66;
+}
+.settings-sub-menu li.active > a,
+.settings-sub-menu li.active > a:hover,
+.settings-sub-menu li.active > a:focus {
+    background-color: lightgrey;
+    color: #263f66;
+}
+.table-header-placeholder.settings-sub-menu{
+    height: auto;
+}

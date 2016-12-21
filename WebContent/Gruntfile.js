@@ -32,6 +32,22 @@ module.exports = function(grunt) {
                     spawn:false,
                     event:['all']
                 }
+            },
+            scripts: {
+                files: 'partials/**/*.html',
+                tasks: ['default'],
+                options: {
+                    spawn:false,
+                    event:['all']
+                }
+            },
+            scripts: {
+                files: 'css/**/*.css',
+                tasks: ['default'],
+                options: {
+                    spawn:false,
+                    event:['all']
+                }
             }
         },
 

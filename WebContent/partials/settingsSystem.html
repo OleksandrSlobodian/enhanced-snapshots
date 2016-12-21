@@ -1,0 +1,216 @@
+<div class="card">
+    <div class="flex-container">
+        <div class="flex-5 card-content flex-center">
+            <div class="full-width">
+                <form name="volumeTypes" >
+                    <div class="col-sm-offset-5 col-sm-7 text-left">
+                        <div>
+                            <span class="text-danger small"
+                                  ng-show="volumeTypes.rVolumeSize.$error.required || volumeTypes.tVolumeSize.$error.required">
+                                {{STRINGS.volumeType.empty}}
+                            </span>
+                        </div>
+
+                        <div>
+                            <small class="text-danger"
+                                   ng-show="volumeTypes.rVolumeSize.$error.min || volumeTypes.tVolumeSize.$error.min ||
+                                          volumeTypes.tVolumeSize.$error.max || volumeTypes.rVolumeSize.$error.max">
+                                {{STRINGS.volumeType.range}}
+                            </small>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="full-width">
+                <form name="otherSettings">
+                    <div class="col-sm-12 form-group">
+                        <div class="settings field-label col-sm-5 text-right">Maximum Task Queue Size:</div>
+                        <div class="col-sm-2 text-left">
+                            <input class="settings form-control col-sm-2 text-left"
+                                   type="number"
+                                   min="0"
+                                   ng-model="settings.systemProperties.maxQueueSize"
+                                   name="maxQueueSize"
+                                   required>
+                        </div>
+                        <div class="col-sm-5"></div>
+                    </div>
+                    <div class="col-sm-12 form-group">
+                        <div class="settings field-label col-sm-5 text-right">Amazon Retry Count:</div>
+                        <div class="col-sm-2 text-left">
+                            <input class="settings form-control col-sm-2 text-left"
+                                   type="number"
+                                   ng-model="settings.systemProperties.amazonRetryCount"
+                                   min="0"
+                                   name="amazonRetryCount"
+                                   required>
+                        </div>
+                        <div class="col-sm-5"></div>
+                    </div>
+                    <div class="col-sm-12 form-group">
+                        <div class="settings field-label col-sm-5 text-right">Amazon Retry Sleep:</div>
+                        <div class="col-sm-2 text-left">
+                            <input class="settings form-control"
+                                   type="number"
+                                   min="0"
+                                   ng-model="settings.systemProperties.amazonRetrySleep"
+                                   name="amazonRetrySleep"
+                                   required>
+                        </div>
+                        <div class="settings field-label col-sm-5 text-left">milliseconds</div>
+                    </div>
+                    <div class="col-sm-12 form-group" ng-show="settings.sungardasSSO" >
+                        <div class="col-sm-5 text-right">SungardAS SSO UUID:</div>
+                        <div class="col-sm-7 text-left">{{settings.uuid}}</div>
+                    </div>
+
+                    <div class="col-sm-12 form-group">
+                        <div class="settings field-label col-sm-5 text-right">Tasks History Time Limit:</div>
+                        <div class="col-sm-2 text-left">
+                            <input class="settings form-control"
+                                   type="number"
+                                   min="0"
+                                   ng-model="settings.systemProperties.taskHistoryTTS"
+                                   name="taskHistoryTTS"
+                                   required>
+                        </div>
+                        <div class="settings field-label col-sm-5 text-left">milliseconds</div>
+                    </div>
+
+                    <div class="col-sm-12 form-group">
+                        <div class="settings field-label col-sm-5 text-right">Logs Limit:</div>
+                        <div class="col-sm-2 text-left">
+                            <input class="settings form-control"
+                                   type="number"
+                                   min="0"
+                                   max="1000"
+                                   ng-model="settings.systemProperties.logsBuffer"
+                                   name="logsBuffer"
+                                   required>
+                        </div>
+                        <div class="settings field-label col-sm-5 text-left">logs</div>
+                    </div>
+
+                    <div class="col-sm-12 form-group" ng-if="settings.clusterMode">
+                        <div class="settings field-label col-sm-5 text-right">Minimum node number:</div>
+                        <div class="col-sm-2 text-left">
+                            <input class="settings form-control"
+                                   type="number"
+                                   min="1"
+                                   max="{{settings.cluster.maxNodeNumber}}"
+                                   ng-model="settings.cluster.minNodeNumber"
+                                   name="minNodeNumber"
+                                   ng-required="settings.clusterMode">
+                        </div>
+                        <div class="col-sm-12 text-danger small" ng-show="otherSettings.minNodeNumber.$error.min"> Should be greater than 0 </div>
+                    </div>
+
+                    <div class="col-sm-12 form-group" ng-if="settings.clusterMode">
+                        <div class="settings field-label col-sm-5 text-right">Maximum node number:</div>
+                        <div class="col-sm-2 text-left">
+                            <input class="settings form-control"
+                                   type="number"
+                                   min="{{settings.cluster.minNodeNumber}}"
+                                   ng-model="settings.cluster.maxNodeNumber"
+                                   name="maxNodeNumber"
+                                   ng-required="settings.clusterMode">
+                        </div>
+                    </div>
+
+
+
+                    <div class="col-sm-12 text-danger small"
+                         ng-show="otherSettings.$error.required ||
+                             sdfs.$error.required ||
+                             volumeTypes.$error.required">
+                        {{STRINGS.otherSettings.empty}}
+                    </div>
+                </form>
+            </div>
+
+            <div class="full-width">
+                <form name="sdfs">
+                    <div class="col-sm-12 form-group">
+                        <div class="settings field-label col-sm-5 text-right">SDFS Volume Size:</div>
+                        <div class="col-sm-2 text-left">
+                            <input class="settings form-control"
+                                   type="number"
+                                   ng-model="settings.sdfs.volumeSize"
+                                   name="volumeSize"
+                                   min="{{settings.sdfs.minVolumeSize}}"
+                                   max="{{settings.sdfs.maxVolumeSize}}"
+                                   required>
+                        </div>
+                        <span class="settings field-label col-sm-5 text-left">GB</span>
+                    </div>
+
+                    <div class="col-sm-12 form-group">
+                        <div class="settings field-label col-sm-5 text-right">SDFS Local Cache Size:</div>
+                        <div class="col-sm-2 text-left">
+                            <input class="settings form-control"
+                                   type="number"
+                                   ng-model="settings.sdfs.sdfsLocalCacheSize"
+                                   name="sdfsLocalCacheSize"
+                                   min="{{settings.sdfs.minSdfsLocalCacheSize}}"
+                                   max="{{settings.sdfs.maxSdfsLocalCacheSize}}"
+                                   required>
+                        </div>
+                        <span class="settings field-label col-sm-5 text-left">GB</span>
+                    </div>
+
+                    <div class="form-group row">
+                        <div></div>
+                        <div class="settings field-label col-sm-5 text-right">Temporary Volume Type:</div>
+                        <div class="col-sm-2 text-left">
+                            <select ng-options="option for option in settings.systemProperties.volumeTypeOptions"
+                                    ng-model="settings.systemProperties.tempVolumeType"
+                                    class="form-control">
+                            </select>
+                        </div>
+                        <div class="col-sm-5 text-left" ng-show="settings.systemProperties.tempVolumeType === 'io1'">
+                            iops per Gb
+                            <input type="number"
+                                   name="tVolumeSize"
+                                   ng-model="settings.systemProperties.tempVolumeIopsPerGb"
+                                   class="settings bucket-name form-control"
+                                   min="1"
+                                   max="50"
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="settings field-label col-sm-5 text-right">Restore Volume Type:</div>
+                        <div class="col-sm-2 text-left">
+                            <select ng-options="option for option in settings.systemProperties.volumeTypeOptions"
+                                    ng-model="settings.systemProperties.restoreVolumeType"
+                                    class="form-control">
+                            </select>
+                        </div>
+                        <div class="col-sm-5 text-left" ng-show="settings.systemProperties.restoreVolumeType === 'io1'">
+                            iops per Gb
+                            <input type="number"
+                                   name="rVolumeSize"
+                                   class="settings bucket-name form-control"
+                                   ng-model="settings.systemProperties.restoreVolumeIopsPerGb"
+                                   min="1"
+                                   max="50"
+                                   required>
+                        </div>
+                    </div>
+
+                    <div class="settings field-label col-sm-5 text-right">Store Snapshots:</div>
+                    <div class="col-sm-2 text-left">
+                        <input class="chb settings text-left"
+                               type="checkbox"
+                               ng-model="settings.systemProperties.storeSnapshots"
+                               name="storeSnapshots">
+                    </div>
+                    <div class="col-sm-12 text-danger small" ng-show="sdfs.sdfsLocalCacheSize.$error.required"> {{STRINGS.sdfs.sdfsLocalCacheSize.empty}} </div>
+                    <div class="col-sm-12 text-danger small" ng-show="sdfs.volumeSize.$error.required"> {{STRINGS.sdfs.volumeSize.empty}} </div>
+                </form>
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,122 @@
+<!--<div class="card">-->
+    <!--<div class="flex-container">-->
+        <!--<div class="col-sm-12 form-group card-content">-->
+            <!--<div class="settings field-label col-sm-5 text-right">Email notifications:</div>-->
+            <!--<div class="col-sm-5 text-left">-->
+                <!--<button type="button" class="btn btn-success" ng-click="emailNotifications()">-->
+                    <!--Edit Email notification </button>-->
+            <!--</div>-->
+            <!--&lt;!&ndash;<div class="settings field-label col-sm-5 text-left"></div>&ndash;&gt;-->
+        <!--</div>-->
+    <!--</div>-->
+<!--</div>-->
+
+<div class="card">
+    <div class="flex-container">
+        <div class="flex-5 card-content flex-center">
+            <div class="full-width form-group">
+
+                <div class="col-sm-12">
+                    <div class="settings field-label col-sm-4 text-right">SNS topic:</div>
+                    <div class="input-group col-sm-4" style="padding: 0px 10px">
+                        <input type="text" class="form-control col-sm-4" placeholder="Type topic...">
+                          <span class="input-group-btn">
+                            <button class="btn btn-primary" type="button">Apply</button>
+                          </span>
+                    </div><!-- /input-group -->
+                    <!--<div class="col-sm-5 text-left">-->
+                        <!--<input class="settings form-control"-->
+                               <!--type="text"-->
+                               <!--ng-model="settings.sns.snsTopic"-->
+                               <!--name="snsTopic"-->
+                               <!--required>-->
+                    <!--</div>-->
+                </div>
+            </div>
+        </div>
+        <!--<div class="flex-1 flex-center">-->
+            <!--<button type="button" class="btn btn-success" ng-click="createTopic()">-->
+                <!--Create </button>-->
+        <!--</div>-->
+    </div>
+</div>
+
+<div class="card">
+    <div class="flex-container">
+        <div class="flex-5 card-content flex-center row">
+            <!--<div class="col-sm-12">-->
+                <!--<div class="col-sm-4">-->
+                <div class="col-sm-12 form-group">
+                    <h3>Create rule</h3>
+                    <div class="settings field-label col-sm-4 text-right">Operation:</div>
+                    <div class="text-left col-sm-4">
+                        <select ng-options="option for option in settings.systemProperties.volumeTypeOptions"
+                                ng-model="settings.systemProperties.restoreVolumeType"
+                                class="form-control">
+                        </select>
+                    </div>
+                </div>
+                <!--<div class="col-sm-4">-->
+                <div class="col-sm-12 form-group">
+                    <div class="settings field-label col-sm-4 text-right">Status:</div>
+                    <div class="text-left col-sm-4">
+                        <select ng-options="option for option in settings.systemProperties.volumeTypeOptions"
+                                ng-model="settings.systemProperties.restoreVolumeType"
+                                class="form-control">
+                        </select>
+                    </div>
+                </div>
+                <!--<div class="col-sm-4">-->
+                <div class="col-sm-12 form-group">
+                    <div class="settings field-label col-sm-4 text-right">Volume ID:</div>
+                    <div class="text-left col-sm-4">
+                        <select ng-options="option for option in settings.systemProperties.volumeTypeOptions"
+                                ng-model="settings.systemProperties.restoreVolumeType"
+                                class="form-control">
+                        </select>
+                    </div>
+                    <div class="col-sm-3">
+                        <button type="button" class="btn btn-primary" ng-click="applyRule()">
+                            Apply </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!--<div class="flex-1 flex-center">-->
+            <!--<button type="button" class="btn btn-success" ng-click="applyRule()">-->
+                <!--Apply </button>-->
+        <!--</div>-->
+    </div>
+</div>
+
+<div class="card">
+    <div class="flex-container">
+        <div class="col-sm-12 form-group card-content">
+            <h3 class="text-center">List of predefined rules</h3>
+
+            <table class="table">
+                <tr>
+                    <th class="text-center">Rule Id</th>
+                    <th class="text-center">Operation</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Volume Id</th>
+                    <th class="action text-center">Action</th>
+                </tr>
+                <tr>
+                    <td class="text-center">1</td>
+                    <td class="text-center">System backup</td>
+                    <td class="text-center">Fail</td>
+                    <td class="text-center">-</td>
+                    <td class="text-center">
+                        <div class="action for-view-mode">
+                            <button class="btn" style="background: white">
+                                <span class="glyphicon glyphicon-trash" tooltip="Remove"></span>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

@@ -149,6 +149,37 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
                 currentUser: currentUser
             }
         })
+        .state('app.settings.systemInfo', {
+            url: "/settings/systemInfo",
+            templateUrl: "partials/settingsSystemInfo.html",
+            controller: "SettingsController",
+            resolve: {
+                currentUser: currentUser
+            }
+        })
+        .state('app.settings.system', {
+            url: "/settings/system",
+            templateUrl: "partials/settingsSystem.html",
+            controller: "SettingsController",
+            resolve: {
+                currentUser: currentUser
+            }
+        })
+        .state('app.settings.snsNotification', {
+            url: "/settings/snsNotification",
+            templateUrl: "partials/settingsSnsNotification.html",
+            controller: "SettingsController",
+            resolve: {
+                currentUser: currentUser
+            }
+        }).state('app.settings.emailNotification', {
+            url: "/settings/emailNotification",
+            templateUrl: "partials/settingsEmailNotification.html",
+            controller: "SettingsController",
+            resolve: {
+                currentUser: currentUser
+            }
+        })
         .state('app.users', {
             url: "/users",
             templateUrl: "partials/users.html",
