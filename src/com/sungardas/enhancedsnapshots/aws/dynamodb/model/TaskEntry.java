@@ -12,76 +12,37 @@ import java.util.List;
 @DynamoDBTable(tableName = "Tasks")
 public class TaskEntry {
 
-    @DynamoDBHashKey(attributeName = "id")
+    @DynamoDBHashKey
     private String id;
-
-    @DynamoDBAttribute(attributeName = "priority")
-    private int priority;
-
-    @DynamoDBAttribute(attributeName = "worker")
     private String worker;
-
-    @DynamoDBAttribute(attributeName = "status")
     private String status;
-
-    @DynamoDBAttribute(attributeName = "type")
     private String type;
-
-    @DynamoDBAttribute(attributeName = "volume")
     private String volume;
-
-    @DynamoDBAttribute(attributeName = "schedulerManual")
     private String schedulerManual;
-
-    @DynamoDBAttribute(attributeName = "schedulerName")
     private String schedulerName;
-
-    @DynamoDBAttribute(attributeName = "schedulerTime")
     private String schedulerTime;
-
-    @DynamoDBAttribute(attributeName = "options")
-    private String options;
-
-    @DynamoDBAttribute
-    private String cron;
-
-    @DynamoDBAttribute
-    private String regular = Boolean.FALSE.toString();
-
-    @DynamoDBAttribute
-    private String enabled;
-
-    //complete time in milliseconds
-    @DynamoDBAttribute
+    private String backupFileName;
     private long completeTime;
-
-    @DynamoDBAttribute
     private long startTime;
-
-    @DynamoDBAttribute
     private String tempVolumeType;
-
-    @DynamoDBAttribute
-    private String restoreVolumeType;
-
-    @DynamoDBAttribute
     private int tempVolumeIopsPerGb;
-
-    @DynamoDBAttribute
-    private int restoreVolumeIopsPerGb;
-
-    @DynamoDBAttribute
     private String progress = TaskProgress.NONE.name();
-
-    @DynamoDBAttribute
     private String tempVolumeId;
-
-    @DynamoDBAttribute
     private String tempSnapshotId;
+    private String availabilityZone;
 
-    @DynamoDBAttribute
+    // for backup tasks only
+    private String cron;
+    private String regular = Boolean.FALSE.toString();
+    private String enabled;
     @DynamoDBTypeConverted(converter = ListTagDynamoDBTypeConverter.class)
     private List<Tag> tags;
+
+    // for restore tasks only
+    private String restoreVolumeType;
+    private int restoreVolumeIopsPerGb;
+    private String instanceToAttach;
+
 
     public String getId() {
         return id;
@@ -91,13 +52,12 @@ public class TaskEntry {
         this.id = id;
     }
 
-    public int getPriority() {
-        return priority;
+    public String getInstanceToAttach() {
+        return instanceToAttach;
     }
 
-
-    public void setPriority(int priority) {
-        this.priority = priority;
+    public void setInstanceToAttach(String instanceToAttach) {
+        this.instanceToAttach = instanceToAttach;
     }
 
     public String getWorker() {
@@ -160,12 +120,8 @@ public class TaskEntry {
         this.schedulerTime = schedulerTime;
     }
 
-    public String getOptions() {
-        return options;
-    }
-
-    public void setOptions(String options) {
-        this.options = options;
+    public void setBackupFileName(String backupFileName) {
+        this.backupFileName = backupFileName;
     }
 
     public String getCron() {
@@ -208,9 +164,8 @@ public class TaskEntry {
         this.completeTime = completeTime;
     }
 
-    @DynamoDBIgnore
-    public String getSourceFileName() {
-        return options.split(", ")[0];
+    public String getBackupFileName() {
+        return backupFileName;
     }
 
     public int getTempVolumeIopsPerGb() {
@@ -229,9 +184,12 @@ public class TaskEntry {
         this.tempVolumeType = tempVolumeType;
     }
 
-    @DynamoDBIgnore
     public String getAvailabilityZone() {
-        return options.split(", ")[1];
+        return availabilityZone;
+    }
+
+    public void setAvailabilityZone(String availabilityZone) {
+        this.availabilityZone = availabilityZone;
     }
 
     @Deprecated
@@ -305,8 +263,6 @@ public class TaskEntry {
     public enum TaskEntryType {
         BACKUP("backup"),
         RESTORE("restore"),
-        DELETE("delete"),
-        SYSTEM_BACKUP("system_backup"),
         UNKNOWN("unknown");
 
         private String type;
@@ -351,6 +307,5 @@ public class TaskEntry {
         public String getStatus() {
             return status;
         }
-
     }
 }

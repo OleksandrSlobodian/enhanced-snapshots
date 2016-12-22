@@ -20,8 +20,6 @@ public interface TaskRepository extends CrudRepository<TaskEntry, String> {
 
     List<TaskEntry> findByRegularAndEnabled(String regular, String enabled);
 
-    List<TaskEntry> findByVolumeAndTypeAndOptions(String volumeId, String type, String options);
-
     List<TaskEntry> findByRegularAndCompleteTimeGreaterThanEqual(String regular, long completeTime);
 
     List<TaskEntry> findByRegular(String regular);

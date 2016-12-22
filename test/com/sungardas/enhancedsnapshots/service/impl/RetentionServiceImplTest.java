@@ -70,7 +70,7 @@ public class RetentionServiceImplTest {
 
         retentionService.apply();
 
-        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture(), userArgumentCaptor.capture());
+        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture());
 
         Collection<BackupEntry> backupEntries = backupCollectionArgumentCaptor.getValue();
 
@@ -83,7 +83,6 @@ public class RetentionServiceImplTest {
         assertTrue(collection.contains(entry1));
         assertTrue(collection.contains(entry2));
         assertFalse(collection.contains(entry3));
-        assertEquals(RetentionServiceImpl.RETENTION_USER, userArgumentCaptor.getValue());
     }
 
 
@@ -101,7 +100,7 @@ public class RetentionServiceImplTest {
 
         retentionService.apply();
 
-        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture(), userArgumentCaptor.capture());
+        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture());
 
         Collection<BackupEntry> backupEntries = backupCollectionArgumentCaptor.getValue();
 
@@ -113,7 +112,6 @@ public class RetentionServiceImplTest {
 
         assertEquals(entry2, iterator.next());
         assertEquals(entry1, iterator.next());
-        assertEquals(RetentionServiceImpl.RETENTION_USER, userArgumentCaptor.getValue());
     }
 
     @Test
@@ -130,7 +128,7 @@ public class RetentionServiceImplTest {
 
         retentionService.apply();
 
-        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture(), userArgumentCaptor.capture());
+        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture());
 
         Collection<BackupEntry> backupEntries = backupCollectionArgumentCaptor.getValue();
 
@@ -142,7 +140,6 @@ public class RetentionServiceImplTest {
 
         assertEquals(entry2, iterator.next());
         assertEquals(entry1, iterator.next());
-        assertEquals(RetentionServiceImpl.RETENTION_USER, userArgumentCaptor.getValue());
     }
 
     @Test
@@ -159,7 +156,7 @@ public class RetentionServiceImplTest {
 
         retentionService.apply();
 
-        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture(), userArgumentCaptor.capture());
+        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture());
 
         Collection<BackupEntry> backupEntries = backupCollectionArgumentCaptor.getValue();
 
@@ -170,7 +167,6 @@ public class RetentionServiceImplTest {
         Collection<BackupEntry> collection = backupCollectionArgumentCaptor.getValue();
 
         assertTrue(collection.contains(entry1));
-        assertEquals(RetentionServiceImpl.RETENTION_USER, userArgumentCaptor.getValue());
     }
 
     @Test
@@ -187,7 +183,7 @@ public class RetentionServiceImplTest {
 
         retentionService.apply();
 
-        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture(), userArgumentCaptor.capture());
+        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture());
 
         Collection<BackupEntry> backupEntries = backupCollectionArgumentCaptor.getValue();
 
@@ -198,7 +194,6 @@ public class RetentionServiceImplTest {
         Iterator<BackupEntry> iterator = backupCollectionArgumentCaptor.getValue().iterator();
 
         assertEquals(entry1, iterator.next());
-        assertEquals(RetentionServiceImpl.RETENTION_USER, userArgumentCaptor.getValue());
     }
 
     @Test
@@ -215,7 +210,7 @@ public class RetentionServiceImplTest {
 
         retentionService.apply();
 
-        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture(), userArgumentCaptor.capture());
+        verify(backupService).deleteBackup(backupCollectionArgumentCaptor.capture());
 
         Collection<BackupEntry> backupEntries = backupCollectionArgumentCaptor.getValue();
 
@@ -227,7 +222,6 @@ public class RetentionServiceImplTest {
 
         assertTrue(collection.contains(entry1));
         assertTrue(collection.contains(entry2));
-        assertEquals(RetentionServiceImpl.RETENTION_USER, userArgumentCaptor.getValue());
     }
 
     @Test

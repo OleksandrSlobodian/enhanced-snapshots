@@ -139,7 +139,7 @@ public class TaskServiceImpl implements TaskService, ClusterEventListener {
         switch (taskEntry.getType()) {
             case "restore": {
                 List<BackupEntry> backupEntry;
-                String sourceFile = taskEntry.getSourceFileName();
+                String sourceFile = taskEntry.getBackupFileName();
                 if (sourceFile == null || sourceFile.isEmpty()) {
                     backupEntry = backupRepository.findByVolumeId(taskEntry.getVolume());
                 } else {

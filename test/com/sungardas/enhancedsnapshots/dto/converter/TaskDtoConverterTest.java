@@ -33,7 +33,6 @@ public class TaskDtoConverterTest {
     public void setUp(){
         taskDto = new TaskDto();
         taskDto.setId(id);
-        taskDto.setPriority(priority);
         taskDto.setType(type);
         taskDto.setStatus(status);
         taskDto.setVolumes(volumes);
@@ -58,7 +57,6 @@ public class TaskDtoConverterTest {
         for(TaskEntry taskEntry: taskEntries) {
             Assert.assertTrue(taskEntry.getId().equals(id));
             // backup priority is 0
-            Assert.assertTrue(taskEntry.getPriority() == 0);
             Assert.assertTrue(taskEntry.getType().equals(type));
             Assert.assertTrue(taskEntry.getStatus().equals(status));
             Assert.assertTrue(taskEntry.getSchedulerManual().equals(schedulerManual));
@@ -74,17 +72,5 @@ public class TaskDtoConverterTest {
 
         // check volume id of second taskEntry
         Assert.assertTrue(taskEntries.get(1).getVolume().equals(volumes.get(1)));
-    }
-
-    @Test
-    public void shouldSetPriority1ForDeleteTasks(){
-        taskDto.setType("delete");
-        List<TaskEntry> taskEntries = TaskDtoConverter.convert(taskDto);
-
-        // check priority of first taskEntry
-        Assert.assertTrue(taskEntries.get(0).getPriority() == 1);
-
-        // check priority of second taskEntry
-        Assert.assertTrue(taskEntries.get(1).getPriority() == 1);
     }
 }

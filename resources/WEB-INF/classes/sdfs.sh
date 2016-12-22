@@ -187,7 +187,15 @@ case "$commandName" in
     sdfscli --expandvolume $sdfs_volume_size
     ;;
 
-    ############################# cloud sync ####################################
+############################# update local cache size ####################################
+--setlocalcache) echo "Updating local cache size"
+    cache_size="$2"
+
+    echo 'Setting local cache size to' $2
+    sdfscli --set-cache-size $cache_size
+    ;;
+
+############################# cloud sync ####################################
 --cloudsync) echo "Sync local sdfs metadata with cloud"
 
     ### sync sdfs metadata

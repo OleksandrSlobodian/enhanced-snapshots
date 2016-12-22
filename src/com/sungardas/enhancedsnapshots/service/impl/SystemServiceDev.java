@@ -5,15 +5,19 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 @Service("SystemService")
 @DependsOn("CreateAppConfiguration")
 @Profile("dev")
 public class SystemServiceDev extends SystemServiceImpl {
 
-    @Override
-    public void backup(final String taskId) {
+    protected void backupSDFS(final Path tempDirectory) throws IOException {
+    }
 
+    protected void storeFiles(Path tempDirectory) {
     }
 
     @Override

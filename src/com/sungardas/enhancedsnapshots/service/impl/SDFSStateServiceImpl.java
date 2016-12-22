@@ -46,6 +46,7 @@ public class SDFSStateServiceImpl implements SDFSStateService {
     private static final String CLOUD_SYNC_CMD = "--cloudsync";
     private static final String SHOW_VOLUME_ID_CMD = "--showvolumes";
     private static final String SYNC_CLUSTER_VOLUMES = "--syncvolumes";
+    private static final String SET_LOCAL_CACHE_SIZE = "--setlocalcache";
 
 
     @Value("${enhancedsnapshots.default.sdfs.mount.time}")
@@ -97,22 +98,6 @@ public class SDFSStateServiceImpl implements SDFSStateService {
             return list.get(0).getLastModified().getTime();
         } else {
             return null;
-        }
-    }
-
-    @Override
-    public synchronized void reconfigureAndRestartSDFS() {
-        try {
-            reconfigurationInProgressFlag = true;
-            stopSDFS();
-            removeSdfsConfFile();
-            configureSDFS();
-            startSDFS(false);
-        } catch (Exception e) {
-            LOG.error("Failed to reconfigure and restart SDFS", e);
-            throw new ConfigurationException("Failed to reconfigure and restart SDFS");
-        } finally {
-            reconfigurationInProgressFlag = false;
         }
     }
 
@@ -236,13 +221,13 @@ public class SDFSStateServiceImpl implements SDFSStateService {
     }
 
     @Override
-    public void expandSdfsVolume(String newVolumeSize) {
+    public void expandSdfsVolume(int newVolumeSize) {
         String[] parameters;
-        try {
-            parameters = new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), EXPAND_VOLUME_CMD, configurationMediator.getSdfsMountPoint(), newVolumeSize};
-            Process p = executeScript(parameters);
-            switch (p.exitValue()) {
-                case 0:
+                    try {
+                        parameters = new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), EXPAND_VOLUME_CMD, configurationMediator.getSdfsMountPoint(), newVolumeSize + VOLUME_SIZE_UNIT};
+                        Process p = executeScript(parameters);
+                        switch (p.exitValue()) {
+                            case 0:
                     LOG.debug("SDFS volume was expanded successfully");
                     break;
                 default:
@@ -347,6 +332,25 @@ public class SDFSStateServiceImpl implements SDFSStateService {
         } catch (Exception e) {
             LOG.error(e);
             throw new EnhancedSnapshotsException("Unable to get SDFS volumeId", e);
+        }
+    }
+
+    @Override
+    public void setLocalCacheSize(int localCacheSize) {
+        String[] parameters;
+        try {
+            parameters = new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), SET_LOCAL_CACHE_SIZE, localCacheSize + LOCAL_CACHE_SIZE_UNIT};
+            Process p = executeScript(parameters);
+            switch (p.exitValue()) {
+                case 0:
+                    LOG.debug("SDFS local cache size updated successfully");
+                    break;
+                default:
+                    throw new ConfigurationException("Failed to update SDFS local cache size");
+            }
+        } catch (Exception e) {
+            LOG.error(e);
+            throw new ConfigurationException("Failed to update SDFS local cache size");
         }
     }
 

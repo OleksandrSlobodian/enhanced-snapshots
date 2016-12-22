@@ -69,16 +69,13 @@ public class SystemController {
 
         if (configurationMediator.getSdfsVolumeSizeWithoutMeasureUnit() != newConfiguration.getSdfs().getVolumeSize()
                 && newConfiguration.getSdfs().getVolumeSize() > 0) {
-            sdfsStateService.expandSdfsVolume(newConfiguration.getSdfs().getVolumeSize() + configurationMediator.getVolumeSizeUnit());
+            sdfsStateService.expandSdfsVolume(newConfiguration.getSdfs().getVolumeSize());
         }
         if (configurationMediator.getSdfsLocalCacheSizeWithoutMeasureUnit() != newConfiguration.getSdfs().getSdfsLocalCacheSize()
                 && newConfiguration.getSdfs().getSdfsLocalCacheSize() > 0) {
-            needToReconfigureSdfs = true;
+            sdfsStateService.setLocalCacheSize(newConfiguration.getSdfs().getSdfsLocalCacheSize());
         }
         systemService.setSystemConfiguration(newConfiguration);
-        if (needToReconfigureSdfs) {
-            sdfsStateService.reconfigureAndRestartSDFS();
-        }
         return new ResponseEntity<>("", HttpStatus.OK);
     }
 
