@@ -36,7 +36,7 @@ public class SystemController {
     @RolesAllowed("ROLE_ADMIN")
     @RequestMapping(value = "/delete", method = RequestMethod.POST)
     public ResponseEntity<String> deleteService(@RequestBody RemoveAppDTO removeAppDTO) {
-        if (!configurationMediator.getConfigurationId().equals(removeAppDTO.getSystemId())) {
+        if (!configurationMediator.getConfigurationId().equals(removeAppDTO.systemId)) {
             return new ResponseEntity<>("{\"msg\":\"Provided system ID is incorrect\"}", HttpStatus.FORBIDDEN);
         }
         systemService.systemUninstall(removeAppDTO.removeS3Bucket);
@@ -54,7 +54,7 @@ public class SystemController {
     public ResponseEntity<String> updateSystemProperties(@RequestBody SystemConfiguration newConfiguration) {
         SystemConfiguration currentConfiguration = systemService.getSystemConfiguration();
         if (!checkIopsAreValid(newConfiguration.getSystemProperties())) {
-            return new ResponseEntity<>("iops per GB can not be less than 1 and more than 30", HttpStatus.BAD_REQUEST);
+            return new ResponseEntity<>("iops per GB can not be less than 1 and more than 50", HttpStatus.BAD_REQUEST);
         }
         if (newConfiguration.getSdfs().getVolumeSize() > currentConfiguration.getSdfs().getMaxVolumeSize()) {
             return new ResponseEntity<>("Volume size can not be more than " + currentConfiguration.getSdfs().getMaxVolumeSize(), HttpStatus.BAD_REQUEST);
@@ -65,17 +65,8 @@ public class SystemController {
         if (newConfiguration.getSystemProperties().getTaskHistoryTTS() < 0) {
             return new ResponseEntity<>("Task history TTS can not be less than 0", HttpStatus.BAD_REQUEST);
         }
-        boolean needToReconfigureSdfs = false;
 
-        if (configurationMediator.getSdfsVolumeSizeWithoutMeasureUnit() != newConfiguration.getSdfs().getVolumeSize()
-                && newConfiguration.getSdfs().getVolumeSize() > 0) {
-            sdfsStateService.expandSdfsVolume(newConfiguration.getSdfs().getVolumeSize());
-        }
-        if (configurationMediator.getSdfsLocalCacheSizeWithoutMeasureUnit() != newConfiguration.getSdfs().getSdfsLocalCacheSize()
-                && newConfiguration.getSdfs().getSdfsLocalCacheSize() > 0) {
-            sdfsStateService.setLocalCacheSize(newConfiguration.getSdfs().getSdfsLocalCacheSize());
-        }
-        systemService.setSystemConfiguration(newConfiguration);
+        systemService.updateSystemConfiguration(newConfiguration);
         return new ResponseEntity<>("", HttpStatus.OK);
     }
 
@@ -93,44 +84,19 @@ public class SystemController {
     }
 
     private static class SystemBackupDto {
-        private Long lastBackup;
+        public Long lastBackup;
 
         public SystemBackupDto(Long lastBackup) {
-            this.lastBackup = lastBackup;
-        }
-
-        public Long getLastBackup() {
-            return lastBackup;
-        }
-
-        public void setLastBackup(Long lastBackup) {
             this.lastBackup = lastBackup;
         }
     }
 
     private static class RemoveAppDTO {
-
-        private String systemId;
-        private boolean removeS3Bucket;
-
-        public boolean isRemoveS3Bucket() {
-            return removeS3Bucket;
-        }
-
-        public void setRemoveS3Bucket(boolean removeS3Bucket) {
-            this.removeS3Bucket = removeS3Bucket;
-        }
-
-        public String getSystemId() {
-            return systemId;
-        }
-
-        public void setSystemId(String instanceId) {
-            this.systemId = instanceId;
-        }
+        public String systemId;
+        public boolean removeS3Bucket;
     }
 
-    // iops per GB can not be less than 1 and more than 30
+    // iops per GB can not be less than 1 and more than 50
     private boolean checkIopsAreValid(SystemConfiguration.SystemProperties systemProperties) {
         boolean result = true;
         if (systemProperties.getRestoreVolumeIopsPerGb() > maxIopsPerGb || systemProperties.getTempVolumeIopsPerGb() > maxIopsPerGb) {

@@ -26,7 +26,7 @@ public interface SystemService {
      *
      * @param systemConfiguration new system configuration {@link SystemConfiguration}
      */
-    void setSystemConfiguration(SystemConfiguration systemConfiguration);
+    void updateSystemConfiguration(SystemConfiguration systemConfiguration);
 
     /**
      * Uninstall system. Removes all system infrastructure: DB tables, instance with application

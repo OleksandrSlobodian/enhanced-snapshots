@@ -278,8 +278,17 @@ public class SystemServiceImpl implements SystemService {
     }
 
     @Override
-    public void setSystemConfiguration(SystemConfiguration configuration) {
-        LOG.info("Updating system properties.");
+    public void updateSystemConfiguration(SystemConfiguration configuration) {
+        LOG.info("Updating system configuration.");
+
+        // updating SDFS setting if required
+        if (configuration.getSdfs().getVolumeSize() > configurationMediator.getSdfsVolumeSizeWithoutMeasureUnit()) {
+            sdfsStateService.expandSdfsVolume(configuration.getSdfs().getVolumeSize());
+        }
+        if (configuration.getSdfs().getSdfsLocalCacheSize() > configurationMediator.getSdfsLocalCacheSizeWithoutMeasureUnit()) {
+            sdfsStateService.setLocalCacheSize(configuration.getSdfs().getSdfsLocalCacheSize());
+        }
+
         // mail configuration
         boolean mailReconnect = false;
         configuration.setUUID(currentConfiguration.getUUID());
