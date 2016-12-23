@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Configuration status="DEBUG">
+<Configuration status="info">
   <Appenders>
     <Console target="SYSTEM_OUT" name="console">
-      <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] [%t] %c{1} - %msg%n"/>
+      <PatternLayout pattern="${hostName} [%d{yyyy-MM-dd HH:mm:ss.SSS}] [%-5level] [%t] %c{1} - %msg%n"/>
     </Console>
     <RollingFile name="RollingFile" fileName="${sys:catalina.home}/logs/enhancedsnapshots.log"
                  filePattern="${sys:catalina.home}/logs/$${date:yyyy-MM}/enhancedsnapshots-%d{MM-dd-yyyy}-%i.log.gz">
@@ -15,7 +15,11 @@
     </RollingFile>
   </Appenders>
   <Loggers>
-    <Root additivity="false" level="debug">
+    <logger name="log4j.logger.org.springframework.security.saml" level="info" additivity="false">
+      <AppenderRef ref="console"/>
+      <AppenderRef ref="RollingFile"/>
+    </logger>
+    <Root additivity="false" level="info">
       <AppenderRef ref="console"/>
       <AppenderRef ref="RollingFile"/>
     </Root>

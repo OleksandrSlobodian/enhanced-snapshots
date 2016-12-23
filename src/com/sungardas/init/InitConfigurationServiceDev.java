@@ -1,63 +1,95 @@
 package com.sungardas.init;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import com.amazonaws.auth.AWSCredentialsProvider;
-
-import com.amazonaws.auth.BasicAWSCredentials;
-import com.amazonaws.internal.StaticCredentialsProvider;
-import com.amazonaws.services.dynamodbv2.datamodeling.IDynamoDBMapper;
-import com.amazonaws.services.s3.AmazonS3;
-import com.amazonaws.services.s3.AmazonS3Client;
-import com.amazonaws.services.s3.internal.BucketNameUtils;
-import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.regions.Regions;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
+import com.sungardas.enhancedsnapshots.aws.AmazonConfigProviderDEV;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.Configuration;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.User;
 import com.sungardas.enhancedsnapshots.dto.InitConfigurationDto;
 import com.sungardas.enhancedsnapshots.dto.converter.BucketNameValidationDTO;
+import com.sungardas.enhancedsnapshots.dto.converter.MailConfigurationDocumentConverter;
 import com.sungardas.enhancedsnapshots.exception.ConfigurationException;
-import com.sungardas.enhancedsnapshots.service.impl.CryptoServiceImpl;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import com.sungardas.enhancedsnapshots.service.CryptoService;
+import com.sungardas.enhancedsnapshots.service.SDFSStateService;
+import com.sungardas.enhancedsnapshots.util.SystemUtils;
+import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 
-class InitConfigurationServiceDev implements InitConfigurationService {
-
-
-    private static final Logger LOG = LogManager.getLogger(InitConfigurationServiceDev.class);
+class InitConfigurationServiceDev extends InitConfigurationServiceImpl {
 
     @Value("${enhancedsnapshots.bucket.name.prefix.002}")
     private String enhancedSnapshotBucketPrefix;
-
     @Value("${amazon.aws.accesskey}")
     private String amazonAWSAccessKey;
-
     @Value("${amazon.aws.secretkey}")
     private String amazonAWSSecretKey;
-
     @Value("${sungardas.worker.configuration}")
     private String instanceId;
-
     @Value("${amazon.aws.region}")
     private String region;
+    @Value("${enhancedsnapshots.db.tables}")
+    private String[] tables;
+    @Value("${enhancedsnapshots.default.tempVolumeType}")
+    private String tempVolumeType;
+    @Value("${enhancedsnapshots.default.tempVolumeIopsPerGb}")
+    private int tempVolumeIopsPerGb;
+    @Value("${enhancedsnapshots.default.restoreVolumeType}")
+    private String restoreVolumeType;
+    @Value("${enhancedsnapshots.default.restoreVolumeIopsPerGb}")
+    private int restoreVolumeIopsPerGb;
+    @Value("${enhancedsnapshots.default.amazon.retry.count}")
+    private int amazonRetryCount;
+    @Value("${enhancedsnapshots.default.amazon.retry.sleep}")
+    private int amazonRetrySleep;
+    @Value("${enhancedsnapshots.default.queue.size}")
+    private int queueSize;
+    @Value("${enhancedsnapshots.default.sdfs.volume.config.path}")
+    private String sdfsConfigPath;
+    @Value("${enhancedsnapshots.default.sdfs.backup.file.name}")
+    private String sdfsStateBackupFileName;
+    @Value("${enhancedsnapshots.default.retention.cron}")
+    private String defaultRetentionCronExpression;
+    @Value("${enhancedsnapshots.default.polling.rate}")
+    private int defaultPollingRate;
+    @Value("${enhancedsnapshots.default.sdfs.local.cache.size}")
+    private int sdfsLocalCacheSize;
+    @Value("${enhancedsnapshots.default.wait.time.before.new.sync}")
+    private int defaultWaitTimeBeforeNewSyncWithAWS;
+    @Value("${enhancedsnapshots.default.max.wait.time.to.detach.volume}")
+    private int defaultMaxWaitTimeToDetachVolume;
 
+    @Value("${enhancedsnapshots.logs.buffer.size}")
+    private int bufferSize;
+    @Value("${enhancedsnapshots.logs.file}")
+    private String logFile;
 
-    private AWSCredentialsProvider credentialsProvider;
-    private AmazonS3Client amazonS3;
+    @Value("${enhancedsnapshots.dev.isSystemConfigured:false}")
+    private boolean isSystemConfigured;
 
-    @Override
+    @Autowired
+    private CryptoService cryptoService;
+
     public void removeProperties() {
     }
 
+    protected List<InitConfigurationDto.S3> getBucketsWithSdfsMetadata() {
+        ArrayList<InitConfigurationDto.S3> result = new ArrayList<>();
+        return result;
+    }
+
     @PostConstruct
-    private void init() {
-        String accessKey = new CryptoServiceImpl().decrypt(instanceId, amazonAWSAccessKey);
-        String secretKey = new CryptoServiceImpl().decrypt(instanceId, amazonAWSSecretKey);
-        credentialsProvider = new StaticCredentialsProvider(new BasicAWSCredentials(accessKey, secretKey));
-        amazonS3 =  new AmazonS3Client(credentialsProvider);
+    protected void init() {
+        DynamoDBMapperConfig config = new DynamoDBMapperConfig.Builder().withTableNameOverride(DynamoDBMapperConfig.TableNameOverride.
+                withTableNamePrefix(AmazonConfigProviderDEV.getDynamoDbPrefix(SystemUtils.getSystemId()))).build();
+        mapper = new DynamoDBMapper(amazonDynamoDB, config);
     }
 
     @Override
@@ -83,18 +115,24 @@ class InitConfigurationServiceDev implements InitConfigurationService {
         db.setValid(true);
         db.setAdminExist(true);
 
-
         config.setS3(names);
         config.setSdfs(sdfs);
         config.setDb(db);
         config.setImmutableBucketNamePrefix(enhancedSnapshotBucketPrefix);
 
+        config.setClusterMode(SystemUtils.clusterMode());
+        config.setUUID(UUID);
+
         return config;
     }
 
     @Override
-    public boolean propertyFileExists() {
-        return false;
+    public boolean systemIsConfigured() {
+        return isSystemConfigured;
+    }
+
+    protected Configuration getConfiguration(){
+        return mapper.load(Configuration.class, SystemUtils.getSystemId());
     }
 
     @Override
@@ -102,17 +140,11 @@ class InitConfigurationServiceDev implements InitConfigurationService {
         return true;
     }
 
-    @Override
-    public String getInstanceId() {
-        return "DEV";
+    protected boolean requiredTablesExist(){
+        return true;
     }
 
-    @Override
-    public void configureAWSLogAgent() {
-    }
-
-    @Override
-    public void validateVolumeSize(final int volumeSize) {
+    protected void validateVolumeSize(final int volumeSize) {
         int min = 10;
         int max = 2000;
         if (volumeSize < min || volumeSize > max) {
@@ -125,54 +157,90 @@ class InitConfigurationServiceDev implements InitConfigurationService {
     }
 
     @Override
-    public void setUser(User user) {
+    public void configureSSO(String spEntityID) {
 
     }
 
     @Override
-    public void createDBAndStoreSettings(final InitController.ConfigDto config) {
+    public void createDBAndStoreSettings(final ConfigDto config) {
+        createDbStructure();
+        storeSettings(config);
+    }
 
+    private void storeSettings(final ConfigDto config) {
+        Configuration configuration = getDevConf();
+        configuration.setMailConfigurationDocument(MailConfigurationDocumentConverter.toMailConfigurationDocument(config.getMailConfiguration(), cryptoService, "DEV", ""));
+        configuration.setDomain(config.getDomain());
+        if (SystemUtils.clusterMode()) {
+            configuration.setClusterMode(true);
+            configuration.setMaxNodeNumber(config.getCluster().getMaxNodeNumber());
+            configuration.setMinNodeNumber(config.getCluster().getMinNodeNumber());
+            configuration.setChunkStoreEncryptionKey(SDFSStateService.generateChunkStoreEncryptionKey());
+            configuration.setChunkStoreIV(SDFSStateService.generateChunkStoreIV());
+            configuration.setSdfsCliPsw(SystemUtils.getSystemId());
+        }
+        mapper.save(configuration);
+
+        User user = new User("admin@admin", DigestUtils.sha512Hex("admin"), "admin", "dev", "dev");
+        user.setId(SystemUtils.getInstanceId());
+        mapper.save(user);
     }
 
     @Override
+    protected void createBucket(String bucketName) {
+    }
+
+    private Configuration getDevConf() {
+        Configuration configuration = new Configuration();
+        configuration.setConfigurationId(SystemUtils.getSystemId());
+        configuration.setEc2Region(Regions.EU_WEST_1.getName());
+        configuration.setSdfsMountPoint("");
+        configuration.setSdfsVolumeName("");
+        configuration.setRestoreVolumeIopsPerGb(restoreVolumeIopsPerGb);
+        configuration.setRestoreVolumeType(restoreVolumeType);
+        configuration.setTempVolumeIopsPerGb(tempVolumeIopsPerGb);
+        configuration.setTempVolumeType(tempVolumeType);
+        configuration.setSdfsLocalCacheSize(sdfsLocalCacheSize);
+        configuration.setAmazonRetryCount(amazonRetryCount);
+        configuration.setAmazonRetrySleep(amazonRetrySleep);
+        configuration.setMaxQueueSize(queueSize);
+        configuration.setSdfsConfigPath(sdfsConfigPath);
+        configuration.setSdfsBackupFileName(sdfsStateBackupFileName);
+        configuration.setRetentionCronExpression(defaultRetentionCronExpression);
+        configuration.setWorkerDispatcherPollingRate(defaultPollingRate);
+        configuration.setWaitTimeBeforeNewSyncWithAWS(defaultWaitTimeBeforeNewSyncWithAWS);
+        configuration.setMaxWaitTimeToDetachVolume(defaultMaxWaitTimeToDetachVolume);
+        configuration.setS3Bucket("com.sungardas.enhancedsnapshots.dev");
+        configuration.setSdfsSize(500);
+        configuration.setSdfsVolumeName("awspool");
+        configuration.setSdfsMountPoint("/mnt/awspool");
+        configuration.setSsoLoginMode(true);
+        configuration.setLogFile(logFile);
+        configuration.setLogsBufferSize(bufferSize);
+        return configuration;
+    }
+
+
+
     public void syncSettingsInDbAndConfigFile() {
-
     }
 
     public BucketNameValidationDTO validateBucketName(String bucketName) {
-        if (!bucketName.startsWith(enhancedSnapshotBucketPrefix)) {
-            return new BucketNameValidationDTO(false, "Bucket name should start with " + enhancedSnapshotBucketPrefix);
-        }
-        if (amazonS3.doesBucketExist(bucketName)) {
-            // check whether we own this bucket
-            List<Bucket> buckets = amazonS3.listBuckets();
-            for(Bucket bucket: buckets){
-                if (bucket.getName().equals(bucketName)){
-                    return new BucketNameValidationDTO(true, "");
-                }
-            }
-            return new BucketNameValidationDTO(false, "The requested bucket name is not available.Please select a different name.");
-        }
-        try {
-            BucketNameUtils.validateBucketName(bucketName);
-            return new BucketNameValidationDTO(true, "");
-        } catch (IllegalArgumentException e) {
-            return new BucketNameValidationDTO(false, e.getMessage());
-        }
+        return new BucketNameValidationDTO(true, "");
     }
 
+    public void saveAndProcessSAMLFiles(MultipartFile spCertificate, MultipartFile idpMetadata) {
+
+    }
+
+    protected void uploadToS3(String bucketName, Path filePath) {
+
+    }
     @Override
-    public void createBucket(String bucketName) {
-        BucketNameValidationDTO validationDTO = validateBucketName(bucketName);
-        if (!validationDTO.isValid()) {
-            throw new IllegalArgumentException(validationDTO.getMessage());
-        }
-        if (!amazonS3.doesBucketExist(bucketName)) {
-            LOG.info("Creating bucket {} in {}", bucketName, "us-west-2");
-            amazonS3.createBucket(bucketName, "us-west-2");
-            // delete created bucket in dev mode, we do not need it
-            LOG.info("Removing bucket {} in {}", bucketName, "us-west-2");
-            amazonS3.deleteBucket(bucketName);
-        }
+    public InitConfigurationDto.DB containsMetadata(final String bucketName) {
+        InitConfigurationDto.DB db = new InitConfigurationDto.DB();
+        db.setValid(true);
+        db.setAdminExist(true);
+        return db;
     }
 }

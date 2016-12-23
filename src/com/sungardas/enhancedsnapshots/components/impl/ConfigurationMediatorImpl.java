@@ -1,29 +1,51 @@
 package com.sungardas.enhancedsnapshots.components.impl;
 
-import javax.annotation.PostConstruct;
-
+import com.amazonaws.services.dynamodbv2.datamodeling.IDynamoDBMapper;
+import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.Configuration;
-import com.sungardas.enhancedsnapshots.components.ConfigurationMediator;
-
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.MailConfigurationDocument;
+import com.sungardas.enhancedsnapshots.components.ConfigurationMediatorConfigurator;
+import com.sungardas.enhancedsnapshots.util.SystemUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import javax.annotation.PostConstruct;
 
 import static com.sungardas.enhancedsnapshots.service.SystemService.VOLUME_SIZE_UNIT;
 
-/**
- * implementation for {@link ConfigurationMediator}
- */
-@Service
-public class ConfigurationMediatorImpl implements ConfigurationMediator {
 
+
+/**
+ * implementation for {@link ConfigurationMediatorConfigurator}
+ */
+@Service("ConfigurationMediator")
+public class ConfigurationMediatorImpl implements ConfigurationMediatorConfigurator {
+
+    private static final Logger LOG = LogManager.getLogger(ConfigurationMediatorImpl.class);
+    @Autowired
+    @Qualifier("dbMapperWithoutProxy")
+    private IDynamoDBMapper dbMapper;
     private Configuration currentConfiguration;
 
-    @PostConstruct
-    private void init() {
-        //Default values for first connection to DB
-        currentConfiguration = new Configuration();
-        currentConfiguration.setAmazonRetryCount(30);
-        currentConfiguration.setAmazonRetrySleep(15);
 
+    @PostConstruct
+    private void init() throws Throwable {
+        for (int i = 0; i < 3; i++) {
+            try {
+                currentConfiguration = dbMapper.load(Configuration.class, SystemUtils.getSystemId());
+                return;
+            } catch (ResourceNotFoundException e) {
+                currentConfiguration = new Configuration();
+                currentConfiguration.setAmazonRetryCount(30);
+                currentConfiguration.setAmazonRetrySleep(15000);
+            } catch (Exception e) {
+                LOG.warn("Failed to get configuration: ", e);
+                Thread.sleep(1000);
+            }
+        }
     }
 
     @Override
@@ -136,12 +158,95 @@ public class ConfigurationMediatorImpl implements ConfigurationMediator {
         return currentConfiguration.getMaxWaitTimeToDetachVolume();
     }
 
+    @Override
+    public int getTaskHistoryTTS() {
+        return currentConfiguration.getTaskHistoryTTS();
+    }
+
+    @Override
     public void setCurrentConfiguration(final Configuration currentConfiguration) {
         this.currentConfiguration = currentConfiguration;
     }
 
     @Override
+    public Configuration getCurrentConfiguration() {
+        return currentConfiguration;
+    }
+
+    @Override
     public String getVolumeSizeUnit() {
         return VOLUME_SIZE_UNIT;
+    }
+
+    public boolean isSsoLoginMode() {
+        return this.currentConfiguration.isSsoLoginMode();
+    }
+
+    public String getSamlEntityId() {
+        return this.currentConfiguration.getEntityId();
+    }
+
+    @Override
+    public boolean isStoreSnapshot() {
+        return currentConfiguration.isStoreSnapshot();
+    }
+
+    @Override
+    public int getLogsBufferSize() {
+        return currentConfiguration.getLogsBufferSize();
+    }
+
+    @Override
+    public String getLogFileName() {
+        return currentConfiguration.getLogFile();
+    }
+
+    public String getDomain() {
+        return currentConfiguration.getDomain();
+    }
+
+    @Override
+    public MailConfigurationDocument getMailConfiguration() {
+        return currentConfiguration.getMailConfigurationDocument();
+    }
+
+    @Override
+    public int getMinNodeNumberInCluster() {
+        return currentConfiguration.getMinNodeNumber();
+    }
+
+    @Override
+    public int getMaxNodeNumberInCluster() {
+        return currentConfiguration.getMaxNodeNumber();
+    }
+
+    @Override
+    public boolean isClusterMode() {
+        return currentConfiguration.isClusterMode();
+    }
+
+    @Override
+    public String getChunkStoreEncryptionKey() {
+        return currentConfiguration.getChunkStoreEncryptionKey();
+    }
+
+    @Override
+    public String getChunkStoreIV() {
+        return currentConfiguration.getChunkStoreIV();
+    }
+
+    @Override
+    public String getSdfsCliPsw() {
+        return currentConfiguration.getSdfsCliPsw();
+    }
+
+    @Override
+    public String getUUID() {
+        return currentConfiguration.getUUID();
+    }
+
+    @Override
+    public boolean isSungardasSSO() {
+        return currentConfiguration.isSungardasSSO();
     }
 }

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('web')
-    .service('Users', function ($q, $http, Storage, BASE_URL) {
+    .service('Users', ['$q', '$http', 'Storage', 'BASE_URL', function ($q, $http, Storage, BASE_URL) {
         var url = BASE_URL + "rest/user";
         var storageKey = '_users';
 
@@ -44,6 +44,22 @@ angular.module('web')
             return Storage.get('currentUser')
         };
 
+        var refreshCurrentUser = function () {
+            var deferred = $q.defer();
+            $http({
+                url: url + "/currentUser",
+                method: 'GET'
+            }).then(function (result) {
+                if (result.data.email) {
+                    Storage.save('currentUser', result.data);
+                }
+                deferred.resolve(result);
+            }, function (e) {
+                deferred.reject(e);
+            });
+            return deferred.promise;
+        };
+
         var remove = function (email) {
             return $http({
                 url: url + "/" + email,
@@ -67,10 +83,15 @@ angular.module('web')
             getCurrent: function () {
                 return getCurrentUser();
             },
+
+            refreshCurrent: function () {
+                return refreshCurrentUser();
+            },
+
             getAll: function () {
                 return getUsers().then(function (data) {
                     return data;
                 })
             }
         }
-    });
+    }]);

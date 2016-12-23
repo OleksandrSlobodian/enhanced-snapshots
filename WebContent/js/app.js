@@ -6,7 +6,7 @@ app.constant('BASE_URL', './');
 app.constant('ITEMS_BY_PAGE', 25);
 app.constant('DISPLAY_PAGES', 7);
 
-app.config(function ($stateProvider, $urlRouterProvider, $httpProvider) {
+app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($stateProvider, $urlRouterProvider, $httpProvider) {
     $urlRouterProvider.otherwise("/app/volumes");
 
     var authenticated = ['$rootScope', function ($rootScope) {
@@ -19,6 +19,43 @@ app.config(function ($stateProvider, $urlRouterProvider, $httpProvider) {
         return true;
     }];
 
+    var ssoMode = ['System', '$q', '$rootScope', function (System, $q, $rootScope) {
+        $rootScope.isLoading = true;
+        var deferred = $q.defer();
+
+        System.get().then(function (data) {
+            $rootScope.isLoading = false;
+            deferred.resolve(data);
+        }, function () {
+            $rootScope.isLoading = false;
+            deferred.reject(false);
+        });
+
+        return deferred.promise;
+    }];
+
+    var doRefresh = ['Users', '$q', 'Storage', function (Users, $q, Storage) {
+        var deferred = $q.defer();
+
+        Users.refreshCurrent().then(function (data) {
+            if (data.status === 302) {
+                Storage.save("ssoMode", {"ssoMode": false});
+            }
+            deferred.resolve(false)
+        }, function (rejection) {
+            if (rejection.status === 401) {
+                var isSso = rejection.data &&
+                    rejection.data.loginMode &&
+                    rejection.data.loginMode === "SSO";
+
+                deferred.resolve(isSso);
+            }
+            deferred.resolve(false)
+        });
+
+        return deferred.promise;
+    }];
+
     $stateProvider
         .state('app', {
             abstract: true,
@@ -27,9 +64,9 @@ app.config(function ($stateProvider, $urlRouterProvider, $httpProvider) {
             resolve: {
                 authenticated: authenticated
             },
-            controller: function ($scope, $rootScope, Storage, toastr) {
+            controller: ['$scope', '$rootScope', 'Storage', 'toastr', function ($scope, $rootScope, Storage, toastr) {
                 $rootScope.$on('$stateChangeSuccess',
-                    function(event, toState, toParams, fromState, fromParams){
+                    function(){
                         var notification = Storage.get("notification");
                         if (notification) {
                             toastr.info(notification, undefined, {
@@ -39,7 +76,8 @@ app.config(function ($stateProvider, $urlRouterProvider, $httpProvider) {
                             Storage.remove("notification");
                         }
                     });
-            }
+                $rootScope.isAdmin = (Storage.get("currentUser") || {}).role === 'admin';
+            }]
         })
         .state('app.volume', {
             abstract: true,
@@ -80,7 +118,15 @@ app.config(function ($stateProvider, $urlRouterProvider, $httpProvider) {
         .state('app.users', {
             url: "/users",
             templateUrl: "partials/users.html",
-            controller: "UserController"
+            controller: "UserController",
+            resolve: {
+                ssoMode: ssoMode
+            }
+        })
+        .state('app.logs', {
+            url: "/logs",
+            templateUrl: "partials/logs.html",
+            controller: "LogsController"
         })
         .state('config', {
             url: "/config",
@@ -93,7 +139,10 @@ app.config(function ($stateProvider, $urlRouterProvider, $httpProvider) {
         .state('login', {
             url: "/login?err",
             templateUrl: "partials/login.html",
-            controller: "LoginController"
+            controller: "LoginController",
+            resolve: {
+                refreshUserResult: doRefresh
+            }
         })
         .state('registration', {
             url: "/registration",
@@ -101,9 +150,30 @@ app.config(function ($stateProvider, $urlRouterProvider, $httpProvider) {
             controller: "RegistrationController"
         });
 
+    $httpProvider.defaults.headers.common["X-Requested-With"] = 'XMLHttpRequest';
     $httpProvider.interceptors.push('Interceptor');
-})
-    .run(function ($rootScope, $state, $modal, $stomp, toastr, Storage) {
+}])
+    .run(['$rootScope', '$state', '$modal', '$stomp', 'toastr', 'Storage', 'Users', 'System', '$q',
+        function ($rootScope, $state, $modal, $stomp, toastr, Storage, Users, System, $q) {
+        $rootScope.isLoading = true;
+
+        System.get().then(function (results) {
+            //response for System.get
+            if (results.ssoMode != undefined) {
+                Storage.save("ssoMode", {"ssoMode": results.ssoMode});
+            }
+
+            Users.refreshCurrent().then(function (data) {
+                if (data.data && data.data.email) {
+                    $state.go('app.volume.list');
+                }
+            });
+            $rootScope.isLoading = false;
+        }, function (err) {
+            console.log(err);
+            $rootScope.isLoading = false;
+        });
+
         $rootScope.getUserName = function () {
             return (Storage.get("currentUser") || {}).email;
         };
@@ -124,21 +194,25 @@ app.config(function ($stateProvider, $urlRouterProvider, $httpProvider) {
                         toastr.error(err.message, err.title);
                     });
                     $rootScope.taskListener = $stomp.subscribe('/task', function (msg) {
-                        Storage.save('lastTaskStatus', msg);
+                        Storage.save('lastTaskStatus_' + msg.taskId, msg);
                         $rootScope.$broadcast("task-status-changed", msg);
                     });
+                }, function (e) {
+                    console.log(e);
                 });
-        };
+            };
 
-        $rootScope.isLoading = false;
 
         $rootScope.$on('$stateChangeError', function (e) {
             e.preventDefault();
-            $state.go('login');
+            if (Storage.get("ssoMode")) {
+                $rootScope.isLoading = true;
+            } else {
+                $state.go('login');
+            }
         });
 
         $rootScope.errorListener = {};
         $rootScope.taskListener = {};
         if (angular.isDefined($rootScope.getUserName())) { $rootScope.subscribeWS(); }
-    });
-
+    }]);

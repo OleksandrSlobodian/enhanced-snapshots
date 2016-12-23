@@ -1,7 +1,6 @@
 'use strict';
-
 angular.module('web')
-    .controller('ConfigController', function ($scope, Volumes, Configuration, $modal, $state) {
+    .controller('ConfigController', ['$scope', 'Volumes', 'Configuration', '$modal', '$state', 'Storage', function ($scope, Volumes, Configuration, $modal, $state, Storage) {
         var DELAYTIME = 600*1000;
         $scope.STRINGS = {
             s3: {
@@ -44,11 +43,21 @@ angular.module('web')
         $scope.isValidInstance = true;
         $scope.selectBucket = function (bucket) {
             $scope.selectedBucket = bucket;
+            Configuration.get('bucket/' + encodeURIComponent(bucket.bucketName) + '/metadata').then(function (result) {
+                //property settings.db.hasAdmin is a legacy code which should be changed. Currently this field is replaced
+                // with value from result.data.hasAdmin of this function. Speak to Kostya for more details
+                $scope.settings.db.hasAdmin = result.data.hasAdmin;
+            }, function (err) {
+                console.warn(err);
+            });
         };
-
-        var wizardCreationProgress = function () {
+		
+		if (angular.isUndefined($scope.isSSO)) { $scope.isSSO = false; } 
+        
+		var wizardCreationProgress = function () {
             var modalInstance = $modal.open({
                 animation: true,
+                backdrop: false,
                 templateUrl: './partials/modal.wizard-progress.html',
                 scope: $scope
             });
@@ -68,6 +77,19 @@ angular.module('web')
             Configuration.get('current').then(function (result, status) {
                 $scope.settings = result.data;
                 $scope.selectedBucket = (result.data.s3 || [])[0] || {};
+                if (!$scope.settings.mailConfiguration) {
+                    $scope.emails = [];
+                    $scope.settings.mailConfiguration = {
+                        events: {
+                            "error": false,
+                            "info": false,
+                            "success": false
+                        }
+                    }
+                } else {
+                    $scope.emails = $scope.settings.mailConfiguration.recipients || [];
+                }
+
                 loader.dismiss();
             }, function (data, status) {
                 $scope.isValidInstance = false;
@@ -78,15 +100,73 @@ angular.module('web')
 
         getCurrentConfig();
 
+        $scope.emailNotifications = function () {
+            $scope.connectionStatus = null;
+            var emailNotificationsModalInstance = $modal.open({
+                animation: true,
+                templateUrl: './partials/modal.email-notifications.html',
+                scope: $scope,
+                backdrop: false
+            });
+
+            emailNotificationsModalInstance.result.then(function () {
+                $scope.settings.mailConfiguration.recipients = $scope.emails;
+            })
+        };
+
+        $scope.testConnection = function () {
+            $scope.settings.mailConfiguration.recipients = $scope.emails;
+            var testData = {
+                testEmail: $scope.testEmail,
+                domain: $scope.settings.domain,
+                mailConfiguration: $scope.settings.mailConfiguration
+            };
+
+            Configuration.check(testData).then(function (response) {
+                $scope.connectionStatus = response.status;
+            }, function (error) {
+                $scope.connectionStatus = error.status;
+            });
+        };
+
         $scope.sendSettings = function () {
             var volumeSize = $scope.isNewVolumeSize ? $scope.sdfsNewSize : $scope.settings.sdfs.volumeSize;
 
-            var settings = {
-                bucketName: $scope.selectedBucket.bucketName,
-                volumeSize: volumeSize
+            var getMailConfig = function () {
+                if (!$scope.settings.mailConfiguration.fromMailAddress) {
+                    return null;
+                } else {
+                    return $scope.settings.mailConfiguration
+                }
             };
 
-            if (!$scope.settings.db.hasAdmin) {
+            var getClusterNodes = function () {
+
+                if ($scope.settings.clusterMode) {
+                    var clusterNodes;
+
+                    clusterNodes = {
+                        minNodeNumber: $scope.settings.cluster.minNodeNumber,
+                        maxNodeNumber: $scope.settings.cluster.maxNodeNumber
+                    };
+
+                    return clusterNodes
+                }
+                return null
+            };
+
+            var settings = {
+                bucketName: $scope.selectedBucket.bucketName,
+                volumeSize: volumeSize,
+                cluster: getClusterNodes(),
+                sungardasSSO: !!$scope.sungardasSSO,
+                ssoMode: $scope.isSSO,
+                domain: $scope.settings.domain,
+                spEntityId: $scope.entityId || null,
+                mailConfiguration: getMailConfig()
+            };
+
+            if (!$scope.settings.db.hasAdmin && !$scope.isSSO) {
                 $scope.userToEdit = {
                     isNew: true,
                     admin: true
@@ -115,8 +195,16 @@ angular.module('web')
             } else {
                 $scope.progressState = 'running';
 
-                Configuration.send('current', settings).then(function () {
+                if (settings.ssoMode) {
+                    settings.user = {email: $scope.adminEmail}
+                }
+
+                $scope.progressState = 'running';
+
+
+                Configuration.send('current', settings, null, $scope.settings.sso).then(function () {
                     $scope.progressState = 'success';
+                    Storage.save("ssoMode", {ssoMode: $scope.isSSO});
                 }, function (data, status) {
                     $scope.progressState = 'failed';
                 });
@@ -132,6 +220,4 @@ angular.module('web')
             }, function (data, status) {
             });
         };
-
-
-    });
+    }]);
