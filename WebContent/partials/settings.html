@@ -2,7 +2,7 @@
     <div class="container">
         <div class="sub-nav pull-right">
             <div class="user">
-                <a ui-sref="login" title="logout">{{getUserName()}}&nbsp;<span
+                <a ui-sref="logout" title="logout">{{getUserName()}}&nbsp;<span
                         class="glyphicon glyphicon-off text-danger"></span></a>
             </div>
             <div class="page-btns">
@@ -120,7 +120,7 @@
                                        ng-model="settings.systemProperties.tempVolumeIopsPerGb"
                                        class="settings bucket-name form-control"
                                        min="1"
-                                       max="30"
+                                       max="50"
                                        required>
                             </div>
                         </div>
@@ -140,7 +140,7 @@
                                        class="settings bucket-name form-control"
                                        ng-model="settings.systemProperties.restoreVolumeIopsPerGb"
                                        min="1"
-                                       max="30"
+                                       max="50"
                                        required>
                             </div>
                         </div>

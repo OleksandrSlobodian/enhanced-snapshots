@@ -1,8 +1,10 @@
 'use strict';
 
 angular.module('web')
-    .controller('LoginController', ['$scope', '$state', '$stateParams', '$stomp', 'Auth', 'System', 'Storage', 'toastr', '$window', 'refreshUserResult',
-        function ($scope, $state, $stateParams, $stomp, Auth, System, Storage, toastr, $window, refreshUserResult) {
+    .controller('LoginController', ['$rootScope', '$scope', '$state', '$stateParams', '$stomp', 'Auth', 'System', 'Storage', 'toastr', '$window', 'refreshUserResult',
+        function ($rootScope, $scope, $state, $stateParams, $stomp, Auth, System, Storage, toastr, $window, refreshUserResult) {
+
+        $rootScope.isLoading = true;
 
         //LOGGING OUT ---------------------
         if ($stateParams.err && $stateParams.err == 'session') {
@@ -11,13 +13,6 @@ angular.module('web')
 
         var currentUser = Storage.get("currentUser");
         var ssoMode = Storage.get("ssoMode");
-
-        if (currentUser !== null && currentUser !== undefined) {
-            if (ssoMode && ssoMode.ssoMode) {
-                $window.location.href = "/saml/logout";
-            }
-            Auth.logOut();
-        }
 
         if (currentUser && currentUser.length > 1) {
             if (ssoMode && ssoMode.ssoMode) {
@@ -28,11 +23,15 @@ angular.module('web')
         //------------------------------------
 
         // Show loader instead of login page if ssoMode is true ----------
-            if (refreshUserResult) {
-                $scope.isLoading = true;
+            if (refreshUserResult === true) {
+                $rootScope.isLoading = true;
                 window.location = "/saml/login";
             } else {
-                $scope.isLoading = !!(ssoMode && ssoMode.ssoMode);
+                if (refreshUserResult === 200 && currentUser && ssoMode && ssoMode.ssoMode != undefined) {
+                    $state.go('app.volume.list');
+                } else {
+                    $rootScope.isLoading = !!(ssoMode && ssoMode.ssoMode);
+                }
             }
 
         //---------------------------------------------
@@ -48,7 +47,7 @@ angular.module('web')
                     $state.go('config');
                 } else {
                     System.get().then(function (data) {
-                        if (data.currentVersion != data.latestVersion) {
+                        if (data.currentVersion < data.latestVersion) {
                             Storage.save("notification", "Newer version is available! Please, create a new instance from the latest AMI.");
                         }
                         $scope.subscribeWS();
@@ -60,5 +59,7 @@ angular.module('web')
                 $scope.error = res;
                 $scope.password = "";
             });
-        }
+        };
+
+
     }]);
