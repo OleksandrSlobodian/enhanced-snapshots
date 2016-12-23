@@ -185,6 +185,7 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     private int bufferSize;
     @Value("${enhancedsnapshots.logs.file}")
     private String logFile;
+    private boolean firstTimeInitialization;
 
     private static final String CUSTOM_BUCKET_NAME_DEFAULT_VALUE = "enhancedsnapshots";
 
@@ -332,7 +333,10 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
             contextManager.refreshContext(ssoMode, entityId);
         } catch (Exception e) {
             LOG.warn("Failed to refresh context: {}", e);
-            removeProperties();
+            // we do not need remove property file in case it's not a first time configuration
+            if (firstTimeInitialization) {
+                removeProperties();
+            }
             contextManager.refreshInitContext();
             throw e;
         }
@@ -824,6 +828,11 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         }
     }
 
+    @Override
+    public void setFlagOfFirstTimeConfiguration(boolean firstTimeInitialization) {
+        this.firstTimeInitialization = firstTimeInitialization;
+    }
+
     protected void createBucket(String bucketName) {
         if (!bucketExists(bucketName)) {
             LOG.info("Creating bucket {} in {} region", bucketName, region);
@@ -836,11 +845,9 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         }
     }
 
-
     private void saveFileOnServer(String fileName, MultipartFile fileToSave) throws IOException {
         fileToSave.transferTo(Paths.get(System.getProperty(catalinaHomeEnvPropName), fileName).toFile());
     }
-
 
     protected void uploadToS3(String bucketName, Path filePath) {
         File file = filePath.toFile();
