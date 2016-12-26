@@ -17,15 +17,19 @@ public class TaskDtoConverter {
 		TaskDto taskDto = new TaskDto();
 		BeanUtils.copyProperties(task, taskDto);
 		taskDto.setSchedulerTime(task.getSchedulerTime());
-		taskDto.setVolumes(Arrays.asList(task.getVolume()));
+		TaskDto.VolumeInfo volumeInfo = new TaskDto.VolumeInfo(task.getVolume(), task.getAvailabilityZone(), task.getInstanceToAttach());
+		volumeInfo.volumeId = task.getVolume();
+		taskDto.setVolumes(Arrays.asList(volumeInfo));
 		return taskDto;
 	}
 
 	public static List<TaskEntry> convert(TaskDto taskDto) {
 		List<TaskEntry> result = new ArrayList<>();
-		for (String volumeId : taskDto.getVolumes()) {
+		for (TaskDto.VolumeInfo volumeInfo : taskDto.getVolumes()) {
 			TaskEntry task = copy(taskDto);
-			task.setVolume(volumeId);
+			task.setVolume(volumeInfo.volumeId);
+			task.setAvailabilityZone(volumeInfo.zone);
+			task.setInstanceToAttach(volumeInfo.instanceId);
 			result.add(task);
 		}
 		return result;

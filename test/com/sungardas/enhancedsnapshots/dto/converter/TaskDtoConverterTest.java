@@ -13,10 +13,8 @@ import java.util.List;
 public class TaskDtoConverterTest {
 
     private String id = "Id1";
-    private String priority = "2";
     private String status = "queued";
     private String type = "backup";
-    private List<String> volumes = Arrays.asList("vol-c343123b", "vol-c34232");
     private String schedulerManual = "false";
     private String schedulerName = "everyYear";
     private String schedulerTime = "00:03:82";
@@ -24,6 +22,7 @@ public class TaskDtoConverterTest {
     private String backupFileName = "someFileName";
     private String cron = "0 0 1 1 *";
     private String zone = "az";
+    private List<TaskDto.VolumeInfo> volumes = Arrays.asList(new TaskDto.VolumeInfo("vol-c343123b", zone, null), new TaskDto.VolumeInfo("vol-c34232", zone, null));
     private String regular = Boolean.TRUE.toString();
     private String enabled = "true";
 
@@ -68,9 +67,9 @@ public class TaskDtoConverterTest {
         }
 
         // check volume id of first taskEntry
-        Assert.assertTrue(taskEntries.get(0).getVolume().equals(volumes.get(0)));
+        Assert.assertTrue(taskEntries.get(0).getVolume().equals(volumes.get(0).volumeId));
 
         // check volume id of second taskEntry
-        Assert.assertTrue(taskEntries.get(1).getVolume().equals(volumes.get(1)));
+        Assert.assertTrue(taskEntries.get(1).getVolume().equals(volumes.get(1).volumeId));
     }
 }
