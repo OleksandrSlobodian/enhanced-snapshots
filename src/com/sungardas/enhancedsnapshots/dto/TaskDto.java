@@ -138,5 +138,8 @@ public class TaskDto {
             this.zone = zone;
             this.instanceId = instanceId;
         }
+
+        public VolumeInfo() {
+        }
     }
 }
