@@ -2,13 +2,18 @@
 
 angular.module('web')
     .controller('HistoryController',
-        ['$scope', '$rootScope', '$q', 'Storage', 'ITEMS_BY_PAGE', 'DISPLAY_PAGES', '$stateParams', '$state', '$modal', '$filter', 'Backups', 'Tasks', 'Zones',
-            function ($scope, $rootScope, $q, Storage, ITEMS_BY_PAGE, DISPLAY_PAGES, $stateParams, $state, $modal, $filter, Backups, Tasks, Zones) {
+        ['$scope', '$rootScope', '$q', 'Storage', 'ITEMS_BY_PAGE', 'DISPLAY_PAGES', '$stateParams', '$state', '$modal', '$filter', 'Backups', 'Tasks', 'Zones', 'Instances',
+            function ($scope, $rootScope, $q, Storage, ITEMS_BY_PAGE, DISPLAY_PAGES, $stateParams, $state, $modal, $filter, Backups, Tasks, Zones, Instances) {
+
         $scope.maxDeleteBackupDisplay = 5;
         $scope.itemsByPage = ITEMS_BY_PAGE;
         $scope.displayedPages = DISPLAY_PAGES;
+        $scope.isRestoreAction = true;
 
         $scope.volumeId = $stateParams.volumeId;
+
+        $scope.restoreActions = ["Restore in AZ", "Attach to instance"];
+        $scope.restoreAction = "Restore in AZ";
 
         $scope.textClass = {
             'false': 'Select',
@@ -22,6 +27,18 @@ angular.module('web')
 
         $scope.selectZone = function (zone) {
             $scope.selectedZone = zone;
+        };
+
+        $scope.selectAction = function (action) {
+            $scope.restoreAction = action;
+            if ($scope.restoreAction == "Restore in AZ") {
+                $scope.isRestoreAction = true;
+            }
+            $scope.isRestoreAction = false;
+        };
+
+        $scope.selectInstance = function (instance) {
+            $scope.instance = instance;
         };
 
         $scope.isAllSelected = false;
@@ -104,10 +121,12 @@ angular.module('web')
 
         $scope.restore = function (backup) {
             $rootScope.isLoading = true;
-            $q.all([Zones.get(), Zones.getCurrent()])
+            $q.all([Zones.get(), Zones.getCurrent(), Instances.get()])
                 .then(function (results) {
                     $scope.zones = results[0];
                     $scope.selectedZone = results[1]["zone-name"] || "";
+                    $scope.instances = results[2];
+                    $scope.instance = $scope.instances[0];
                 })
                 .finally(function () {
                     $rootScope.isLoading = false;
@@ -127,12 +146,16 @@ angular.module('web')
                     volumes: [$scope.objectToProcess.volumeId],
                     backupFileName: $scope.objectToProcess.fileName,
                     type: "restore",
-                    zone: $scope.selectedZone,
+                    instance: $scope.instance,
                     status: "waiting",
                     schedulerManual: true,
                     schedulerName: Storage.get('currentUser').email,
                     schedulerTime: Date.now()
                 };
+                if ($scope.isRestoreAction) {
+                    newTask.zone = $scope.selectedZone;
+                };
+                newTask.instance = $scope.instance;
                 Tasks.insert(newTask).then(function () {
                     var successInstance = $modal.open({
                         animation: true,

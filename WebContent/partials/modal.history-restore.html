@@ -4,20 +4,50 @@
 <div class="modal-body">
     <p>You are going to start restore process for: </p>
     <blockquote>
-        <p>Volume: <span class="h4 text-primary">{{objectToProcess.volumeId}}</span></p>
-
         <p>Backup: <span class="h4 text-warning">{{objectToProcess.fileName}}</span></p>
     </blockquote>
-    <div>Restore will be done to
-        <span dropdown>
-            <a href dropdown-toggle>{{selectedZone || "current"}}</a>
-            <ul class="dropdown-menu" >
-                <li ng-repeat="zone in zones">
-                    <a href ng-click="selectZone(zone)">{{zone}}</a>
-                </li>
-            </ul>
-        </span> availability zone
-    </div>
+    <table class="table">
+        <tr>
+            <th>Volume</th>
+            <th>Action</th>
+            <th>Value</th>
+        </tr>
+        <tr>
+            <td>{{objectToProcess.volumeId}}</td>
+            <td>
+                <span dropdown>
+                    <a href dropdown-toggle>{{restoreAction}}</a>
+                    <ul class="dropdown-menu" >
+                        <li ng-repeat="action in restoreActions">
+                            <a href ng-click="selectAction(action)">{{action}}</a>
+                        </li>
+                    </ul>
+                </span>
+            </td>
+
+            <td ng-if="restoreAction=='Restore in AZ'">
+                <span dropdown>
+                    <a href dropdown-toggle>{{selectedZone || "current"}}</a>
+                    <ul class="dropdown-menu" >
+                        <li ng-repeat="zone in zones">
+                            <a href ng-click="selectZone(zone)">{{zone}}</a>
+                        </li>
+                    </ul>
+                </span>
+            </td>
+            <td ng-if="restoreAction=='Attach to instance'">
+                <span dropdown>
+                    <a href dropdown-toggle>{{instance}}</a>
+                    <ul class="dropdown-menu" >
+                        <li ng-repeat="instance in instances">
+                            <a href ng-click="selectInstance(instance)">{{instance}}</a>
+                        </li>
+                    </ul>
+                </span>
+            </td>
+        </tr>
+    </table>
+
     <p> Do you want to start it now?</p>
 </div>
 <div class="modal-footer">

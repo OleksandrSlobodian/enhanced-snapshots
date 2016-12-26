@@ -1,8 +1,9 @@
 'use strict';
 
 angular.module('web')
-    .controller('VolumesController', ['$scope', '$rootScope', '$state', '$q', 'Retention', '$filter', 'Storage', 'Regions', 'ITEMS_BY_PAGE', 'DISPLAY_PAGES', '$modal', 'Volumes', 'Tasks', 'Zones',
-        function ($scope, $rootScope, $state, $q, Retention, $filter, Storage, Regions, ITEMS_BY_PAGE, DISPLAY_PAGES, $modal, Volumes, Tasks, Zones) {
+    .controller('VolumesController', ['$scope', '$rootScope', '$state', '$q', 'Retention', '$filter', 'Storage', 'Regions', 'ITEMS_BY_PAGE', 'DISPLAY_PAGES', '$modal', 'Volumes', 'Tasks', 'Zones', 'Instances',
+        function ($scope, $rootScope, $state, $q, Retention, $filter, Storage, Regions, ITEMS_BY_PAGE, DISPLAY_PAGES, $modal, Volumes, Tasks, Zones, Instances) {
+
         $scope.maxVolumeDisplay = 5;
         $scope.itemsByPage = ITEMS_BY_PAGE;
         $scope.displayedPages = DISPLAY_PAGES;
@@ -160,49 +161,81 @@ angular.module('web')
         //-----------Volumes-get/refresh-end------------
 
         //-----------Volume-backup/restore/retention-------------
-        $scope.selectZone = function (zone) {
-            $scope.selectedZone = zone;
-        };
+
+
 
         $scope.volumeAction = function (actionType) {
             $rootScope.isLoading = true;
-            $q.all([Zones.get(), Zones.getCurrent()])
-                .then(function (results) {
-                    $scope.zones = results[0];
-                    $scope.selectedZone = results[1]["zone-name"] || "";
-                 })
-                .finally(function () {
-                    $rootScope.isLoading = false;
-                });
-
-
             $scope.selectedVolumes = $scope.volumes.filter(function (v) { return v.isSelected; });
             $scope.actionType = actionType;
             $scope.action = actions[actionType];
             $scope.schedule = { name: '', cron: '', enabled: true };
-
             var confirmInstance = $modal.open({
                 animation: true,
                 templateUrl: './partials/modal.volumeAction.html',
                 scope: $scope
             });
 
+            $scope.restoreActions = ["Restore in AZ", "Attach to instance"];
+            //$scope.restoreAction = "Restore in AZ";
+
+            $scope.selectZone = function (volume, zone) {
+                volume.zone = zone;
+            };
+
+            $scope.selectAction = function (volume, action) {
+                volume.restoreAction = action;
+            };
+
+            $scope.selectInstance = function (volume, instance) {
+                volume.instanceId = instance;
+            };
+
+            $q.all([Zones.get(), Zones.getCurrent(), Instances.get()])
+                .then(function (results) {
+                    $scope.zones = results[0];
+                    $scope.selectedZone = results[1]["zone-name"] || "";
+                    $scope.instances = results[2];
+                    $scope.instance = $scope.instances[0];
+                 })
+                .finally(function () {
+                    $rootScope.isLoading = false;
+                });
+
             confirmInstance.result.then(function () {
                 $rootScope.isLoading = true;
-                var volList = $scope.selectedVolumes.map(function (v) { return v.volumeId; });
+                //var volList = {};
+
+                var volList = $scope.selectedVolumes.map(function (v) {
+                    var restoreAction = v.restoreAction ? v.restoreAction : "Restore in AZ";
+                    if (restoreAction === "Restore in AZ")
+                    {
+                        var zone = v.zone ? v.zone : $scope.selectedZone;
+                    }
+                    if (restoreAction === "Attach to instance") {
+                        var instanceId = v.instanceId ? v.instanceId : $scope.instance;
+                    }
+                    //var zone = v.zone ? v.zone : $scope.selectedZone;
+                    return v = {
+                        "volumeId": v.volumeId,
+                        "zone": zone,
+                        "instanceId": instanceId
+                    }; });
+
 
                 var getNewTask = function(){
                     var newTask = {
                         id: "",
                         priority: "",
                         volumes: volList,
+                        //volumes: $scope.selectedVolumes,
                         status: "waiting"
                     };
 
                     switch (actionType) {
                         case 'restore':
                             newTask.backupFileName = "";
-                            newTask.zone = $scope.selectedZone;
+                            //newTask.zone = $scope.selectedZone;
                         case 'backup':
                             newTask.type = actionType;
                             newTask.schedulerManual = true;
