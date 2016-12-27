@@ -2,6 +2,7 @@ package com.sungardas.enhancedsnapshots.service.impl;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.BucketLifecycleConfiguration;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupEntry;
@@ -72,6 +73,9 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
 
     @Autowired
     private ConfigurationMediator configurationMediator;
+
+    @Value("${enhancedsnapshots.s3.rule.ia.names}")
+    private List<String> s3RuleNames;
 
 
     @Override
@@ -351,6 +355,30 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
             LOG.error(e);
             throw new EnhancedSnapshotsException("Unable to get SDFS volumeId", e);
         }
+    }
+
+    @Override
+    public void enableS3IA() {
+        List<BucketLifecycleConfiguration.Rule> rules = amazonS3.getBucketLifecycleConfiguration(configurationMediator.getS3Bucket()).getRules();
+        for (BucketLifecycleConfiguration.Rule rule: rules) {
+            if(s3RuleNames.contains(rule.getId())) {
+                rule.setStatus(IA_ENABLED);
+            }
+        }
+        amazonS3.setBucketLifecycleConfiguration(configurationMediator.getS3Bucket(),
+                new BucketLifecycleConfiguration(rules));
+    }
+
+    @Override
+    public void disableS3IA() {
+        List<BucketLifecycleConfiguration.Rule> rules = amazonS3.getBucketLifecycleConfiguration(configurationMediator.getS3Bucket()).getRules();
+        for (BucketLifecycleConfiguration.Rule rule: rules) {
+            if(s3RuleNames.contains(rule.getId())) {
+                rule.setStatus(IA_DISABLED);
+            }
+        }
+        amazonS3.setBucketLifecycleConfiguration(configurationMediator.getS3Bucket(),
+                new BucketLifecycleConfiguration(rules));
     }
 
     private BackupEntry getBackupFromFile(File file) {

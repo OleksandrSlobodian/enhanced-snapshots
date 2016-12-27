@@ -217,6 +217,7 @@ class InitConfigurationServiceDev extends InitConfigurationServiceImpl {
         configuration.setSsoLoginMode(isSystemConfigured);
         configuration.setLogFile(logFile);
         configuration.setLogsBufferSize(bufferSize);
+        configuration.setIaEnabled(true);
         return configuration;
     }
 
@@ -242,5 +243,10 @@ class InitConfigurationServiceDev extends InitConfigurationServiceImpl {
         db.setValid(true);
         db.setAdminExist(true);
         return db;
+    }
+
+    @Override
+    protected void createS3LifeCycleRules(String bucketName) {
+        //skip
     }
 }

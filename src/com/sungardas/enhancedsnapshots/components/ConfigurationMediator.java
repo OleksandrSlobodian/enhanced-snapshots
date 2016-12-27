@@ -84,4 +84,6 @@ public interface ConfigurationMediator {
     String getUUID();
 
     boolean isSungardasSSO();
+
+    boolean isIaEnabled();
 }
