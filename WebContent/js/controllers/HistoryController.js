@@ -144,9 +144,9 @@ angular.module('web')
                     id: "",
                     priority: "",
                     //volumes: [$scope.objectToProcess.volumeId],
-                    volumes: {
+                    volumes: [{
                         volumeId: $scope.objectToProcess.volumeId
-                    },
+                    }],
                     backupFileName: $scope.objectToProcess.fileName,
                     type: "restore",
                     instance: $scope.instance,
