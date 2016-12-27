@@ -143,7 +143,10 @@ angular.module('web')
                 var newTask = {
                     id: "",
                     priority: "",
-                    volumes: [$scope.objectToProcess.volumeId],
+                    //volumes: [$scope.objectToProcess.volumeId],
+                    volumes: {
+                        volumeId: $scope.objectToProcess.volumeId
+                    },
                     backupFileName: $scope.objectToProcess.fileName,
                     type: "restore",
                     instance: $scope.instance,
@@ -153,9 +156,10 @@ angular.module('web')
                     schedulerTime: Date.now()
                 };
                 if ($scope.isRestoreAction) {
-                    newTask.zone = $scope.selectedZone;
-                };
-                newTask.instance = $scope.instance;
+                    newTask.volumes.zone = $scope.selectedZone;
+                } else if (!$scope.isRestoreAction) {
+                    newTask.volumes.instance = $scope.instance;
+                }
                 Tasks.insert(newTask).then(function () {
                     var successInstance = $modal.open({
                         animation: true,

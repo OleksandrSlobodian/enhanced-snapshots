@@ -6,7 +6,7 @@
     <blockquote>
         <p>Backup: <span class="h4 text-warning">{{objectToProcess.fileName}}</span></p>
     </blockquote>
-    <table class="table">
+    <table class="table restore-table">
         <tr>
             <th>Volume</th>
             <th>Action</th>
@@ -24,7 +24,6 @@
                     </ul>
                 </span>
             </td>
-
             <td ng-if="restoreAction=='Restore in AZ'">
                 <span dropdown>
                     <a href dropdown-toggle>{{selectedZone || "current"}}</a>
