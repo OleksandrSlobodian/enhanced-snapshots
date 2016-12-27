@@ -186,10 +186,10 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     private String logFile;
 
     @Value("${enhancedsnapshots.s3.rule.ia.names}")
-    private List<String> s3RuleNames;
+    private String[] s3RuleNames;
 
     @Value("${enhancedsnapshots.s3.rule.ia.prefixes}")
-    private List<String> s3RulePrefixes;
+    private String[] s3RulePrefixes;
 
     @Value("${enhancedsnapshots.s3.rule.ia.days}")
     private int s3MoveToIaAfterDays;
@@ -334,18 +334,23 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
      */
     protected void createS3LifeCycleRules(String bucketName) {
         List<BucketLifecycleConfiguration.Rule> iaRules = new ArrayList<>();
-        for(int i = 0; i < s3RuleNames.size(); i++) {
-            iaRules.add(getRule(s3RuleNames.get(i), s3RulesEnabled, s3RulePrefixes.get(i), s3MoveToIaAfterDays));
+        for(int i = 0; i < s3RuleNames.length; i++) {
+            iaRules.add(getRule(s3RuleNames[i], s3RulesEnabled, s3RulePrefixes[i], s3MoveToIaAfterDays));
         }
-        List<BucketLifecycleConfiguration.Rule> currentRules = amazonS3.getBucketLifecycleConfiguration(bucketName).getRules();
+        BucketLifecycleConfiguration bucketLifecycleConfiguration = amazonS3.getBucketLifecycleConfiguration(bucketName);
+        if (bucketLifecycleConfiguration != null) {
+            List<BucketLifecycleConfiguration.Rule> currentRules = bucketLifecycleConfiguration.getRules();
 
-        for (BucketLifecycleConfiguration.Rule rule: iaRules) {
-            if(!contains(currentRules, rule.getId())) {
-                currentRules.add(rule);
+            for (BucketLifecycleConfiguration.Rule rule : iaRules) {
+                if (!contains(currentRules, rule.getId())) {
+                    currentRules.add(rule);
+                }
             }
-        }
 
-        amazonS3.setBucketLifecycleConfiguration(bucketName, new BucketLifecycleConfiguration(currentRules));
+            amazonS3.setBucketLifecycleConfiguration(bucketName, new BucketLifecycleConfiguration(currentRules));
+        } else {
+            amazonS3.setBucketLifecycleConfiguration(bucketName, new BucketLifecycleConfiguration(iaRules));
+        }
     }
 
     private boolean contains(List<BucketLifecycleConfiguration.Rule> rules, String id) {

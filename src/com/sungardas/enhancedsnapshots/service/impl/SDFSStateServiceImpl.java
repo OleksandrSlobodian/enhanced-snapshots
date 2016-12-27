@@ -14,6 +14,7 @@ import com.sungardas.enhancedsnapshots.exception.ConfigurationException;
 import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsException;
 import com.sungardas.enhancedsnapshots.exception.SDFSException;
 import com.sungardas.enhancedsnapshots.service.SDFSStateService;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +76,7 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
     private ConfigurationMediator configurationMediator;
 
     @Value("${enhancedsnapshots.s3.rule.ia.names}")
-    private List<String> s3RuleNames;
+    private String[] s3RuleNames;
 
 
     @Override
@@ -361,7 +362,7 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
     public void enableS3IA() {
         List<BucketLifecycleConfiguration.Rule> rules = amazonS3.getBucketLifecycleConfiguration(configurationMediator.getS3Bucket()).getRules();
         for (BucketLifecycleConfiguration.Rule rule: rules) {
-            if(s3RuleNames.contains(rule.getId())) {
+            if(ArrayUtils.contains(s3RuleNames, rule.getId())) {
                 rule.setStatus(IA_ENABLED);
             }
         }
@@ -373,7 +374,7 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
     public void disableS3IA() {
         List<BucketLifecycleConfiguration.Rule> rules = amazonS3.getBucketLifecycleConfiguration(configurationMediator.getS3Bucket()).getRules();
         for (BucketLifecycleConfiguration.Rule rule: rules) {
-            if(s3RuleNames.contains(rule.getId())) {
+            if(ArrayUtils.contains(s3RuleNames, rule.getId())) {
                 rule.setStatus(IA_DISABLED);
             }
         }
