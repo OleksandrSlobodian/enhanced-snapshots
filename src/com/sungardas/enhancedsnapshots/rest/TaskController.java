@@ -78,10 +78,6 @@ public class TaskController {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<MessageDto> addTask(@RequestBody TaskDto taskInfo) {
         taskInfo.setId(UUID.randomUUID().toString());
-        //TODO: add separate endpoint for system backup
-        if(taskInfo.getType().equals("system_backup")){
-            systemService.backup();
-        }
         return new ResponseEntity(new MessageDto(taskService.createTask(taskInfo)), OK);
     }
 

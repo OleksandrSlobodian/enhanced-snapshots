@@ -77,6 +77,13 @@ public class SystemController {
     }
 
     @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
+    @RequestMapping(value = "/backup", method = RequestMethod.POST)
+    public ResponseEntity<String> backupSystem() {
+        systemService.backup();
+        return new ResponseEntity<>("", HttpStatus.OK);
+    }
+
+    @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
     @RequestMapping(value = "/mail/configuration/test", method = RequestMethod.POST)
     public ResponseEntity mailConfigurationTest(@RequestBody MailConfigurationTestDto dto) {
         mailService.testConfiguration(dto.getMailConfiguration(), dto.getTestEmail(), dto.getDomain());
