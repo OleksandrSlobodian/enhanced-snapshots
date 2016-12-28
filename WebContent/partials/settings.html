@@ -55,6 +55,15 @@
                         <div class="col-sm-5 text-right">S3 Bucket:</div>
                         <div class="col-sm-7 text-left">{{settings.s3.bucketName || 'unknown'}}</div>
                     </div>
+                    <div class="col-sm-12 form-group">
+                        <div class="settings field-label col-sm-5 text-right">S3 infrequent access: </div>
+                        <div class="col-sm-2 text-left">
+                            <input class="chb settings text-left"
+                                   type="checkbox"
+                                   ng-model="settings.s3.ia"
+                                   name="storeSnapshots">
+                        </div>
+                    </div>
                 </div>
 
                 <div class="full-width">
