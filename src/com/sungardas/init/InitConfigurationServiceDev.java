@@ -244,9 +244,4 @@ class InitConfigurationServiceDev extends InitConfigurationServiceImpl {
         db.setAdminExist(true);
         return db;
     }
-
-    @Override
-    protected void createS3LifeCycleRules(String bucketName) {
-        //skip
-    }
 }

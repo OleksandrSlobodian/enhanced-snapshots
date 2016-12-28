@@ -15,9 +15,10 @@ import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.model.*;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.internal.BucketNameUtils;
-import com.amazonaws.services.s3.model.*;
-import com.amazonaws.services.s3.model.lifecycle.LifecycleFilter;
-import com.amazonaws.services.s3.model.lifecycle.LifecyclePrefixPredicate;
+import com.amazonaws.services.s3.model.AmazonS3Exception;
+import com.amazonaws.services.s3.model.Bucket;
+import com.amazonaws.services.s3.model.ListObjectsRequest;
+import com.amazonaws.services.s3.model.S3Object;
 import com.sungardas.enhancedsnapshots.aws.AmazonConfigProvider;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.*;
 import com.sungardas.enhancedsnapshots.dto.InitConfigurationDto;
@@ -185,18 +186,6 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
     @Value("${enhancedsnapshots.logs.file}")
     private String logFile;
 
-    @Value("${enhancedsnapshots.s3.rule.ia.names}")
-    private String[] s3RuleNames;
-
-    @Value("${enhancedsnapshots.s3.rule.ia.prefixes}")
-    private String[] s3RulePrefixes;
-
-    @Value("${enhancedsnapshots.s3.rule.ia.days}")
-    private int s3MoveToIaAfterDays;
-
-    @Value("${enhancedsnapshots.s3.ia.enabled}")
-    private boolean s3RulesEnabled;
-
     private static final String CUSTOM_BUCKET_NAME_DEFAULT_VALUE = "enhancedsnapshots";
 
     @Autowired
@@ -286,7 +275,6 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
                 mapper.save(conf);
             }
 
-            createS3LifeCycleRules(conf.getS3Bucket());
             refreshContext(conf.isSsoLoginMode(), conf.getEntityId());
             LOG.info("System is successfully restored.");
             return;
@@ -318,7 +306,6 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         }
         storePropertiesEditableFromConfigFile();
         createDBAndStoreSettings(config);
-        createS3LifeCycleRules(config.getBucketName());
         if (config.isSsoMode()) {
             //upload certificate and metadata to bucket
             uploadToS3(config.getBucketName(), Paths.get(System.getProperty(catalinaHomeEnvPropName), samlIdpMetadata));
@@ -327,53 +314,6 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
 
         refreshContext(config.isSsoMode(), config.getSpEntityId());
         LOG.info("System is successfully configured");
-    }
-
-    /**
-     * Create S3 life cycle rules if they does not exists.
-     */
-    protected void createS3LifeCycleRules(String bucketName) {
-        List<BucketLifecycleConfiguration.Rule> iaRules = new ArrayList<>();
-        for(int i = 0; i < s3RuleNames.length; i++) {
-            iaRules.add(getRule(s3RuleNames[i], s3RulesEnabled, s3RulePrefixes[i], s3MoveToIaAfterDays));
-        }
-        BucketLifecycleConfiguration bucketLifecycleConfiguration = amazonS3.getBucketLifecycleConfiguration(bucketName);
-        if (bucketLifecycleConfiguration != null) {
-            List<BucketLifecycleConfiguration.Rule> currentRules = bucketLifecycleConfiguration.getRules();
-
-            for (BucketLifecycleConfiguration.Rule rule : iaRules) {
-                if (!contains(currentRules, rule.getId())) {
-                    currentRules.add(rule);
-                }
-            }
-
-            amazonS3.setBucketLifecycleConfiguration(bucketName, new BucketLifecycleConfiguration(currentRules));
-        } else {
-            amazonS3.setBucketLifecycleConfiguration(bucketName, new BucketLifecycleConfiguration(iaRules));
-        }
-    }
-
-    private boolean contains(List<BucketLifecycleConfiguration.Rule> rules, String id) {
-        for(BucketLifecycleConfiguration.Rule rule: rules) {
-            if(id.equals(rule.getId())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private BucketLifecycleConfiguration.Rule getRule(String name, boolean enabled, String prefix, int days){
-        BucketLifecycleConfiguration.Rule rule = new BucketLifecycleConfiguration.Rule();
-        rule.setId(name);
-        if(enabled) {
-            rule.setStatus(SDFSStateService.IA_ENABLED);
-        }else {
-            rule.setStatus(SDFSStateService.IA_DISABLED);
-        }
-        rule.setFilter(new LifecycleFilter(new LifecyclePrefixPredicate(prefix)));
-        rule.setTransitions(Arrays.asList(new BucketLifecycleConfiguration.Transition()
-                .withStorageClass(StorageClass.StandardInfrequentAccess).withDays(days)));
-        return rule;
     }
 
     @Override
