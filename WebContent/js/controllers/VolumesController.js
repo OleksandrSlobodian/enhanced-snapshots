@@ -235,7 +235,6 @@ angular.module('web')
                     switch (actionType) {
                         case 'restore':
                             newTask.backupFileName = "";
-                            //newTask.zone = $scope.selectedZone;
                         case 'backup':
                             newTask.type = actionType;
                             newTask.schedulerManual = true;
