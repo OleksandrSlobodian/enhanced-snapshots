@@ -24,18 +24,6 @@ angular.module('web')
             'true': 'check'
         };
 
-        $scope.selectZone = function (zone) {
-            $scope.selectedZone = zone;
-        };
-
-        $scope.selectAction = function (action) {
-            $scope.restoreAction = action;
-        };
-
-        $scope.selectInstance = function (instance) {
-            $scope.instance = instance;
-        };
-
         $scope.isAllSelected = false;
         $scope.selectedAmount = 0;
 
@@ -148,10 +136,13 @@ angular.module('web')
                     schedulerName: Storage.get('currentUser').email,
                     schedulerTime: Date.now()
                 };
-                if ($scope.restoreAction === $scope.restoreActions[0]) {
+                if ($scope.restoreAction === $scope.restoreActions[1]) {
+                    newTask.volumes[0].instance = $scope.instance;
+                    newTask.volumes[0].zone = null;
+                } else {
                     newTask.volumes[0].zone = $scope.selectedZone;
+                    newTask.volumes[0].instance = null;
                 }
-                newTask.volumes[0].instance = $scope.instance;
                 Tasks.insert(newTask).then(function () {
                     var successInstance = $modal.open({
                         animation: true,

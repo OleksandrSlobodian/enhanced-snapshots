@@ -41,14 +41,6 @@ module.exports = function(grunt) {
                     event:['all']
                 }
             }
-            //scripts: {
-            //    files: 'css/**/*.css',
-            //    tasks: ['default'],
-            //    options: {
-            //        spawn:false,
-            //        event:['all']
-            //    }
-            //}
         },
 
         copy: {

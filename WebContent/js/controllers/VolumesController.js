@@ -192,32 +192,30 @@ angular.module('web')
                 $rootScope.isLoading = true;
 
                 var volList = $scope.selectedVolumes.map(function (v) {
-                    var restoreAction = v.restoreAction ? v.restoreAction : $scope.restoreActions[0];
-                    if (restoreAction === $scope.restoreActions[0])
-                    {
-                        var zone = v.zone ? v.zone : $scope.selectedZone;
+                    var result = { "volumeId": v.volumeId };
+                    if (actionType === 'restore') {
+                        // restoreAction == "Attach to instance"
+                        if (v.restoreAction === $scope.restoreActions[1]) {
+                            result.instanceId = v.instanceId || $scope.instance;
+                        } else {
+                            result.zone = v.zone || $scope.selectedZone;
+                        }
                     }
-                    if (restoreAction === $scope.restoreActions[1]) {
-                        var instanceId = v.instanceId ? v.instanceId : $scope.instance;
-                    }
-                    return v = {
-                        "volumeId": v.volumeId,
-                        "zone": zone,
-                        "instanceId": instanceId
-                    }; });
+                    return result;
+                });
 
 
                 var getNewTask = function(){
                     var newTask = {
                         id: "",
                         priority: "",
-                        status: "waiting"
+                        status: "waiting",
+                        volumes: volList
                     };
 
                     switch (actionType) {
                         case 'restore':
                             newTask.backupFileName = "";
-                            newTask.volumes = volList;
                         case 'backup':
                             newTask.type = actionType;
                             newTask.schedulerManual = true;
