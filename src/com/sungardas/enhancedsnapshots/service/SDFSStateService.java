@@ -15,6 +15,8 @@ public interface SDFSStateService {
     // constant value
     long BYTES_IN_GB = 1_073_741_824;
 
+    String IA_ENABLED = "Enabled";
+    String IA_DISABLED = "Disabled";
 
     /**
      * Returns max sdfs volume size for current system in GB
@@ -105,5 +107,9 @@ public interface SDFSStateService {
         SecureRandom secureRandom = new SecureRandom();
         return DatatypeConverter.printHexBinary(secureRandom.generateSeed(16));
     }
+
+    void enableS3IA();
+
+    void disableS3IA();
 
 }

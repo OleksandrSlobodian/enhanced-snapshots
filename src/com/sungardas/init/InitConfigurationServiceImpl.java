@@ -214,6 +214,9 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
 
     protected static final String UUID = java.util.UUID.randomUUID().toString();
 
+    @Value("${enhancedsnapshots.s3.ia.enabled}")
+    private boolean s3RulesEnabled;
+
     @PostConstruct
     protected void init() {
         configureAWSLogAgent();
@@ -523,6 +526,7 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         configuration.setStoreSnapshot(storeSnapshot);
         configuration.setLogFile(logFile);
         configuration.setLogsBufferSize(bufferSize);
+        configuration.setIaEnabled(s3RulesEnabled);
         if (SystemUtils.clusterMode()) {
             configuration.setClusterMode(SystemUtils.clusterMode());
             configuration.setMaxNodeNumber(config.getCluster().getMaxNodeNumber());
