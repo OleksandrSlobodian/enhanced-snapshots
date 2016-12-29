@@ -162,7 +162,8 @@ angular.module('web')
 
         //-----------Volume-backup/restore/retention-------------
 
-
+        $scope.restoreActions = ["Restore in AZ", "Attach to instance"];
+        $scope.restoreAction = $scope.restoreActions[0];
 
         $scope.volumeAction = function (actionType) {
             $rootScope.isLoading = true;
@@ -175,21 +176,6 @@ angular.module('web')
                 templateUrl: './partials/modal.volumeAction.html',
                 scope: $scope
             });
-
-            $scope.restoreActions = ["Restore in AZ", "Attach to instance"];
-            //$scope.restoreAction = "Restore in AZ";
-
-            $scope.selectZone = function (volume, zone) {
-                volume.zone = zone;
-            };
-
-            $scope.selectAction = function (volume, action) {
-                volume.restoreAction = action;
-            };
-
-            $scope.selectInstance = function (volume, instance) {
-                volume.instanceId = instance;
-            };
 
             $q.all([Zones.get(), Zones.getCurrent(), Instances.get()])
                 .then(function (results) {
@@ -204,18 +190,16 @@ angular.module('web')
 
             confirmInstance.result.then(function () {
                 $rootScope.isLoading = true;
-                //var volList = {};
 
                 var volList = $scope.selectedVolumes.map(function (v) {
-                    var restoreAction = v.restoreAction ? v.restoreAction : "Restore in AZ";
-                    if (restoreAction === "Restore in AZ")
+                    var restoreAction = v.restoreAction ? v.restoreAction : $scope.restoreActions[0];
+                    if (restoreAction === $scope.restoreActions[0])
                     {
                         var zone = v.zone ? v.zone : $scope.selectedZone;
                     }
-                    if (restoreAction === "Attach to instance") {
+                    if (restoreAction === $scope.restoreActions[1]) {
                         var instanceId = v.instanceId ? v.instanceId : $scope.instance;
                     }
-                    //var zone = v.zone ? v.zone : $scope.selectedZone;
                     return v = {
                         "volumeId": v.volumeId,
                         "zone": zone,
@@ -227,14 +211,13 @@ angular.module('web')
                     var newTask = {
                         id: "",
                         priority: "",
-                        volumes: volList,
-                        //volumes: $scope.selectedVolumes,
                         status: "waiting"
                     };
 
                     switch (actionType) {
                         case 'restore':
                             newTask.backupFileName = "";
+                            newTask.volumes = volList;
                         case 'backup':
                             newTask.type = actionType;
                             newTask.schedulerManual = true;

@@ -4,7 +4,7 @@
 <div class="modal-body">
     <p>You are going to {{action.description}} for: </p>
     <blockquote ng-if="actionType != 'restore'">
-        <div ng-show="selectedVolumes.length<=maxVolumeDisplay&&actionType != 'restore'">
+        <div ng-show="selectedVolumes.length<=maxVolumeDisplay">
             <div class="h4 text-primary" ng-repeat="volume in selectedVolumes">{{volume.volumeId}}</div>
         </div>
         <p ng-hide="selectedVolumes.length<=maxVolumeDisplay">{{selectedVolumes.length}} selected volumes</p>
@@ -24,35 +24,32 @@
             <tr ng-repeat="volume in selectedVolumes track by $index">
                 <td>{{volume.volumeId}}</td>
                 <td>
-                        <span dropdown>
-                            <a href dropdown-toggle>{{volume.restoreAction ? volume.restoreAction :restoreActions[0]}}</a>
-                            <ul class="dropdown-menu" >
-                                <li ng-repeat="action in restoreActions">
-                                    <a href ng-click="selectAction(volume, action)">{{action}}</a>
-                                </li>
-                            </ul>
-                        </span>
+                    <span dropdown>
+                        <a href dropdown-toggle>{{volume.restoreAction ? volume.restoreAction :restoreActions[0]}}</a>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="action in restoreActions">
+                                <a href ng-click="volume.restoreAction = action;">{{action}}</a>
+                            </li>
+                        </ul>
+                    </span>
                 </td>
-                <td ng-if="volume.restoreAction!='Attach to instance'">
-                        <span dropdown>
-                            <a href dropdown-toggle>{{volume.zone ? volume.zone : selectedZone || "current"}}</a>
-                            <ul class="dropdown-menu" >
-                                <li ng-repeat="zone in zones">
-                                    <a href ng-click="selectZone(volume, zone)">{{zone}}</a>
-                                </li>
-                            </ul>
-                        </span>
-                </td>
-
-                <td ng-if="volume.restoreAction=='Attach to instance'">
-                        <span dropdown>
-                            <a href dropdown-toggle>{{volume.instanceId ? volume.instanceId : instance}}</a>
-                            <ul class="dropdown-menu" >
-                                <li ng-repeat="instance in instances">
-                                    <a href ng-click="selectInstance(volume, instance)">{{instance}}</a>
-                                </li>
-                            </ul>
-                        </span>
+                <td>
+                    <span dropdown ng-show="volume.restoreAction!=restoreActions[1]">
+                        <a href dropdown-toggle>{{volume.zone ? volume.zone : selectedZone || "current"}}</a>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="zone in zones">
+                                <a href ng-click="volume.zone = zone;">{{zone}}</a>
+                            </li>
+                        </ul>
+                    </span>
+                    <span dropdown ng-show="volume.restoreAction==restoreActions[1]">
+                        <a href dropdown-toggle>{{volume.instanceId ? volume.instanceId : instance}}</a>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="instance in instances">
+                                <a href ng-click="volume.instanceId = instance;">{{instance}}</a>
+                            </li>
+                        </ul>
+                    </span>
                 </td>
             </tr>
         </table>

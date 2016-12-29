@@ -8,12 +8,11 @@ angular.module('web')
         $scope.maxDeleteBackupDisplay = 5;
         $scope.itemsByPage = ITEMS_BY_PAGE;
         $scope.displayedPages = DISPLAY_PAGES;
-        $scope.isRestoreAction = true;
 
         $scope.volumeId = $stateParams.volumeId;
 
         $scope.restoreActions = ["Restore in AZ", "Attach to instance"];
-        $scope.restoreAction = "Restore in AZ";
+        $scope.restoreAction = $scope.restoreActions[0];
 
         $scope.textClass = {
             'false': 'Select',
@@ -31,10 +30,6 @@ angular.module('web')
 
         $scope.selectAction = function (action) {
             $scope.restoreAction = action;
-            if ($scope.restoreAction == "Restore in AZ") {
-                $scope.isRestoreAction = true;
-            }
-            $scope.isRestoreAction = false;
         };
 
         $scope.selectInstance = function (instance) {
@@ -143,23 +138,20 @@ angular.module('web')
                 var newTask = {
                     id: "",
                     priority: "",
-                    //volumes: [$scope.objectToProcess.volumeId],
                     volumes: [{
                         volumeId: $scope.objectToProcess.volumeId
                     }],
                     backupFileName: $scope.objectToProcess.fileName,
                     type: "restore",
-                    instance: $scope.instance,
                     status: "waiting",
                     schedulerManual: true,
                     schedulerName: Storage.get('currentUser').email,
                     schedulerTime: Date.now()
                 };
-                if ($scope.isRestoreAction) {
-                    newTask.volumes.zone = $scope.selectedZone;
-                } else if (!$scope.isRestoreAction) {
-                    newTask.volumes.instance = $scope.instance;
+                if ($scope.restoreAction === $scope.restoreActions[0]) {
+                    newTask.volumes[0].zone = $scope.selectedZone;
                 }
+                newTask.volumes[0].instance = $scope.instance;
                 Tasks.insert(newTask).then(function () {
                     var successInstance = $modal.open({
                         animation: true,

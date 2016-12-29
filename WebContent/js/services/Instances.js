@@ -8,6 +8,8 @@ angular.module('web')
             var deferred = $q.defer();
             $http.get(url).success(function (data) {
                 deferred.resolve(data);
+            }, function (e) {
+                deferred.reject(e);
             });
             return deferred.promise;
 

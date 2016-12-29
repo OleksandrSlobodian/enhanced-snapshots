@@ -1251,7 +1251,7 @@ div.tr.state-removed {
 /*restore table*/
 
 .restore-table td, .restore-table th {
-    width: 180px;
+    width: 30%;
     display: inline-block;
     text-overflow: ellipsis;
     white-space: nowrap;

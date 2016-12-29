@@ -24,8 +24,8 @@
                     </ul>
                 </span>
             </td>
-            <td ng-if="restoreAction=='Restore in AZ'">
-                <span dropdown>
+            <td>
+                <span dropdown ng-show="restoreAction==restoreActions[0]">
                     <a href dropdown-toggle>{{selectedZone || "current"}}</a>
                     <ul class="dropdown-menu" >
                         <li ng-repeat="zone in zones">
@@ -33,9 +33,8 @@
                         </li>
                     </ul>
                 </span>
-            </td>
-            <td ng-if="restoreAction=='Attach to instance'">
-                <span dropdown>
+
+                <span dropdown ng-show="restoreAction==restoreActions[1]">
                     <a href dropdown-toggle>{{instance}}</a>
                     <ul class="dropdown-menu" >
                         <li ng-repeat="instance in instances">
