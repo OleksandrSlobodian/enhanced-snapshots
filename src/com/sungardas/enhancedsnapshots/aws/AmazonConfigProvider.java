@@ -23,8 +23,10 @@ import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sqs.AmazonSQS;
 import com.amazonaws.services.sqs.AmazonSQSClient;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.DynamoDBOperationsBridge;
 import com.sungardas.enhancedsnapshots.components.RetryInterceptor;
 import com.sungardas.enhancedsnapshots.util.SystemUtils;
+import org.socialsignin.spring.data.dynamodb.core.DynamoDBOperations;
 import org.socialsignin.spring.data.dynamodb.repository.config.EnableDynamoDBRepositories;
 import org.springframework.aop.framework.ProxyFactoryBean;
 import org.springframework.context.annotation.Bean;
@@ -33,7 +35,10 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @Profile("prod")
-@EnableDynamoDBRepositories(basePackages = "com.sungardas.enhancedsnapshots.aws.dynamodb.repository", dynamoDBMapperConfigRef = "dynamoDBMapperConfig")
+@EnableDynamoDBRepositories(
+        basePackages = "com.sungardas.enhancedsnapshots.aws.dynamodb.repository",
+        dynamoDBOperationsRef = "dynamoDBOperations"
+)
 public class AmazonConfigProvider {
     private InstanceProfileCredentialsProvider credentialsProvider;
 
@@ -206,6 +211,11 @@ public class AmazonConfigProvider {
         AmazonCloudWatchClient cloudWatchClient = new AmazonCloudWatchClient(amazonCredentialsProvider());
         cloudWatchClient.setRegion(getRegion());
         return cloudWatchClient;
+    }
+
+    @Bean(name = "dynamoDBOperations")
+    public DynamoDBOperations dynamoDBOperations() {
+        return new DynamoDBOperationsBridge(amazonDynamoDB(), dynamoDBMapperConfig());
     }
 
     public static String getDynamoDbPrefix() {
