@@ -19,7 +19,7 @@
                     <a href dropdown-toggle>{{restoreAction}}</a>
                     <ul class="dropdown-menu" >
                         <li ng-repeat="action in restoreActions">
-                            <a href ng-click="$parent.restoreAction = action;">{{action}}</a>
+                            <a href ng-click="selectAction(action)">{{action}}</a>
                         </li>
                     </ul>
                 </span>
@@ -29,7 +29,7 @@
                     <a href dropdown-toggle>{{selectedZone || "current"}}</a>
                     <ul class="dropdown-menu" >
                         <li ng-repeat="zone in zones">
-                            <a href ng-click="$parent.selectedZone = zone;">{{zone}}</a>
+                            <a href ng-click="selectZone(zone)">{{zone}}</a>
                         </li>
                     </ul>
                 </span>
@@ -38,7 +38,7 @@
                     <a href dropdown-toggle>{{instance}}</a>
                     <ul class="dropdown-menu" >
                         <li ng-repeat="instance in instances">
-                            <a href ng-click="$parent.instance = instance;">{{instance}}</a>
+                            <a href ng-click="selectInstance(instance)">{{instance}}</a>
                         </li>
                     </ul>
                 </span>
