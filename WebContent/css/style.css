@@ -1247,3 +1247,12 @@ div.tr.state-removed {
 
 /* end of view-specific styling*/
 /* end of Color scheme */
+
+/*restore table*/
+
+.restore-table td, .restore-table th {
+    width: 30%;
+    display: inline-block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

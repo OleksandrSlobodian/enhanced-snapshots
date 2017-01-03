@@ -3,13 +3,57 @@
 </div>
 <div class="modal-body">
     <p>You are going to {{action.description}} for: </p>
-    <blockquote>
+    <blockquote ng-if="actionType != 'restore'">
         <div ng-show="selectedVolumes.length<=maxVolumeDisplay">
             <div class="h4 text-primary" ng-repeat="volume in selectedVolumes">{{volume.volumeId}}</div>
         </div>
         <p ng-hide="selectedVolumes.length<=maxVolumeDisplay">{{selectedVolumes.length}} selected volumes</p>
-        <p ng-show="actionType === 'restore'"><span>Volume's last backup will be used</span></p>
+        <span ng-if="actionType === 'backup'">Volume's last backup will be used</span>
+
     </blockquote>
+
+    <div ng-if="actionType === 'restore'">
+        <span>Volume's last backup will be used</span>
+        <table class="table restore-table">
+            <tr>
+                <th>Volume</th>
+                <th>Action</th>
+                <th>Value</th>
+            </tr>
+
+            <tr ng-repeat="volume in selectedVolumes track by $index">
+                <td>{{volume.volumeId}}</td>
+                <td>
+                    <span dropdown>
+                        <a href dropdown-toggle>{{volume.restoreAction ? volume.restoreAction :restoreActions[0]}}</a>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="action in restoreActions">
+                                <a href ng-click="volume.restoreAction = action;">{{action}}</a>
+                            </li>
+                        </ul>
+                    </span>
+                </td>
+                <td>
+                    <span dropdown ng-show="volume.restoreAction!=restoreActions[1]">
+                        <a href dropdown-toggle>{{volume.zone ? volume.zone : selectedZone || "current"}}</a>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="zone in zones">
+                                <a href ng-click="volume.zone = zone;">{{zone}}</a>
+                            </li>
+                        </ul>
+                    </span>
+                    <span dropdown ng-show="volume.restoreAction==restoreActions[1]">
+                        <a href dropdown-toggle>{{volume.instanceId ? volume.instanceId : instance}}</a>
+                        <ul class="dropdown-menu" >
+                            <li ng-repeat="instance in instances">
+                                <a href ng-click="volume.instanceId = instance;">{{instance}}</a>
+                            </li>
+                        </ul>
+                    </span>
+                </td>
+            </tr>
+        </table>
+    </div>
 
     <div ng-show="action.type == 'schedule'">
         <div class="form-group">
@@ -38,17 +82,7 @@
         <!-- enabled end-->
     </div>
 
-    <div ng-show="action.type == 'restore'">
-        Restore will be done to
-        <span dropdown>
-            <a href dropdown-toggle>{{selectedZone || "current"}}</a>
-            <ul class="dropdown-menu" >
-                <li ng-repeat="zone in zones">
-                    <a href ng-click="selectZone(zone)">{{zone}}</a>
-                </li>
-            </ul>
-        </span> availability zone
-    </div>
+
 
     <p> Do you want to {{action.description}} now?</p>
 </div>

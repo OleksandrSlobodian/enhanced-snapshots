@@ -47,6 +47,7 @@ class InitController {
             initConfigurationService.configureSystem(null);
         } else {
             LOG.info("System is not configured");
+            initConfigurationService.setFlagOfFirstTimeConfiguration(true);
         }
     }
 

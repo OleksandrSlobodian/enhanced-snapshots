@@ -1,6 +1,5 @@
 package com.sungardas.enhancedsnapshots.rest;
 
-import java.security.Principal;
 import java.util.List;
 
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupEntry;
@@ -66,10 +65,10 @@ public class BackupController {
 
     @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
     @RequestMapping(value = "/{backupName}", method = RequestMethod.DELETE)
-    public ResponseEntity<String> deleteBackup(Principal principal, @PathVariable String backupName) {
+    public ResponseEntity<String> deleteBackup(@PathVariable String backupName) {
         LOG.debug("Removing backup [{}]", backupName);
         try {
-            backupService.deleteBackup(backupName, principal.getName());
+            backupService.deleteBackup(backupName);
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         } catch (DataAccessException e) {
             return new ResponseEntity<>("Failed to remove backup.", HttpStatus.NOT_ACCEPTABLE);

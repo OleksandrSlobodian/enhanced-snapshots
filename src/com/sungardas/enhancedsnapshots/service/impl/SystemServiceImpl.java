@@ -93,8 +93,6 @@ public class SystemServiceImpl implements SystemService {
     private ConfigurationMediatorConfigurator configurationMediator;
     @Autowired
     private SDFSStateService sdfsStateService;
-    @Autowired
-    private NotificationService notificationService;
     @Value("${enhancedsnapshots.default.maxIopsPerGb}")
     private int maxIopsPerGb;
 
@@ -124,29 +122,22 @@ public class SystemServiceImpl implements SystemService {
     }
 
     @Override
-    public void backup(final String taskId) {
+    public void backup() {
         try {
-            LOG.info("System backup started");
-            notificationService.notifyAboutRunningTaskProgress(taskId, "System backup started", 0);
             Path tempDirectory = Files.createTempDirectory(TEMP_DIRECTORY_PREFIX);
             LOG.info("Add info file");
-            notificationService.notifyAboutRunningTaskProgress(taskId, "System information backup", 5);
             addInfo(tempDirectory);
             LOG.info("Backup SDFS state");
-            notificationService.notifyAboutRunningTaskProgress(taskId, "Backup SDFS state", 10);
-            backupSDFS(tempDirectory, taskId);
-            notificationService.notifyAboutRunningTaskProgress(taskId, "Backup system files", 55);
+            backupSDFS(tempDirectory);
             LOG.info("Backup files");
             storeFiles(tempDirectory);
             LOG.info("Backup db");
-            notificationService.notifyAboutRunningTaskProgress(taskId, "Backup DB", 60);
-            backupDB(tempDirectory, taskId);
+            backupDB(tempDirectory);
             if (configurationMediator.isSsoLoginMode()){
                 LOG.info("Backup up saml certificate and ipd metadata", 90);
                 backupSamlFiles(tempDirectory);
             }
             LOG.info("Upload to S3");
-            notificationService.notifyAboutRunningTaskProgress(taskId, "Upload to S3", 95);
             uploadToS3(tempDirectory);
             tempDirectory.toFile().delete();
             LOG.info("System backup finished");
@@ -169,26 +160,17 @@ public class SystemServiceImpl implements SystemService {
         objectMapper.writeValue(dest, info);
     }
 
-    private void backupDB(final Path tempDirectory, final String taskId) throws IOException {
-        notificationService.notifyAboutRunningTaskProgress(taskId, "Backup DB", 65);
+    private void backupDB(final Path tempDirectory) throws IOException {
         storeTable(BackupEntry.class, tempDirectory);
-        notificationService.notifyAboutRunningTaskProgress(taskId, "Backup DB", 70);
         storeTable(Configuration.class, tempDirectory);
-        notificationService.notifyAboutRunningTaskProgress(taskId, "Backup DB", 75);
         storeTable(RetentionEntry.class, tempDirectory);
-        notificationService.notifyAboutRunningTaskProgress(taskId, "Backup DB", 80);
         storeTable(SnapshotEntry.class, tempDirectory);
-        notificationService.notifyAboutRunningTaskProgress(taskId, "Backup DB", 85);
         storeTable(User.class, tempDirectory);
-        notificationService.notifyAboutRunningTaskProgress(taskId, "Backup DB", 90);
     }
 
-    private void backupSDFS(final Path tempDirectory, final String taskId) throws IOException {
-        notificationService.notifyAboutRunningTaskProgress(taskId, "Backup SDFS state", 15);
+    protected void backupSDFS(final Path tempDirectory) throws IOException {
         copyToDirectory(Paths.get(currentConfiguration.getSdfsConfigPath()), tempDirectory);
-        notificationService.notifyAboutRunningTaskProgress(taskId, "Backup SDFS state", 20);
         sdfsStateService.cloudSync();
-        notificationService.notifyAboutRunningTaskProgress(taskId, "Backup SDFS state", 45);
     }
 
     private void backupSamlFiles(final Path tempDirectory) throws IOException {
@@ -196,7 +178,7 @@ public class SystemServiceImpl implements SystemService {
         copyToDirectory(Paths.get(System.getProperty("catalina.home"), samlIdpMetadata), tempDirectory);
     }
 
-    private void storeFiles(Path tempDirectory) {
+    protected void storeFiles(Path tempDirectory) {
         //nginx certificates
         try {
             copyToDirectory(Paths.get(currentConfiguration.getNginxCertPath()), tempDirectory);
@@ -297,8 +279,17 @@ public class SystemServiceImpl implements SystemService {
     }
 
     @Override
-    public void setSystemConfiguration(SystemConfiguration configuration) {
-        LOG.info("Updating system properties.");
+    public void updateSystemConfiguration(SystemConfiguration configuration) {
+        LOG.info("Updating system configuration.");
+
+        // updating SDFS setting if required
+        if (configuration.getSdfs().getVolumeSize() > configurationMediator.getSdfsVolumeSizeWithoutMeasureUnit()) {
+            sdfsStateService.expandSdfsVolume(configuration.getSdfs().getVolumeSize());
+        }
+        if (configuration.getSdfs().getSdfsLocalCacheSize() > configurationMediator.getSdfsLocalCacheSizeWithoutMeasureUnit()) {
+            sdfsStateService.setLocalCacheSize(configuration.getSdfs().getSdfsLocalCacheSize());
+        }
+
         // mail configuration
         boolean mailReconnect = false;
         configuration.setUUID(currentConfiguration.getUUID());

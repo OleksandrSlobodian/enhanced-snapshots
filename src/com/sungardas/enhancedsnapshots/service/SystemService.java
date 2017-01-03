@@ -12,7 +12,7 @@ public interface SystemService {
     /**
      * Backup current system state to S3 bucket Backup data are: -DynamoDB tables -Property file -nginx certificates
      */
-    void backup(String taskId);
+    void backup();
 
     /**
      * Get current system configuration from DB
@@ -26,7 +26,7 @@ public interface SystemService {
      *
      * @param systemConfiguration new system configuration {@link SystemConfiguration}
      */
-    void setSystemConfiguration(SystemConfiguration systemConfiguration);
+    void updateSystemConfiguration(SystemConfiguration systemConfiguration);
 
     /**
      * Uninstall system. Removes all system infrastructure: DB tables, instance with application
@@ -35,8 +35,6 @@ public interface SystemService {
      */
     @RolesAllowed("ROLE_ADMIN")
     void systemUninstall(boolean removeS3Bucket);
-
-    String VOLUME_SIZE_UNIT = "GB";
 
     /**
      * synchronize system settings with DB

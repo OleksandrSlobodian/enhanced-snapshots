@@ -38,6 +38,16 @@ angular.module('web')
             return deferred.promise;
         };
 
+        var _backup = function() {
+            var deferred = $q.defer();
+            $http.post(url + '/backup').then(function (result) {
+                deferred.resolve(result.data);
+            }, function (e) {
+                deferred.reject(e);
+            });
+            return deferred.promise;
+        };
+
         return {
             get: function () {
                 return _get();
@@ -47,6 +57,9 @@ angular.module('web')
             },
             delete: function (deletionData) {
                 return _delete(deletionData);
+            },
+            backup: function () {
+                return _backup();
             }
         }
     }]);

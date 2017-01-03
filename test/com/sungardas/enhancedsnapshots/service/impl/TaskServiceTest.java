@@ -55,7 +55,8 @@ public class TaskServiceTest {
     public void setUp(){
 
         taskDto = new TaskDto();
-        taskDto.setVolumes(Arrays.asList("volId-1"));
+        TaskDto.VolumeInfo volume = new TaskDto.VolumeInfo("volId-1", null, null);
+        taskDto.setVolumes(Arrays.asList(volume));
 
         when(configuration.getTempVolumeIopsPerGb()).thenReturn(iopsPerGb);
         when(configuration.getTempVolumeType()).thenReturn(VolumeType.Gp2.toString());

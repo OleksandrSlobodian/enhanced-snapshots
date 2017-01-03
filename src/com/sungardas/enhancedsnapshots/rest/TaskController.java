@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.sungardas.enhancedsnapshots.dto.MessageDto;
 import com.sungardas.enhancedsnapshots.dto.TaskDto;
 import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsException;
+import com.sungardas.enhancedsnapshots.service.SystemService;
 import com.sungardas.enhancedsnapshots.service.TaskService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,9 @@ public class TaskController {
 
     @Autowired
     private TaskService taskService;
+    @Autowired
+    private SystemService systemService;
+
 
     @ExceptionHandler(EnhancedSnapshotsException.class)
     @ResponseStatus(INTERNAL_SERVER_ERROR)
@@ -74,7 +78,6 @@ public class TaskController {
     @RequestMapping(method = RequestMethod.POST)
     public ResponseEntity<MessageDto> addTask(@RequestBody TaskDto taskInfo) {
         taskInfo.setId(UUID.randomUUID().toString());
-
         return new ResponseEntity(new MessageDto(taskService.createTask(taskInfo)), OK);
     }
 

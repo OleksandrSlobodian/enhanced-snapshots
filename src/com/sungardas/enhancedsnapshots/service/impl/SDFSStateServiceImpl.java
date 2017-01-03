@@ -53,6 +53,7 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
     private static final String CLOUD_SYNC_CMD = "--cloudsync";
     private static final String SHOW_VOLUME_ID_CMD = "--showvolumes";
     private static final String SYNC_CLUSTER_VOLUMES = "--syncvolumes";
+    private static final String SET_LOCAL_CACHE_SIZE = "--setlocalcache";
     private static final String DELETE_CLUSTER_VOLUME = "--deletevolume";
 
 
@@ -115,22 +116,6 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
             return list.get(0).getLastModified().getTime();
         } else {
             return null;
-        }
-    }
-
-    @Override
-    public synchronized void reconfigureAndRestartSDFS() {
-        try {
-            reconfigurationInProgressFlag = true;
-            stopSDFS();
-            removeSdfsConfFile();
-            configureSDFS();
-            startSDFS(false);
-        } catch (Exception e) {
-            LOG.error("Failed to reconfigure and restart SDFS", e);
-            throw new ConfigurationException("Failed to reconfigure and restart SDFS");
-        } finally {
-            reconfigurationInProgressFlag = false;
         }
     }
 
@@ -309,13 +294,13 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
     }
 
     @Override
-    public void expandSdfsVolume(String newVolumeSize) {
+    public void expandSdfsVolume(int newVolumeSize) {
         String[] parameters;
-        try {
-            parameters = new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), EXPAND_VOLUME_CMD, configurationMediator.getSdfsMountPoint(), newVolumeSize};
-            Process p = executeScript(parameters);
-            switch (p.exitValue()) {
-                case 0:
+                    try {
+                        parameters = new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), EXPAND_VOLUME_CMD, configurationMediator.getSdfsMountPoint(), newVolumeSize + VOLUME_SIZE_UNIT};
+                        Process p = executeScript(parameters);
+                        switch (p.exitValue()) {
+                            case 0:
                     LOG.debug("SDFS volume was expanded successfully");
                     break;
                 default:
@@ -343,14 +328,6 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
         } catch (Exception e) {
             LOG.error(e);
             throw new ConfigurationException("Failed to sync SDFS metadata");
-        }
-    }
-
-    private void removeSdfsConfFile() {
-        File sdfsConf = new File(configurationMediator.getSdfsConfigPath());
-        if (sdfsConf.exists()) {
-            sdfsConf.delete();
-            LOG.info("SDFS conf file was successfully removed.");
         }
     }
 
@@ -424,6 +401,25 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
     }
 
     @Override
+
+    public void setLocalCacheSize(int localCacheSize) {
+        String[] parameters;
+        try {
+            parameters = new String[]{getSdfsScriptFile(sdfsScript).getAbsolutePath(), SET_LOCAL_CACHE_SIZE, localCacheSize + LOCAL_CACHE_SIZE_UNIT};
+            Process p = executeScript(parameters);
+            switch (p.exitValue()) {
+                case 0:
+                    LOG.debug("SDFS local cache size updated successfully");
+                    break;
+                default:
+                    throw new ConfigurationException("Failed to update SDFS local cache size");
+            }
+        } catch (Exception e) {
+            LOG.error(e);
+            throw new ConfigurationException("Failed to update SDFS local cache size");
+        }
+    }
+
     public void enableS3IA() {
         List<BucketLifecycleConfiguration.Rule> rules = amazonS3.getBucketLifecycleConfiguration(configurationMediator.getS3Bucket()).getRules();
         for (BucketLifecycleConfiguration.Rule rule: rules) {

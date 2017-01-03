@@ -32,10 +32,6 @@ angular.module('web')
             return priorities[task.status] || 0;
         };
 
-        $scope.typePriority = function (task) {
-            return parseInt(task.priority) || 0;
-        };
-
         $scope.volumeId = $stateParams.volumeId;
 
         $scope.tasks = [];

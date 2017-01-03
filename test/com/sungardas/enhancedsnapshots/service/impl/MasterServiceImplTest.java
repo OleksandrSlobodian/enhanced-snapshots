@@ -54,8 +54,6 @@ public class MasterServiceImplTest {
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
-                getTaskEntry(TaskEntry.TaskEntryType.DELETE),
-                getTaskEntry(TaskEntry.TaskEntryType.SYSTEM_BACKUP)
         });
 
         List<NodeEntry> nodes = Arrays.asList(new NodeEntry[]{
@@ -83,8 +81,6 @@ public class MasterServiceImplTest {
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
-                getTaskEntry(TaskEntry.TaskEntryType.DELETE),
-                getTaskEntry(TaskEntry.TaskEntryType.SYSTEM_BACKUP)
         });
 
         List<NodeEntry> nodes = Arrays.asList(new NodeEntry[]{
@@ -116,8 +112,6 @@ public class MasterServiceImplTest {
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
-                getTaskEntry(TaskEntry.TaskEntryType.DELETE),
-                getTaskEntry(TaskEntry.TaskEntryType.SYSTEM_BACKUP)
         });
 
         List<NodeEntry> nodes = Arrays.asList(new NodeEntry[]{
@@ -150,8 +144,6 @@ public class MasterServiceImplTest {
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
                 getTaskEntry(TaskEntry.TaskEntryType.RESTORE),
-                getTaskEntry(TaskEntry.TaskEntryType.DELETE),
-                getTaskEntry(TaskEntry.TaskEntryType.SYSTEM_BACKUP)
         });
 
         List<NodeEntry> nodes = Arrays.asList(new NodeEntry[]{

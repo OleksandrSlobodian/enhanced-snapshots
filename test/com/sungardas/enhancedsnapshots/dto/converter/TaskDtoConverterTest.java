@@ -13,10 +13,8 @@ import java.util.List;
 public class TaskDtoConverterTest {
 
     private String id = "Id1";
-    private String priority = "2";
     private String status = "queued";
     private String type = "backup";
-    private List<String> volumes = Arrays.asList("vol-c343123b", "vol-c34232");
     private String schedulerManual = "false";
     private String schedulerName = "everyYear";
     private String schedulerTime = "00:03:82";
@@ -24,6 +22,7 @@ public class TaskDtoConverterTest {
     private String backupFileName = "someFileName";
     private String cron = "0 0 1 1 *";
     private String zone = "az";
+    private List<TaskDto.VolumeInfo> volumes = Arrays.asList(new TaskDto.VolumeInfo("vol-c343123b", zone, null), new TaskDto.VolumeInfo("vol-c34232", zone, null));
     private String regular = Boolean.TRUE.toString();
     private String enabled = "true";
 
@@ -33,7 +32,6 @@ public class TaskDtoConverterTest {
     public void setUp(){
         taskDto = new TaskDto();
         taskDto.setId(id);
-        taskDto.setPriority(priority);
         taskDto.setType(type);
         taskDto.setStatus(status);
         taskDto.setVolumes(volumes);
@@ -58,7 +56,6 @@ public class TaskDtoConverterTest {
         for(TaskEntry taskEntry: taskEntries) {
             Assert.assertTrue(taskEntry.getId().equals(id));
             // backup priority is 0
-            Assert.assertTrue(taskEntry.getPriority() == 0);
             Assert.assertTrue(taskEntry.getType().equals(type));
             Assert.assertTrue(taskEntry.getStatus().equals(status));
             Assert.assertTrue(taskEntry.getSchedulerManual().equals(schedulerManual));
@@ -70,21 +67,9 @@ public class TaskDtoConverterTest {
         }
 
         // check volume id of first taskEntry
-        Assert.assertTrue(taskEntries.get(0).getVolume().equals(volumes.get(0)));
+        Assert.assertTrue(taskEntries.get(0).getVolume().equals(volumes.get(0).volumeId));
 
         // check volume id of second taskEntry
-        Assert.assertTrue(taskEntries.get(1).getVolume().equals(volumes.get(1)));
-    }
-
-    @Test
-    public void shouldSetPriority1ForDeleteTasks(){
-        taskDto.setType("delete");
-        List<TaskEntry> taskEntries = TaskDtoConverter.convert(taskDto);
-
-        // check priority of first taskEntry
-        Assert.assertTrue(taskEntries.get(0).getPriority() == 1);
-
-        // check priority of second taskEntry
-        Assert.assertTrue(taskEntries.get(1).getPriority() == 1);
+        Assert.assertTrue(taskEntries.get(1).getVolume().equals(volumes.get(1).volumeId));
     }
 }

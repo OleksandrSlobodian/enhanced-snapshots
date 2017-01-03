@@ -5,6 +5,7 @@ import com.amazonaws.services.dynamodbv2.model.ResourceNotFoundException;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.Configuration;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.MailConfigurationDocument;
 import com.sungardas.enhancedsnapshots.components.ConfigurationMediatorConfigurator;
+import com.sungardas.enhancedsnapshots.service.SDFSStateService;
 import com.sungardas.enhancedsnapshots.util.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,8 +14,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
-
-import static com.sungardas.enhancedsnapshots.service.SystemService.VOLUME_SIZE_UNIT;
 
 
 
@@ -120,7 +119,7 @@ public class ConfigurationMediatorImpl implements ConfigurationMediatorConfigura
 
     @Override
     public String getSdfsLocalCacheSize() {
-        return currentConfiguration.getSdfsLocalCacheSize() + VOLUME_SIZE_UNIT;
+        return currentConfiguration.getSdfsLocalCacheSize() + SDFSStateService.LOCAL_CACHE_SIZE_UNIT;
     }
 
     @Override
@@ -130,7 +129,7 @@ public class ConfigurationMediatorImpl implements ConfigurationMediatorConfigura
 
     @Override
     public String getSdfsVolumeSize() {
-        return currentConfiguration.getSdfsSize() + VOLUME_SIZE_UNIT;
+        return currentConfiguration.getSdfsSize() + SDFSStateService.VOLUME_SIZE_UNIT;
     }
 
     @Override
@@ -175,7 +174,7 @@ public class ConfigurationMediatorImpl implements ConfigurationMediatorConfigura
 
     @Override
     public String getVolumeSizeUnit() {
-        return VOLUME_SIZE_UNIT;
+        return SDFSStateService.VOLUME_SIZE_UNIT;
     }
 
     public boolean isSsoLoginMode() {
