@@ -331,14 +331,6 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
         }
     }
 
-    private void removeSdfsConfFile() {
-        File sdfsConf = new File(configurationMediator.getSdfsConfigPath());
-        if (sdfsConf.exists()) {
-            sdfsConf.delete();
-            LOG.info("SDFS conf file was successfully removed.");
-        }
-    }
-
     private Process executeScript(String[] parameters) throws IOException, InterruptedException {
         LOG.info("Executing script: {}", Arrays.toString(parameters));
         Process p = Runtime.getRuntime().exec(parameters);
@@ -426,6 +418,7 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
             LOG.error(e);
             throw new ConfigurationException("Failed to update SDFS local cache size");
         }
+    }
 
     public void enableS3IA() {
         List<BucketLifecycleConfiguration.Rule> rules = amazonS3.getBucketLifecycleConfiguration(configurationMediator.getS3Bucket()).getRules();
@@ -448,7 +441,6 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
         }
         amazonS3.setBucketLifecycleConfiguration(configurationMediator.getS3Bucket(),
                 new BucketLifecycleConfiguration(rules));
-
     }
 
     private BackupEntry getBackupFromFile(File file) {

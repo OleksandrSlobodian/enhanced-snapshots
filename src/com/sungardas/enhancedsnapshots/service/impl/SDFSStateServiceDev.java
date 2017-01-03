@@ -50,15 +50,13 @@ public class SDFSStateServiceDev extends SDFSStateServiceImpl {
 
     @Override
     public void setLocalCacheSize(int localCacheSize) {
-
-
+    }
 
     @Override
     public void enableS3IA() {
     }
 
     @Override
-    public void disableS3IA() {
-
+    public void disableS3IA () {
     }
 }
