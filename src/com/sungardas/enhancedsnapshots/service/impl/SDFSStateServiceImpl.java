@@ -2,8 +2,12 @@ package com.sungardas.enhancedsnapshots.service.impl;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.model.BucketLifecycleConfiguration;
 import com.amazonaws.services.s3.model.ListObjectsRequest;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
+import com.amazonaws.services.s3.model.StorageClass;
+import com.amazonaws.services.s3.model.lifecycle.LifecycleFilter;
+import com.amazonaws.services.s3.model.lifecycle.LifecyclePrefixPredicate;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupState;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.EventEntry;
@@ -13,6 +17,7 @@ import com.sungardas.enhancedsnapshots.exception.ConfigurationException;
 import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsException;
 import com.sungardas.enhancedsnapshots.exception.SDFSException;
 import com.sungardas.enhancedsnapshots.service.SDFSStateService;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,7 +69,6 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
     private static final int IOPS_INDEX = 3;
     private static final long BYTES_IN_GIB = 1073741824l;
 
-
     @Autowired
     private ResourceLoader resourceLoader;
 
@@ -74,6 +78,17 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
     @Autowired
     private ConfigurationMediator configurationMediator;
 
+    @Value("${enhancedsnapshots.s3.rule.ia.names}")
+    private String[] s3RuleNames;
+
+    @Value("${enhancedsnapshots.s3.rule.ia.prefixes}")
+    private String[] s3RulePrefixes;
+
+    @Value("${enhancedsnapshots.s3.rule.ia.days}")
+    private int s3MoveToIaAfterDays;
+
+    @Value("${enhancedsnapshots.s3.ia.enabled}")
+    private boolean s3RulesEnabled;
 
     @Override
     public void restoreSDFS() {
@@ -110,8 +125,11 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
                 LOG.info("SDFS is already running");
                 return;
             }
+            boolean applyIaRules = false;
             if (!new File(configurationMediator.getSdfsConfigPath()).exists()) {
                 configureSDFS();
+                applyIaRules = true;
+
             }
             String[] parameters = {getSdfsScriptFile(sdfsScript).getAbsolutePath(), MOUNT_CMD, restore.toString()};
 
@@ -134,10 +152,62 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
                         throw new ConfigurationException("Failed to synchronize SDFS");
                 }
             }
+            if (applyIaRules) {
+                LOG.info("Applying S3 lifecycle rules");
+                createS3LifeCycleRules(configurationMediator.getS3Bucket());
+                LOG.info("S3 lifecycle rules has been applied");
+            }
         } catch (Exception e) {
             LOG.error(e);
             throw new ConfigurationException("Failed to start SDFS");
         }
+    }
+
+    /**
+     * Create S3 life cycle rules if they does not exists.
+     */
+    protected void createS3LifeCycleRules(String bucketName) {
+        List<BucketLifecycleConfiguration.Rule> iaRules = new ArrayList<>();
+        for(int i = 0; i < s3RuleNames.length; i++) {
+            iaRules.add(getRule(s3RuleNames[i], s3RulesEnabled, s3RulePrefixes[i], s3MoveToIaAfterDays));
+        }
+        BucketLifecycleConfiguration bucketLifecycleConfiguration = amazonS3.getBucketLifecycleConfiguration(bucketName);
+        if (bucketLifecycleConfiguration != null) {
+            List<BucketLifecycleConfiguration.Rule> currentRules = bucketLifecycleConfiguration.getRules();
+
+            for (BucketLifecycleConfiguration.Rule rule : iaRules) {
+                if (!contains(currentRules, rule.getId())) {
+                    currentRules.add(rule);
+                }
+            }
+
+            amazonS3.setBucketLifecycleConfiguration(bucketName, new BucketLifecycleConfiguration(currentRules));
+        } else {
+            amazonS3.setBucketLifecycleConfiguration(bucketName, new BucketLifecycleConfiguration(iaRules));
+        }
+    }
+
+    private boolean contains(List<BucketLifecycleConfiguration.Rule> rules, String id) {
+        for(BucketLifecycleConfiguration.Rule rule: rules) {
+            if(id.equals(rule.getId())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private BucketLifecycleConfiguration.Rule getRule(String name, boolean enabled, String prefix, int days){
+        BucketLifecycleConfiguration.Rule rule = new BucketLifecycleConfiguration.Rule();
+        rule.setId(name);
+        if(enabled) {
+            rule.setStatus(SDFSStateService.IA_ENABLED);
+        }else {
+            rule.setStatus(SDFSStateService.IA_DISABLED);
+        }
+        rule.setFilter(new LifecycleFilter(new LifecyclePrefixPredicate(prefix)));
+        rule.setTransitions(Arrays.asList(new BucketLifecycleConfiguration.Transition()
+                .withStorageClass(StorageClass.StandardInfrequentAccess).withDays(days)));
+        return rule;
     }
 
     @Override
@@ -339,6 +409,7 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
     }
 
     @Override
+
     public void setLocalCacheSize(int localCacheSize) {
         String[] parameters;
         try {
@@ -355,6 +426,29 @@ public class SDFSStateServiceImpl implements SDFSStateService, ClusterEventListe
             LOG.error(e);
             throw new ConfigurationException("Failed to update SDFS local cache size");
         }
+
+    public void enableS3IA() {
+        List<BucketLifecycleConfiguration.Rule> rules = amazonS3.getBucketLifecycleConfiguration(configurationMediator.getS3Bucket()).getRules();
+        for (BucketLifecycleConfiguration.Rule rule: rules) {
+            if(ArrayUtils.contains(s3RuleNames, rule.getId())) {
+                rule.setStatus(IA_ENABLED);
+            }
+        }
+        amazonS3.setBucketLifecycleConfiguration(configurationMediator.getS3Bucket(),
+                new BucketLifecycleConfiguration(rules));
+    }
+
+    @Override
+    public void disableS3IA() {
+        List<BucketLifecycleConfiguration.Rule> rules = amazonS3.getBucketLifecycleConfiguration(configurationMediator.getS3Bucket()).getRules();
+        for (BucketLifecycleConfiguration.Rule rule: rules) {
+            if(ArrayUtils.contains(s3RuleNames, rule.getId())) {
+                rule.setStatus(IA_DISABLED);
+            }
+        }
+        amazonS3.setBucketLifecycleConfiguration(configurationMediator.getS3Bucket(),
+                new BucketLifecycleConfiguration(rules));
+
     }
 
     private BackupEntry getBackupFromFile(File file) {

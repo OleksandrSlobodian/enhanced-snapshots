@@ -217,6 +217,7 @@ class InitConfigurationServiceDev extends InitConfigurationServiceImpl {
         configuration.setSsoLoginMode(isSystemConfigured);
         configuration.setLogFile(logFile);
         configuration.setLogsBufferSize(bufferSize);
+        configuration.setIaEnabled(true);
         return configuration;
     }
 

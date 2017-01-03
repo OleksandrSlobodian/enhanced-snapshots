@@ -47,8 +47,18 @@ public class SDFSStateServiceDev extends SDFSStateServiceImpl {
     public long getSDFSVolumeId() {
         return 1000000;
     }
+
     @Override
     public void setLocalCacheSize(int localCacheSize) {
+
+
+
+    @Override
+    public void enableS3IA() {
+    }
+
+    @Override
+    public void disableS3IA() {
 
     }
 }

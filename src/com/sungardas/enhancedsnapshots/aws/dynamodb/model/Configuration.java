@@ -39,6 +39,7 @@ public class Configuration {
     // amazon settings
     private String region;
     private String s3Bucket;
+    private boolean IaEnabled;
 
     // Nginx
     private String nginxCertPath;
@@ -374,5 +375,13 @@ public class Configuration {
 
     public void setSungardasSSO(boolean sungardasSSO) {
         this.sungardasSSO = sungardasSSO;
+    }
+
+    public boolean isIaEnabled() {
+        return IaEnabled;
+    }
+
+    public void setIaEnabled(boolean iaEnabled) {
+        IaEnabled = iaEnabled;
     }
 }

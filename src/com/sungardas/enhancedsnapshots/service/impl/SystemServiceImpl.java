@@ -225,6 +225,7 @@ public class SystemServiceImpl implements SystemService {
 
         configuration.setS3(new SystemConfiguration.S3());
         configuration.getS3().setBucketName(configurationMediator.getS3Bucket());
+        configuration.getS3().setIA(configurationMediator.isIaEnabled());
 
         configuration.setSdfs(new SystemConfiguration.SDFS());
         configuration.getSdfs().setMountPoint(configurationMediator.getSdfsMountPoint());
@@ -311,6 +312,7 @@ public class SystemServiceImpl implements SystemService {
         currentConfiguration.setStoreSnapshot(configuration.getSystemProperties().isStoreSnapshots());
         currentConfiguration.setTaskHistoryTTS(configuration.getSystemProperties().getTaskHistoryTTS());
         currentConfiguration.setLogsBufferSize(configuration.getSystemProperties().getLogsBuffer());
+        currentConfiguration.setIaEnabled(configuration.getS3().isIA());
         if (configuration.getDomain() == null) {
             currentConfiguration.setDomain("");
         }
@@ -335,6 +337,11 @@ public class SystemServiceImpl implements SystemService {
         clusterEventPublisher.settingsUpdated();
         if (mailReconnect) {
             mailService.reconnect();
+        }
+        if(currentConfiguration.isIaEnabled()) {
+            sdfsStateService.enableS3IA();
+        } else {
+            sdfsStateService.disableS3IA();
         }
     }
 

@@ -29,8 +29,4 @@ public interface TaskRepository extends CrudRepository<TaskEntry, String> {
     List<TaskEntry> findByWorkerAndProgressNot(String worker, String progress);
 
     List<TaskEntry> findByWorkerIsNull();
-
-    default void save(List<TaskEntry> tasks) {
-        tasks.forEach(this::save);
-    }
 }

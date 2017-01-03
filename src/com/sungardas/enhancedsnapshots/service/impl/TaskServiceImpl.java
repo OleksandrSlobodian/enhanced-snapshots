@@ -59,11 +59,7 @@ public class TaskServiceImpl implements TaskService, ClusterEventListener {
         List<TaskEntry> partiallyFinished = taskRepository.findByStatusAndRegularAndWorker(TaskEntry.TaskEntryStatus.RUNNING.getStatus(), Boolean.FALSE.toString(), SystemUtils.getInstanceId());
         partiallyFinished.forEach(t -> t.setStatus(TaskEntry.TaskEntryStatus.PARTIALLY_FINISHED.getStatus()));
 
-        // method save(Iterable<S> var1) in spring-data-dynamodb 4.4.1 does not work correctly, that's why we have to save every taskEntry separately
-        // this should be changed once save(Iterable<S> var1) in spring-data-dynamodb is fixed
-        for(TaskEntry taskEntry: partiallyFinished){
-            taskRepository.save(taskEntry);
-        }
+        taskRepository.save(partiallyFinished);
 
         schedulerService.addTask(new Task() {
             @Override
@@ -127,11 +123,7 @@ public class TaskServiceImpl implements TaskService, ClusterEventListener {
             }
 
         }
-        // method save(Iterable<S> var1) in spring-data-dynamodb 4.4.1 does not work correctly, that's why we have to save every taskEntry separately
-        // this should be changed once save(Iterable<S> var1) in spring-data-dynamodb is fixed
-        for(TaskEntry taskEntry: validTasks){
-            taskRepository.save(taskEntry);
-        }
+        taskRepository.save(validTasks);
         return messages;
     }
 

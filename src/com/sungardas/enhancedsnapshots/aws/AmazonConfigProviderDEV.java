@@ -32,7 +32,10 @@ import org.springframework.context.annotation.Profile;
 
 @Configuration
 @Profile("dev")
-@EnableDynamoDBRepositories(basePackages = "com.sungardas.enhancedsnapshots.aws.dynamodb.repository", dynamoDBMapperConfigRef = "dynamoDBMapperConfig")
+@EnableDynamoDBRepositories(
+        basePackages = "com.sungardas.enhancedsnapshots.aws.dynamodb.repository",
+        dynamoDBOperationsRef = "dynamoDBOperations"
+)
 public class AmazonConfigProviderDEV extends AmazonConfigProvider {
 
 

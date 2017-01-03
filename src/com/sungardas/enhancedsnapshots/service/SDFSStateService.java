@@ -17,6 +17,8 @@ public interface SDFSStateService {
     String VOLUME_SIZE_UNIT = "GB";
     String LOCAL_CACHE_SIZE_UNIT = "GB";
 
+    String IA_ENABLED = "Enabled";
+    String IA_DISABLED = "Disabled";
 
     /**
      * Returns max sdfs volume size for current system in GB
@@ -103,9 +105,16 @@ public interface SDFSStateService {
         return DatatypeConverter.printHexBinary(secureRandom.generateSeed(16));
     }
 
+
     /**
      * Updating local cache size
      * @param localCacheSize new cache size in GB
      */
     void setLocalCacheSize(int localCacheSize);
+
+    void enableS3IA();
+
+    void disableS3IA();
+
+
 }

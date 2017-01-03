@@ -13,8 +13,4 @@ public interface UserRepository extends CrudRepository<User, String> {
     List<User> findByEmailAndPassword(String email, String password);
 
     List<User> findByEmail(String email);
-
-    default void delete(List<User> entities) {
-        entities.forEach(this::delete);
-    }
 }

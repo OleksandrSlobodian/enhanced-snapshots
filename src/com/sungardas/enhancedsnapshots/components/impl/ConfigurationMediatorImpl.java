@@ -248,4 +248,9 @@ public class ConfigurationMediatorImpl implements ConfigurationMediatorConfigura
     public boolean isSungardasSSO() {
         return currentConfiguration.isSungardasSSO();
     }
+
+    @Override
+    public boolean isIaEnabled() {
+        return currentConfiguration.isIaEnabled();
+    }
 }

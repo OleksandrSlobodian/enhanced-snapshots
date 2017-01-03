@@ -9,8 +9,8 @@
     <properties>
         <org.springframework.version>4.3.2.RELEASE</org.springframework.version>
         <org.springframework.dao.version>2.0.8</org.springframework.dao.version>
-        <springdata.commons>1.9.0.RELEASE</springdata.commons>
-        <amazonaws.sdk.version>1.11.66</amazonaws.sdk.version>
+        <springdata.commons>1.12.5.RELEASE</springdata.commons>
+        <amazonaws.sdk.version>1.11.68</amazonaws.sdk.version>
     </properties>
 
     <repositories>
@@ -81,11 +81,64 @@
             <artifactId>jersey-bundle</artifactId>
             <version>1.19</version>
         </dependency>
+
+        <!--AWS dependencies-->
         <dependency>
             <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk</artifactId>
+            <artifactId>aws-java-sdk-core</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+            <classifier>
+
+            </classifier>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-s3</artifactId>
             <version>${amazonaws.sdk.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-dynamodb</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sqs</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-ec2</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-sns</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-autoscaling</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-cloudformation</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-cloudwatch</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-elasticloadbalancing</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+        </dependency>
+
+
+        <!--AWS dependencies-->
         <dependency>
             <groupId>org.apache.tomcat</groupId>
             <artifactId>tomcat-annotations-api</artifactId>
@@ -346,25 +399,6 @@
             <groupId>org.hibernate</groupId>
             <artifactId>hibernate-entitymanager</artifactId>
             <version>4.2.0.Final</version>
-        </dependency>
-        <dependency>
-            <groupId>org.socialsignin</groupId>
-            <artifactId>spring-data-dynamodb</artifactId>
-            <version>1.0.2.RELEASE</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-context</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-aop</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.springframework</groupId>
-                    <artifactId>spring-tx</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>
