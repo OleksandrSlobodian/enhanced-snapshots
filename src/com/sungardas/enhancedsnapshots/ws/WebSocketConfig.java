@@ -66,6 +66,8 @@ public class WebSocketConfig extends AbstractWebSocketMessageBrokerConfigurer im
         BrokerService broker = new BrokerService();
         broker.addConnector("stomp://0.0.0.0:" + brokerPort);
         broker.setPersistent(false);
+        // can be enabled for debug purposes
+        broker.setUseJmx(false);
         return broker;
     }
 

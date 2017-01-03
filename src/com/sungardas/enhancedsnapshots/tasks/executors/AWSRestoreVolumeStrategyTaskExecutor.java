@@ -106,6 +106,8 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
             String targetZone = taskEntry.getAvailabilityZone();
             if (taskEntry.getInstanceToAttach() != null) {
                 targetZone = awsCommunication.getInstanceStatus(taskEntry.getInstanceToAttach()).getAvailabilityZone();
+                taskEntry.setAvailabilityZone(targetZone);
+                taskRepository.save(taskEntry);
             }
 
             String volumeId = taskEntry.getVolume();
@@ -144,6 +146,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         }
         if (taskEntry.getInstanceToAttach() != null) {
             taskEntry.setAvailabilityZone(awsCommunication.getInstanceStatus(taskEntry.getInstanceToAttach()).getAvailabilityZone());
+            taskRepository.save(taskEntry);
         }
         if (taskEntry.progress() != TaskProgress.NONE) {
             switch (taskEntry.progress()) {
@@ -331,12 +334,11 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
 
     private void creatingTempSnapshotStep(TaskEntry taskEntry) {
         setProgress(taskEntry, TaskProgress.CREATING_SNAPSHOT);
-        Volume volumeSrc = awsCommunication.getVolume(taskEntry.getVolume());
+        Volume volumeSrc = awsCommunication.getVolume(taskEntry.getTempVolumeId());
         if (volumeSrc == null) {
-            LOG.error("Can't get access to {} volume", taskEntry.getVolume());
+            LOG.error("Can't get access to {} volume", taskEntry.getTempVolumeId());
             throw new DataAccessException(MessageFormat.format("Can't get access to {} volume", taskEntry.getVolume()));
         }
-
         taskEntry.setTempSnapshotId(awsCommunication.createSnapshot(volumeSrc).getSnapshotId());
         taskRepository.save(taskEntry);
     }
