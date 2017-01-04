@@ -301,9 +301,9 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
 
     private void creatingTempSnapshotStep(TaskEntry taskEntry) {
         setProgress(taskEntry, TaskProgress.CREATING_SNAPSHOT);
-        Volume volumeSrc = awsCommunication.getVolume(taskEntry.getVolume());
+        Volume volumeSrc = awsCommunication.getVolume(taskEntry.getTempVolumeId());
         if (volumeSrc == null) {
-            LOG.error("Can't get access to {} volume", taskEntry.getVolume());
+            LOG.error("Can't get access to {} volume", taskEntry.getTempVolumeId());
             throw new DataAccessException(MessageFormat.format("Can't get access to {} volume", taskEntry.getVolume()));
         }
 
