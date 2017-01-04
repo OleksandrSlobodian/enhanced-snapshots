@@ -125,6 +125,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
                     taskEntry.getRestoreVolumeIopsPerGb());
             awsCommunication.setResourceName(volume.getVolumeId(), RESTORED_NAME_PREFIX + taskEntry.getVolume());
             awsCommunication.addTag(volume.getVolumeId(), "Created by", "Enhanced Snapshots");
+            attachToInstanceIfRequired(volume.getVolumeId(), taskEntry);
             setProgress(taskEntry, TaskProgress.DONE);
         } catch (EnhancedSnapshotsTaskInterruptedException e) {
             LOG.info("Restore task was canceled");
@@ -241,6 +242,8 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
     private void attachToInstanceIfRequired(String volumeId, TaskEntry taskEntry) {
         try {
             if (taskEntry.getInstanceToAttach() != null) {
+                LOG.info("Attaching to instance {}", taskEntry.getInstanceToAttach());
+                notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Attaching to instance", 85);
                 awsCommunication.attachVolume(awsCommunication.getInstance(taskEntry.getInstanceToAttach()),
                         awsCommunication.getVolume(volumeId));
             }
