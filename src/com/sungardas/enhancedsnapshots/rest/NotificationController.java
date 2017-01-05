@@ -2,6 +2,9 @@ package com.sungardas.enhancedsnapshots.rest;
 
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.SnsRuleEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry;
+import com.sungardas.enhancedsnapshots.dto.SnsSettingsDto;
+import com.sungardas.enhancedsnapshots.service.NotificationService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,22 +19,24 @@ import java.util.Map;
 @RequestMapping("/notification")
 public class NotificationController {
 
+    @Autowired
+    private NotificationService notificationService;
+
     //TODO move to db
-    private String snsTopic = "";
     private Map<String, SnsRuleEntry> rules = new HashMap<>();
 
     @RolesAllowed("ROLE_ADMIN")
     @RequestMapping(value = "/sns/settings", method = RequestMethod.GET)
     public ResponseEntity getSnsSettings() {
         SnsSettingsDto dto = new SnsSettingsDto();
-        dto.topic = snsTopic;
+        dto.topic = notificationService.getSnsTopic();
         return new ResponseEntity(dto, HttpStatus.OK);
     }
 
     @RolesAllowed("ROLE_ADMIN")
     @RequestMapping(value = "/sns/settings", method = RequestMethod.PUT)
     public ResponseEntity setSnsSettings(@RequestBody SnsSettingsDto settingsDto) {
-        snsTopic = settingsDto.topic;
+        notificationService.setSnsTopic(settingsDto.topic);
         return new ResponseEntity(HttpStatus.OK);
     }
 
@@ -101,10 +106,6 @@ public class NotificationController {
 
 
     //DTOs
-    private class SnsSettingsDto {
-        public String topic;
-    }
-
     private static final class SnsRuleOperationsDto {
         public final List<TaskEntry.TaskEntryType> operations;
 

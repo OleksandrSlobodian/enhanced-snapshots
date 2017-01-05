@@ -462,6 +462,7 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         createTable(User.class);
         createTable(NodeEntry.class);
         createTable(EventEntry.class);
+        createTable(NotificationConfigurationEntry.class);
     }
 
     private void createTable(Class tableClass) {

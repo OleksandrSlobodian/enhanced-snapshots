@@ -31,4 +31,8 @@ public interface NotificationService {
     void notifyAboutError(ExceptionDto exceptionDto);
 
     void notifyUser(String broker, Dto dto);
+
+    String getSnsTopic();
+
+    void setSnsTopic(String snsTopic);
 }

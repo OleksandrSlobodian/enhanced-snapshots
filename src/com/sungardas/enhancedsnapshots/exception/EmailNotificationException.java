@@ -1,6 +1,6 @@
 package com.sungardas.enhancedsnapshots.exception;
 
-public class EmailNotificationException extends EnhancedSnapshotsException {
+public class EmailNotificationException extends NotificationException {
     public EmailNotificationException() {
     }
 
