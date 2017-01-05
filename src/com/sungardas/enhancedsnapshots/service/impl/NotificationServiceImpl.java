@@ -4,8 +4,10 @@ import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.model.AmazonSNSException;
 import com.amazonaws.services.sns.model.GetTopicAttributesRequest;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.NotificationConfigurationEntry;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.SnsRuleEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.repository.NotificationConfigurationRepository;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.repository.SnsRuleRepository;
 import com.sungardas.enhancedsnapshots.dto.Dto;
 import com.sungardas.enhancedsnapshots.dto.ExceptionDto;
 import com.sungardas.enhancedsnapshots.dto.TaskProgressDto;
@@ -16,6 +18,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.util.List;
 
 import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus.RUNNING;
 
@@ -33,6 +36,9 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Autowired
     private AmazonSNS amazonSNS;
+
+    @Autowired
+    private SnsRuleRepository snsRuleRepository;
 
     @PostConstruct
     private void init() {
@@ -84,6 +90,41 @@ public class NotificationServiceImpl implements NotificationService {
         NotificationConfigurationEntry entry = getNotificationConfiguration();
         entry.setSnsTopic(snsTopic);
         notificationConfigurationRepository.save(entry);
+    }
+
+    @Override
+    public void createRule(SnsRuleEntry ruleEntry) {
+        validateRule(ruleEntry);
+        snsRuleRepository.save(ruleEntry);
+    }
+
+    @Override
+    public List<SnsRuleEntry> getRules() {
+        return snsRuleRepository.findAll();
+    }
+
+    @Override
+    public void updateRule(SnsRuleEntry ruleEntry) {
+        validateRule(ruleEntry);
+        snsRuleRepository.save(ruleEntry);
+    }
+
+    @Override
+    public void deleteRule(String snsRuleId) {
+        snsRuleRepository.delete(snsRuleId);
+    }
+
+    private void validateRule(SnsRuleEntry ruleEntry) {
+        try {
+            TaskEntry.TaskEntryType.valueOf(ruleEntry.getOperation());
+        } catch (Exception e) {
+            throw new SnsNotificationException("Operation field is invalid");
+        }
+        try {
+            TaskEntry.TaskEntryStatus.valueOf(ruleEntry.getStatus());
+        } catch (Exception e) {
+            throw new SnsNotificationException("Status field is invalid");
+        }
     }
 
     private NotificationConfigurationEntry getNotificationConfiguration() {

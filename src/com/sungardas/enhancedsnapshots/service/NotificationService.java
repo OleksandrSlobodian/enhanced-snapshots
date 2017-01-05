@@ -1,9 +1,12 @@
 package com.sungardas.enhancedsnapshots.service;
 
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.SnsRuleEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus;
 import com.sungardas.enhancedsnapshots.dto.Dto;
 import com.sungardas.enhancedsnapshots.dto.ExceptionDto;
 import com.sungardas.enhancedsnapshots.dto.TaskProgressDto;
+
+import java.util.List;
 
 public interface NotificationService {
 
@@ -32,7 +35,24 @@ public interface NotificationService {
 
     void notifyUser(String broker, Dto dto);
 
+    /**
+     * Get SNS ARN
+     * @return SNS ARN
+     */
     String getSnsTopic();
 
+    /**
+     * Set SNS ARN
+     * @param snsTopic or null
+     */
     void setSnsTopic(String snsTopic);
+
+    //SNS rules CRUD
+    void createRule(SnsRuleEntry ruleEntry);
+
+    List<SnsRuleEntry> getRules();
+
+    void updateRule(SnsRuleEntry ruleEntry);
+
+    void deleteRule(String snsRuleId);
 }

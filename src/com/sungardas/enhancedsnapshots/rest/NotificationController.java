@@ -5,15 +5,14 @@ import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry;
 import com.sungardas.enhancedsnapshots.dto.SnsSettingsDto;
 import com.sungardas.enhancedsnapshots.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/notification")
@@ -21,9 +20,6 @@ public class NotificationController {
 
     @Autowired
     private NotificationService notificationService;
-
-    //TODO move to db
-    private Map<String, SnsRuleEntry> rules = new HashMap<>();
 
     @RolesAllowed("ROLE_ADMIN")
     @RequestMapping(value = "/sns/settings", method = RequestMethod.GET)
@@ -55,35 +51,30 @@ public class NotificationController {
     @RolesAllowed("ROLE_ADMIN")
     @RequestMapping(value = "/sns/rule", method = RequestMethod.GET)
     public ResponseEntity getRules() {
-        return new ResponseEntity(rules.values(), HttpStatus.OK);
+        return new ResponseEntity(notificationService.getRules(), HttpStatus.OK);
     }
 
     @RolesAllowed("ROLE_ADMIN")
     @RequestMapping(value = "/sns/rule", method = RequestMethod.POST)
     public ResponseEntity addRule(@RequestBody SnsRuleEntry snsRuleEntry) {
-        snsRuleEntry.setId(Math.random()+"");
-        rules.put(snsRuleEntry.getId(), snsRuleEntry);
+        notificationService.createRule(snsRuleEntry);
         return new ResponseEntity(HttpStatus.OK);
     }
 
     @RolesAllowed("ROLE_ADMIN")
     @RequestMapping(value = "/sns/rule", method = RequestMethod.PUT)
     public ResponseEntity updateRule(@RequestBody SnsRuleEntry snsRuleEntry) {
-        if(rules.containsKey(snsRuleEntry.getId())) {
-            rules.put(snsRuleEntry.getId(), snsRuleEntry);
-            return new ResponseEntity(HttpStatus.OK);
-        } else {
-            return new ResponseEntity("Rule not found", HttpStatus.NOT_FOUND);
-        }
+        notificationService.updateRule(snsRuleEntry);
+        return new ResponseEntity(HttpStatus.OK);
     }
 
     @RolesAllowed("ROLE_ADMIN")
     @RequestMapping(value = "/sns/rule/{ruleId}", method = RequestMethod.DELETE)
-    public ResponseEntity addRule(@PathVariable("ruleId") String ruleId) {
-        if(rules.containsKey(ruleId)) {
-            rules.remove(ruleId);
-            return new ResponseEntity(HttpStatus.OK);
-        } else {
+    public ResponseEntity deleteRule(@PathVariable("ruleId") String ruleId) {
+        try {
+            notificationService.deleteRule(ruleId);
+            return new ResponseEntity(HttpStatus.NO_CONTENT);
+        } catch (EmptyResultDataAccessException e) {
             return new ResponseEntity("Rule not found", HttpStatus.NOT_FOUND);
         }
     }
