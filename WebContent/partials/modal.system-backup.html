@@ -9,7 +9,7 @@
     </div>
 
     <div ng-show="state === 'done'">
-        <h3>Your System Backup task created successfully!</h3>
+        <h3>Your System Backup done successfully!</h3>
     </div>
 
     <div ng-show="state === 'failed'">
@@ -17,7 +17,7 @@
     </div>
 
     <div class="text-right">
-        <button class="btn btn-success" ng-show="state === 'ask'" ng-click="sendTask()">Add Task</button>
+        <button class="btn btn-success" ng-show="state === 'ask'" ng-click="sendTask()">Ok</button>
         <button class="btn btn-default" ng-hide="state === 'ask'" ng-click="$close()"><span
                 class="glyphicon glyphicon-ok"></span>&nbsp; Done
         </button>

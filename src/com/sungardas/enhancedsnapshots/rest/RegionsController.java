@@ -6,6 +6,7 @@ import java.util.HashSet;
 
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.ec2.model.AvailabilityZone;
+import com.amazonaws.services.ec2.model.Instance;
 import com.sungardas.enhancedsnapshots.exception.DataAccessException;
 import com.sungardas.enhancedsnapshots.service.AWSCommunicationService;
 
@@ -25,7 +26,7 @@ import javax.annotation.security.RolesAllowed;
 public class RegionsController {
 
     @Autowired
-    AWSCommunicationService communicationService;
+    private AWSCommunicationService communicationService;
 
     @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
     @RequestMapping(value = "/regions", method = RequestMethod.GET)
@@ -53,6 +54,20 @@ public class RegionsController {
             return new ResponseEntity<>(availabilityZones, HttpStatus.OK);
         } catch (Exception e) {
             return new ResponseEntity<>("Failed to get list of availability zones.", HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+    }
+
+    @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
+    @RequestMapping( value = "/instances", method = RequestMethod.GET)
+    public ResponseEntity getInstances() {
+        try {
+            HashSet<String> instances = new HashSet<>();
+            for (Instance instance : communicationService.getInstances()) {
+                instances.add(instance.getInstanceId());
+            }
+            return new ResponseEntity<>(instances, HttpStatus.OK);
+        } catch (Exception e) {
+            return new ResponseEntity<>("Failed to get list of instances", HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 

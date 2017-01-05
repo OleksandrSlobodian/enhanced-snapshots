@@ -24,8 +24,6 @@ import static com.sungardas.enhancedsnapshots.dto.converter.RetentionConverter.t
 @Service
 public class RetentionServiceImpl implements RetentionService, MasterInitialization {
 
-    public static final String RETENTION_USER = "RETENTION POLICY";
-
     private static final long BYTES_IN_GB = 1073741824;
 
     private static final Logger LOG = LogManager.getLogger(RetentionServiceImpl.class);
@@ -112,8 +110,8 @@ public class RetentionServiceImpl implements RetentionService, MasterInitializat
             }
         }
         if (!backupsToRemove.isEmpty()) {
-            LOG.debug("Found backup to remove: {}", backupsToRemove);
-            backupService.deleteBackup(backupsToRemove, RETENTION_USER);
+            LOG.debug("Removing backup {} according to retention policy", backupsToRemove);
+            backupService.deleteBackup(backupsToRemove);
             LOG.debug("Backups successfully removed");
         }
         LOG.debug("Finished");

@@ -33,6 +33,8 @@ public class AWSCommunicationServiceImpl implements AWSCommunicationService {
     private final static int MIN_SIZE_OF_OI1_VOLUME = 4;
     private final static int MIN_IOPS_VALUE = 100;
     private final static int MAX_IOPS_VALUE = 20_000;
+    private final static String INSTANCE_RUNNING_STATE = "running";
+    private final static String INSTANCE_STOPPED_STATE = "stopped";
 
     @Autowired
     private AmazonS3 amazonS3;
@@ -215,6 +217,31 @@ public class AWSCommunicationServiceImpl implements AWSCommunicationService {
     }
 
     @Override
+    public InstanceStatus getInstanceStatus(String instanceId) {
+        DescribeInstanceStatusResult describeInstanceStatusRequest = ec2client
+                .describeInstanceStatus(new DescribeInstanceStatusRequest().withInstanceIds(instanceId));
+        List<InstanceStatus> instanceStatuses = describeInstanceStatusRequest
+                .getInstanceStatuses();
+        for (InstanceStatus status : instanceStatuses) {
+            return status;
+        }
+        return null;
+    }
+
+    @Override
+    public List<Instance> getInstances() {
+        List<Reservation> reservations = ec2client.describeInstances(new DescribeInstancesRequest()).getReservations();
+        List<Instance> result = new ArrayList<>();
+        for (Reservation res : reservations) {
+            result.addAll(res.getInstances().stream().filter(i -> {
+                String name = i.getState().getName();
+                return name.equals(INSTANCE_RUNNING_STATE) || name.equals(INSTANCE_STOPPED_STATE);
+            }).collect(Collectors.toList()));
+        }
+        return result;
+    }
+
+    @Override
     public void detachVolume(Volume volume) {
         DetachVolumeRequest detachVolumeRequest = new DetachVolumeRequest(volume.getVolumeId());
         ec2client.detachVolume(detachVolumeRequest);
@@ -369,7 +396,6 @@ public class AWSCommunicationServiceImpl implements AWSCommunicationService {
     public String getDNSName(String instanceId) {
         return getInstance(instanceId).getPrivateDnsName();
     }
-
 
     @Override
     public boolean volumeExists(String volumeId) {

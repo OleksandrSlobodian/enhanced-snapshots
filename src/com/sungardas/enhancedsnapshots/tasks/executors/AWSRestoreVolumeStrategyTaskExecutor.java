@@ -78,7 +78,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
             taskRepository.save(taskEntry);
             notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Starting restore", 0);
 
-            String sourceFile = taskEntry.getSourceFileName();
+            String sourceFile = taskEntry.getBackupFileName();
             if (snapshotService.getSnapshotIdByVolumeId(taskEntry.getVolume()) != null && (sourceFile == null || sourceFile.isEmpty())) {
                 LOG.info("Task was defined as restore from snapshot.");
                 notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Restore from Snapshot", 5);
@@ -104,6 +104,9 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         try {
             notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Restore from snapshot", 20);
             String targetZone = taskEntry.getAvailabilityZone();
+            if (taskEntry.getInstanceToAttach() != null) {
+                targetZone = awsCommunication.getInstanceStatus(taskEntry.getInstanceToAttach()).getAvailabilityZone();
+            }
 
             String volumeId = taskEntry.getVolume();
             String snapshotId = snapshotService.getSnapshotIdByVolumeId(volumeId);
@@ -132,12 +135,15 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
     private void restoreFromBackupFile(TaskEntry taskEntry) throws IOException, InterruptedException {
         Volume tempVolume = taskEntry.getTempVolumeId() != null ? awsCommunication.getVolume(taskEntry.getTempVolumeId()) : null;
         BackupEntry backupEntry;
-        if (taskEntry.getSourceFileName() != null && !taskEntry.getSourceFileName().isEmpty()) {
-            backupEntry = backupRepository.findOne(taskEntry.getSourceFileName());
+        if (taskEntry.getBackupFileName() != null && !taskEntry.getBackupFileName().isEmpty()) {
+            backupEntry = backupRepository.findOne(taskEntry.getBackupFileName());
         } else {
             backupEntry = backupRepository.findByVolumeId(taskEntry.getVolume())
                     .stream().sorted((e1, e2) -> e2.getTimeCreated().compareTo(e1.getTimeCreated()))
                     .findFirst().get();
+        }
+        if (taskEntry.getInstanceToAttach() != null) {
+            taskEntry.setAvailabilityZone(awsCommunication.getInstanceStatus(taskEntry.getInstanceToAttach()).getAvailabilityZone());
         }
         if (taskEntry.progress() != TaskProgress.NONE) {
             switch (taskEntry.progress()) {
@@ -209,6 +215,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
                     Volume volumeToRestore = moveToTargetZoneStep(taskEntry);
                     awsCommunication.setResourceName(volumeToRestore.getVolumeId(), RESTORED_NAME_PREFIX + backupEntry.getFileName());
                     addTags(volumeToRestore.getVolumeId(), backupEntry);
+                    attachToInstanceIfRequired(volumeToRestore.getVolumeId(), taskEntry);
                 }
                 case DELETING_TEMP_VOLUME: {
                     notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Deleting temp volume", 85);
@@ -224,6 +231,19 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
             awsCommunication.deleteTemporaryTag(tempVolume.getVolumeId());
             awsCommunication.setResourceName(tempVolume.getVolumeId(), RESTORED_NAME_PREFIX + backupEntry.getFileName());
             addTags(tempVolume.getVolumeId(), backupEntry);
+            attachToInstanceIfRequired(tempVolume.getVolumeId(), taskEntry);
+        }
+    }
+
+    private void attachToInstanceIfRequired(String volumeId, TaskEntry taskEntry) {
+        try {
+            if (taskEntry.getInstanceToAttach() != null) {
+                awsCommunication.attachVolume(awsCommunication.getInstance(taskEntry.getInstanceToAttach()),
+                        awsCommunication.getVolume(volumeId));
+            }
+        } catch (Exception e) {
+            LOG.error("Failed to attache volume {} to instance {}", volumeId, taskEntry.getInstanceToAttach());
+            LOG.error(e);
         }
     }
 

@@ -36,4 +36,6 @@ interface InitConfigurationService {
      */
     void saveAndProcessSAMLFiles(MultipartFile spCertificate, MultipartFile idpMetadata);
 
+    void setFlagOfFirstTimeConfiguration(boolean firstTimeInitialization);
+
 }

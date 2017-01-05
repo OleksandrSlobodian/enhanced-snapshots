@@ -10,9 +10,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryType.SYSTEM_BACKUP;
-
-
 
 public class TaskDtoConverter {
 
@@ -20,23 +17,20 @@ public class TaskDtoConverter {
 		TaskDto taskDto = new TaskDto();
 		BeanUtils.copyProperties(task, taskDto);
 		taskDto.setSchedulerTime(task.getSchedulerTime());
-		taskDto.setPriority(String.valueOf(task.getPriority()));
-		taskDto.setVolumes(Arrays.asList(task.getVolume()));
+		TaskDto.VolumeInfo volumeInfo = new TaskDto.VolumeInfo(task.getVolume(), task.getAvailabilityZone(), task.getInstanceToAttach());
+		volumeInfo.volumeId = task.getVolume();
+		taskDto.setVolumes(Arrays.asList(volumeInfo));
 		return taskDto;
 	}
 
 	public static List<TaskEntry> convert(TaskDto taskDto) {
 		List<TaskEntry> result = new ArrayList<>();
-        if(SYSTEM_BACKUP.getType().equals(taskDto.getType())){
-            TaskEntry task = copy(taskDto);
-            task.setVolume(SYSTEM_BACKUP.getType());
-            result.add(task);
-        } else {
-            for (String volumeId : taskDto.getVolumes()) {
-                TaskEntry task = copy(taskDto);
-                task.setVolume(volumeId);
-				result.add(task);
-			}
+		for (TaskDto.VolumeInfo volumeInfo : taskDto.getVolumes()) {
+			TaskEntry task = copy(taskDto);
+			task.setVolume(volumeInfo.volumeId);
+			task.setAvailabilityZone(volumeInfo.zone);
+			task.setInstanceToAttach(volumeInfo.instanceId);
+			result.add(task);
 		}
 		return result;
 	}
@@ -44,17 +38,8 @@ public class TaskDtoConverter {
 	private static TaskEntry copy(TaskDto taskDto){
 		TaskEntry task = new TaskEntry();
 		BeanUtils.copyProperties(taskDto, task);
-		String options = new StringBuffer().
-				append(taskDto.getBackupFileName()).append(", ").append(taskDto.getZone()).toString();
-		task.setOptions(options);
-		switch (task.getType()) {
-			case "delete":
-				task.setPriority(1);
-				break;
-			default:
-				task.setPriority(0);
-				break;
-		}
+		task.setBackupFileName(taskDto.getBackupFileName());
+		task.setAvailabilityZone(taskDto.getZone());
 		return task;
 	}
 

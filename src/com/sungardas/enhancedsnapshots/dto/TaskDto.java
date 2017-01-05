@@ -7,10 +7,9 @@ import java.util.List;
 public class TaskDto {
 
     private String id;
-    private String priority;
     private String status;
     private String type;
-    private List<String> volumes = Collections.emptyList();
+    private List<VolumeInfo> volumes = Collections.emptyList();
     private String schedulerManual;
     private String schedulerName;
     private String schedulerTime;
@@ -19,6 +18,8 @@ public class TaskDto {
     private String zone;
     private String regular = Boolean.FALSE.toString();
     private String enabled;
+    private String instanceToAttach;
+
 
     public TaskDto() {
     }
@@ -29,14 +30,6 @@ public class TaskDto {
 
     public void setBackupFileName(String backupFileName) {
         this.backupFileName = backupFileName;
-    }
-
-    public String getPriority() {
-        return priority;
-    }
-
-    public void setPriority(String priority) {
-        this.priority = priority;
     }
 
     public String getStatus() {
@@ -55,11 +48,11 @@ public class TaskDto {
         this.type = type;
     }
 
-    public List<String> getVolumes() {
+    public List<VolumeInfo> getVolumes() {
         return volumes;
     }
 
-    public void setVolumes(List<String> volumes) {
+    public void setVolumes(List<VolumeInfo> volumes) {
         this.volumes = volumes;
     }
 
@@ -124,5 +117,29 @@ public class TaskDto {
 
     public void setZone(String zone) {
         this.zone = zone;
+    }
+
+
+    public String getInstanceToAttach() {
+        return instanceToAttach;
+    }
+
+    public void setInstanceToAttach(String instanceToAttach) {
+        this.instanceToAttach = instanceToAttach;
+    }
+
+    public static class VolumeInfo {
+        public String volumeId;
+        public String zone;
+        public String instanceId;
+
+        public VolumeInfo(String volumeId, String zone, String instanceId) {
+            this.volumeId = volumeId;
+            this.zone = zone;
+            this.instanceId = instanceId;
+        }
+
+        public VolumeInfo() {
+        }
     }
 }

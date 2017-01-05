@@ -132,6 +132,7 @@ public class SystemConfiguration {
 
     public static class S3 {
         private String bucketName;
+        private boolean IA;
 
         public String getBucketName() {
             return bucketName;
@@ -139,6 +140,14 @@ public class SystemConfiguration {
 
         public void setBucketName(String bucketName) {
             this.bucketName = bucketName;
+        }
+
+        public boolean isIA() {
+            return IA;
+        }
+
+        public void setIA(boolean IA) {
+            this.IA = IA;
         }
     }
 

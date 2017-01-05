@@ -190,18 +190,6 @@ public class MasterServiceImpl implements MasterService {
                 }
                 node.setFreeBackupWorkers(node.getFreeBackupWorkers() - 1);
                 t.setWorker(node.getNodeId());
-            } else if (TaskEntry.TaskEntryType.DELETE.getType().equals(t.getType())) {
-                NodeEntry node = getNodeWithMaxAvailableBackupWorkers(nodes);
-                if (node.getFreeBackupWorkers() == 0) {
-                    continue;
-                }
-                t.setWorker(node.getNodeId());
-            } else if (TaskEntry.TaskEntryType.SYSTEM_BACKUP.getType().equals(t.getType())) {
-                NodeEntry node = getNodeWithMaxAvailableRestoreWorkers(nodes);
-                if (node.getFreeRestoreWorkers() == 0) {
-                    continue;
-                }
-                t.setWorker(node.getNodeId());
             }
         }
         taskRepository.save(unassignedTasks);

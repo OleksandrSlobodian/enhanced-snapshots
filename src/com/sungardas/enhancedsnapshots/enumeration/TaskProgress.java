@@ -16,5 +16,6 @@ public enum TaskProgress {
     FAIL_CLEANING,
     INTERRUPTED_CLEANING,
     MOVE_TO_TARGET_ZONE,
+    ATTACH_TO_INSTANCE,
     DONE
 }

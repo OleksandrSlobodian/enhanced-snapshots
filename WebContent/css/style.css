@@ -1248,8 +1248,6 @@ div.tr.state-removed {
 /* end of view-specific styling*/
 /* end of Color scheme */
 
-
-
 /* Settings */
 .settings-sub-menu {
     color: #263f66;
@@ -1264,6 +1262,16 @@ div.tr.state-removed {
     background-color: lightgrey;
     color: #263f66;
 }
-.table-header-placeholder.settings-sub-menu{
+.table-header-placeholder.settings-sub-menu {
     height: auto;
+}
+
+
+/*restore table*/
+
+.restore-table td, .restore-table th {
+    width: 30%;
+    display: inline-block;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }

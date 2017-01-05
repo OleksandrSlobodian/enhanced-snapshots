@@ -174,6 +174,14 @@ case "$commandName" in
         /sbin/sdfscli --sync-remote-cloud-volume=${volume} --password=${cliPass}
     done
     ;;
+############################# Deleting remote volumes ####################################
+--deletevolume) echo "Deleting volume"
+    cliPass="${2:-apassword}"
+    vol="${3}"
+    echo "CLI pass: $cliPass"
+    echo "VolumeId: $vol"
+    /sbin/sdfscli --delete-remote-cloud-volume=$vol --password=$cliPass
+    ;;
 
 ############################# expand volume ####################################
 --expandvolume) echo "Expanding volume"
@@ -187,7 +195,15 @@ case "$commandName" in
     sdfscli --expandvolume $sdfs_volume_size
     ;;
 
-    ############################# cloud sync ####################################
+############################# update local cache size ####################################
+--setlocalcache) echo "Updating local cache size"
+    cache_size="$2"
+
+    echo 'Setting local cache size to' $2
+    sdfscli --set-cache-size $cache_size
+    ;;
+
+############################# cloud sync ####################################
 --cloudsync) echo "Sync local sdfs metadata with cloud"
 
     ### sync sdfs metadata

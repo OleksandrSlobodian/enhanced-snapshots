@@ -1,5 +1,6 @@
 package com.sungardas.enhancedsnapshots.service.impl;
 
+import com.sungardas.enhancedsnapshots.exception.ConfigurationException;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +16,6 @@ public class SDFSStateServiceDev extends SDFSStateServiceImpl {
     @Override
     public Long getBackupTime() {
         return System.currentTimeMillis();
-    }
-
-    @Override
-    public void reconfigureAndRestartSDFS() {
-
     }
 
     @Override
@@ -43,7 +39,24 @@ public class SDFSStateServiceDev extends SDFSStateServiceImpl {
     }
 
     @Override
+    public void cloudSync() {
+
+    }
+
+    @Override
     public long getSDFSVolumeId() {
         return 1000000;
+    }
+
+    @Override
+    public void setLocalCacheSize(int localCacheSize) {
+    }
+
+    @Override
+    public void enableS3IA() {
+    }
+
+    @Override
+    public void disableS3IA () {
     }
 }

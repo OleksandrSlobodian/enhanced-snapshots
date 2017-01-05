@@ -45,6 +45,14 @@ public interface AWSCommunicationService {
 
     Instance getInstance(String instanceId);
 
+    InstanceStatus getInstanceStatus(String instanceId);
+
+    /**
+     * Returns list of instances in stopped or running state
+     * @return
+     */
+    List<Instance> getInstances();
+
     void detachVolume(Volume volume);
 
     void setResourceName(String resourceid, String value);

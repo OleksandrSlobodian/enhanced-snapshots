@@ -14,7 +14,11 @@ public interface SDFSStateService {
 
     // constant value
     long BYTES_IN_GB = 1_073_741_824;
+    String VOLUME_SIZE_UNIT = "GB";
+    String LOCAL_CACHE_SIZE_UNIT = "GB";
 
+    String IA_ENABLED = "Enabled";
+    String IA_DISABLED = "Disabled";
 
     /**
      * Returns max sdfs volume size for current system in GB
@@ -32,7 +36,6 @@ public interface SDFSStateService {
         return maxVolumeSize;
     }
 
-
     /**
      * Returns count of GB which can be used to increase sdfs local cache
      *
@@ -46,11 +49,6 @@ public interface SDFSStateService {
     }
 
     Long getBackupTime();
-
-    /**
-     * Reconfigure SDFS and restart
-     */
-    void reconfigureAndRestartSDFS();
 
     /**
      * Restore SDFS from S3 bucket
@@ -74,8 +72,9 @@ public interface SDFSStateService {
 
     /**
      * Expand sdfs volume
+     * @param newVolumeSize size in GB
      */
-    void expandSdfsVolume(String newVolumeSize);
+    void expandSdfsVolume(int newVolumeSize);
 
     /**
      * Sync local SDFS metadata with cloud
@@ -105,5 +104,17 @@ public interface SDFSStateService {
         SecureRandom secureRandom = new SecureRandom();
         return DatatypeConverter.printHexBinary(secureRandom.generateSeed(16));
     }
+
+
+    /**
+     * Updating local cache size
+     * @param localCacheSize new cache size in GB
+     */
+    void setLocalCacheSize(int localCacheSize);
+
+    void enableS3IA();
+
+    void disableS3IA();
+
 
 }

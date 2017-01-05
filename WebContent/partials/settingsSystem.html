@@ -206,6 +206,15 @@
                                ng-model="settings.systemProperties.storeSnapshots"
                                name="storeSnapshots">
                     </div>
+                    <div class="col-sm-12 form-group">
+                        <div class="settings field-label col-sm-5 text-right">S3 infrequent access: </div>
+                        <div class="col-sm-2 text-left">
+                            <input class="chb settings text-left"
+                                   type="checkbox"
+                                   ng-model="settings.s3.ia"
+                                   name="storeSnapshots">
+                        </div>
+                    </div>
                     <div class="col-sm-12 text-danger small" ng-show="sdfs.sdfsLocalCacheSize.$error.required"> {{STRINGS.sdfs.sdfsLocalCacheSize.empty}} </div>
                     <div class="col-sm-12 text-danger small" ng-show="sdfs.volumeSize.$error.required"> {{STRINGS.sdfs.volumeSize.empty}} </div>
                 </form>
