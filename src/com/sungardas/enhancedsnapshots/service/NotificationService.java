@@ -1,6 +1,7 @@
 package com.sungardas.enhancedsnapshots.service;
 
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.SnsRuleEntry;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus;
 import com.sungardas.enhancedsnapshots.dto.Dto;
 import com.sungardas.enhancedsnapshots.dto.ExceptionDto;
@@ -55,4 +56,8 @@ public interface NotificationService {
     void updateRule(SnsRuleEntry ruleEntry);
 
     void deleteRule(String snsRuleId);
+
+    void notifyViaSns(TaskEntry.TaskEntryType operation, TaskEntryStatus status, String volumeId);
+
+
 }

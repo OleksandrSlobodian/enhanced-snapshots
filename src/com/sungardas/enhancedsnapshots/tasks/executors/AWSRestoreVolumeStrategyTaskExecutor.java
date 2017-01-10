@@ -25,7 +25,7 @@ import java.text.MessageFormat;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus.RUNNING;
+import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus.*;
 import static com.sungardas.enhancedsnapshots.enumeration.TaskProgress.FAIL_CLEANING;
 import static com.sungardas.enhancedsnapshots.enumeration.TaskProgress.INTERRUPTED_CLEANING;
 
@@ -318,6 +318,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         taskEntry.setProgress(TaskProgress.DONE.name());
         taskService.complete(taskEntry);
         LOG.info("{} task {} was completed", taskEntry.getType(), taskEntry.getId());
+        notificationService.notifyViaSns(TaskEntry.TaskEntryType.RESTORE, COMPLETE, taskEntry.getVolume());
         mailService.notifyAboutSuccess(taskEntry);
     }
 
@@ -396,6 +397,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         LOG.error(e);
         taskEntry.setStatus(TaskEntry.TaskEntryStatus.ERROR.getStatus());
         taskRepository.save(taskEntry);
+        notificationService.notifyViaSns(TaskEntry.TaskEntryType.RESTORE, ERROR, taskEntry.getVolume());
         mailService.notifyAboutError(taskEntry, e);
     }
 

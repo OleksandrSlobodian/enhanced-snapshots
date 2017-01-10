@@ -9,4 +9,8 @@ import java.util.List;
 @EnableScan
 public interface SnsRuleRepository extends CrudRepository<SnsRuleEntry, String> {
     List<SnsRuleEntry> findAll();
+
+    List<SnsRuleEntry> findByOperationAndStatusAndVolumeId(String operation, String status, String volumeId);
+    List<SnsRuleEntry> findByOperationAndStatusAndVolumeIdIsNull(String operation, String status);
+
 }

@@ -243,6 +243,7 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
         dto.setMessage("Done");
         dto.setProgress(100);
         notificationService.notifyAboutTaskProgress(dto);
+        notificationService.notifyViaSns(TaskEntry.TaskEntryType.BACKUP, TaskEntry.TaskEntryStatus.ERROR, taskEntry.getVolume());
         mailService.notifyAboutError(taskEntry, e);
     }
 
@@ -395,6 +396,7 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
         LOG.info("Task completed.");
         checkThreadInterruption(taskEntry);
         retentionService.apply();
+        notificationService.notifyViaSns(TaskEntry.TaskEntryType.BACKUP, COMPLETE, taskEntry.getVolume());
         mailService.notifyAboutSuccess(taskEntry);
     }
 
