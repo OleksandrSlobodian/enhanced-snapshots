@@ -1,7 +1,10 @@
 export default function Auth (Storage, $q, $http, BASE_URL) {
     "ngInject";
+    //var sessionUrl = `${BASE_URL}login`;
+    //var logoutUrl = BASE_URL + "logout";
     var sessionUrl = BASE_URL + "./rest/auth";
     var logoutUrl = BASE_URL + "./rest/logout";
+
     var statuses = {
         404: "Service is unavailable",
         401: "Your authentication information was incorrect. Please try again"

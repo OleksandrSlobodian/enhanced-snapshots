@@ -1,5 +1,6 @@
 import './components/auth/login.html';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '../assets/styles/style.css';
 
 import WebServices from './services';
 import WebFilters from './filters';

@@ -1,6 +1,7 @@
 export default function RunConfig ($stateProvider, $urlRouterProvider) {
     "ngInject";
-    $urlRouterProvider.otherwise("/app/volumes");
+    //$urlRouterProvider.otherwise("/app/volumes");
+    $urlRouterProvider.otherwise("/loader");//andr changes
 
     const authenticated = ($rootScope) => {
         "ngInject";
@@ -30,8 +31,29 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
         return deferred.promise;
     };
 
-    const doRefresh = (Users, $q, Storage) => {
+    //const doRefresh = (Users, $q, Storage, Auth, $rootScope, System) => {
+    //    "ngInject";
+    //    $rootScope.isLoading = true;
+    //    var deferred = $q.defer();
+    //
+    //    var promises = [System.get(), Users.refreshCurrent()];
+    //    $q.all(promises).then(function (results) {
+    //        if (results[0].ssoMode != undefined) {
+    //            //response for System.get
+    //            Storage.save("ssoMode", {"ssoMode": results[0].ssoMode});
+    //        }
+    //        if (results[1].status === 200) {
+    //            deferred.resolve(results[1].status)
+    //            } else {
+    //            deferred.resolve(false)
+    //        }
+    //    });
+    //
+    //    return deferred.promise;
+    //};
+    const doRefresh = (Users, $q, Storage, $rootScope) => {
         "ngInject";
+        $rootScope.isLoading = true;
         var deferred = $q.defer();
 
         Users.refreshCurrent().then(function (data) {
@@ -143,6 +165,23 @@ export default function RunConfig ($stateProvider, $urlRouterProvider) {
             resolve: {
                 refreshUserResult: doRefresh
             }
+        })
+        //TODO: andrey changes
+        .state('loader', {
+            url: "/loader",
+            template: '<div class="loading">'+
+                '<div class="text-center spinner-container">' +
+                '<span class="glyphicon glyphicon-refresh text-muted spin"></span>'+
+                '</div> </div>',
+            controller: "LoaderController"
+        })
+        .state('logout', {
+            url: "/logout",
+            template: '<div class="loading">'+
+                '<div class="text-center spinner-container">' +
+                '<span class="glyphicon glyphicon-refresh text-muted spin"></span>'+
+                '</div> </div>',
+            controller: "LogoutController"
         })
         //TODO: move to future feature folder
         .state('registration', {

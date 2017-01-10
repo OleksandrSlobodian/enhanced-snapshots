@@ -3,8 +3,6 @@ const webpack = require('webpack');
 const autoprefixer = require('autoprefixer');
 const HtmlPlugin = require('html-webpack-plugin');
 const ExtractTextPlugin = require("extract-text-webpack-plugin");
-//const ngAnnotatePlugin = require('ng-annotate-webpack-plugin');
-//const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     //context: path.resolve(__dirname, 'WebContent'),
@@ -35,8 +33,8 @@ module.exports = {
             poll: 1000
         },
         proxy: {
-            '/rest/': {
-                target: 'http://localhost:8080',
+            '/': {
+                target: 'http://localhost:8080/',
                 secure: false
             }
         }
@@ -44,6 +42,10 @@ module.exports = {
     resolve: {
         modulesDirectories: [ 'node_modules'],
         extensions: [ '', '.js', '.css', '.json' ]
+        //alias: {
+        //    Stomp: './node_modules/stomp-client',
+        //    'angular-awesome-slider': path.resolve(__dirname, 'node_modules', 'angular-awesome-slider', 'dist', 'angular-awesome-slider.js')
+        //}
     },
 
     module: {
@@ -64,8 +66,7 @@ module.exports = {
             {
                 test: /\.css$/,
                 loader: ExtractTextPlugin.extract('style', 'css-loader'),
-                //loader: "style-loader!css-loader",
-                exclude: path.resolve(__dirname, 'index.css'),
+                exclude: path.resolve(__dirname, 'index.css')
             },
             {
                 test: /\.(ttf|eot|woff|woff2|png|ico|jpg|jpeg|gif|svg)$/i,
@@ -73,10 +74,6 @@ module.exports = {
                     "url-loader?mimetype=image/png"
                 ]
             }
-            //{
-            //    test: /\.png$/,
-            //    loader: "url-loader?mimetype=image/png"
-            //}
         ]
     },
     plugins: [
@@ -85,17 +82,9 @@ module.exports = {
             '_': 'lodash',
             '$': 'jquery',
             'jQuery': 'jquery',
+            //'SockJS': 'SockJS',
             'window.jQuery': 'jquery'
         }),
-
-        //new CopyWebpackPlugin([
-        //    {
-        //        from: '../WebContent',
-        //        to: 'C:/Program Files/apache-tomcat-8.5.8/webapps/ROOT'
-        //    }
-        //], {
-        //    copyUnmodified: true
-        //}),
 
         new HtmlPlugin({
             title: 'Sungard Availability Services | Enhanced Snapshots',
