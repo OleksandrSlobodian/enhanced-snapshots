@@ -65,9 +65,6 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
     @Autowired
     private VolumeService volumeService;
 
-    @Autowired
-    private MailService mailService;
-
     private String instanceId = SystemUtils.getInstanceId();
 
 
@@ -217,7 +214,7 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
         dto.setMessage("Done");
         dto.setProgress(100);
         notificationService.notifyAboutTaskProgress(dto);
-        mailService.notifyAboutSystemStatus("Backup task for volume with id: " + taskEntry.getVolume() + " was canceled");
+        notificationService.notifyAboutSystemStatus("Backup task for volume with id: " + taskEntry.getVolume() + " was canceled");
     }
 
     private void failCleaningStep(TaskEntry taskEntry, Volume tempVolume, Exception e) {
@@ -244,7 +241,7 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
         dto.setProgress(100);
         notificationService.notifyAboutTaskProgress(dto);
         notificationService.notifyViaSns(TaskEntry.TaskEntryType.BACKUP, TaskEntry.TaskEntryStatus.ERROR, taskEntry.getVolume());
-        mailService.notifyAboutError(taskEntry, e);
+        notificationService.notifyAboutError(taskEntry, e);
     }
 
     private void startedStep(TaskEntry taskEntry) {
@@ -397,7 +394,7 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
         checkThreadInterruption(taskEntry);
         retentionService.apply();
         notificationService.notifyViaSns(TaskEntry.TaskEntryType.BACKUP, COMPLETE, taskEntry.getVolume());
-        mailService.notifyAboutSuccess(taskEntry);
+        notificationService.notifyAboutSuccess(taskEntry);
     }
 
 

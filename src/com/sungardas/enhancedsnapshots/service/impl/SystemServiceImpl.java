@@ -19,7 +19,10 @@ import com.sungardas.enhancedsnapshots.dto.Cluster;
 import com.sungardas.enhancedsnapshots.dto.SystemConfiguration;
 import com.sungardas.enhancedsnapshots.dto.converter.MailConfigurationDocumentConverter;
 import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsException;
-import com.sungardas.enhancedsnapshots.service.*;
+import com.sungardas.enhancedsnapshots.service.CryptoService;
+import com.sungardas.enhancedsnapshots.service.NotificationService;
+import com.sungardas.enhancedsnapshots.service.SDFSStateService;
+import com.sungardas.enhancedsnapshots.service.SystemService;
 import com.sungardas.enhancedsnapshots.util.SystemUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -107,7 +110,7 @@ public class SystemServiceImpl implements SystemService {
     private CryptoService cryptoService;
 
     @Autowired
-    private MailService mailService;
+    private NotificationService notificationService;
     @Autowired
     private ClusterEventPublisher clusterEventPublisher;
 
@@ -118,7 +121,7 @@ public class SystemServiceImpl implements SystemService {
     @PostConstruct
     private void init() {
         currentConfiguration = configurationMediator.getCurrentConfiguration();
-        mailService.reconnect();
+        notificationService.reconnect();
     }
 
     @Override
@@ -295,7 +298,7 @@ public class SystemServiceImpl implements SystemService {
         configuration.setUUID(currentConfiguration.getUUID());
         if (configuration.getMailConfiguration() == null) {
             currentConfiguration.setMailConfigurationDocument(null);
-            mailService.disconnect();
+            notificationService.disconnect();
         } else {
             currentConfiguration.setMailConfigurationDocument(MailConfigurationDocumentConverter.toMailConfigurationDocument(configuration.getMailConfiguration(),
                     cryptoService, currentConfiguration.getConfigurationId(), currentConfiguration.getMailConfigurationDocument().getPassword()));
@@ -336,7 +339,7 @@ public class SystemServiceImpl implements SystemService {
         configurationMediator.setCurrentConfiguration(currentConfiguration);
         clusterEventPublisher.settingsUpdated();
         if (mailReconnect) {
-            mailService.reconnect();
+            notificationService.reconnect();
         }
         if(currentConfiguration.isIaEnabled()) {
             sdfsStateService.enableS3IA();

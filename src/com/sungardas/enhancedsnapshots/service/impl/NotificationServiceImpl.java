@@ -10,6 +10,7 @@ import com.amazonaws.services.sns.model.AmazonSNSException;
 import com.amazonaws.services.sns.model.GetTopicAttributesRequest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sungardas.enhancedsnapshots.aws.dynamodb.model.MailConfigurationDocument;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.NotificationConfigurationEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.SnsRuleEntry;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry;
@@ -19,12 +20,15 @@ import com.sungardas.enhancedsnapshots.aws.dynamodb.repository.TaskRepository;
 import com.sungardas.enhancedsnapshots.dto.Dto;
 import com.sungardas.enhancedsnapshots.dto.ExceptionDto;
 import com.sungardas.enhancedsnapshots.dto.TaskProgressDto;
+import com.sungardas.enhancedsnapshots.exception.EmailNotificationException;
 import com.sungardas.enhancedsnapshots.exception.SnsNotificationException;
 import com.sungardas.enhancedsnapshots.service.MasterInitialization;
 import com.sungardas.enhancedsnapshots.service.NotificationService;
 import com.sungardas.enhancedsnapshots.service.SchedulerService;
 import com.sungardas.enhancedsnapshots.service.Task;
 import com.sungardas.enhancedsnapshots.util.SystemUtils;
+import freemarker.template.Configuration;
+import freemarker.template.Template;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +37,8 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import javax.mail.Session;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,7 +46,7 @@ import java.util.concurrent.Executors;
 import static com.sungardas.enhancedsnapshots.aws.dynamodb.model.TaskEntry.TaskEntryStatus.RUNNING;
 
 @Service
-public class NotificationServiceImpl implements NotificationService, MasterInitialization {
+public class NotificationServiceImpl extends SimpleNotificationServiceImpl implements NotificationService, MasterInitialization {
 
     private static final Logger LOG = LogManager.getLogger(NotificationServiceImpl.class);
 
@@ -77,18 +83,47 @@ public class NotificationServiceImpl implements NotificationService, MasterIniti
     @Value("${enhancedsnapshots.default.restore.threadPool.size}")
     private int restoreThreadPoolSize;
 
+    @Value("${enhancedsnapshots.mail.success.template.path}")
+    private String successTemplatePath;
+
+    @Value("${enhancedsnapshots.mail.success.subject}")
+    private String successSubject;
+
+    @Value("${enhancedsnapshots.mail.error.template.path}")
+    private String failTemplatePath;
+
+    @Value("${enhancedsnapshots.mail.error.subject}")
+    private String errorSubject;
+
+    @Value("${enhancedsnapshots.mail.info.subject}")
+    private String infoSubject;
+
     private ExecutorService eventsExecutorService = Executors.newSingleThreadExecutor();
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    private Template successTemplate;
+
+    private Template failTemplate;
+
+    private Session session;
+
     @PostConstruct
-    private void postConstruct() {
-        if (notificationConfigurationRepository.count() == 0) {
-            notificationConfigurationRepository.save(new NotificationConfigurationEntry());
-        }
+    private void postConstruct() throws IOException {
+        Configuration cfg = new Configuration(Configuration.VERSION_2_3_25);
+        cfg.setTemplateLoader(getTemplateLoader());
+
+        successTemplate = cfg.getTemplate(successTemplatePath);
+        failTemplate = cfg.getTemplate(failTemplatePath);
+        infoTemplate = cfg.getTemplate(systemInformationTemplatePath);
+        reconnect();
     }
 
     @Override
     public void init() {
+        if (notificationConfigurationRepository.count() == 0) {
+            notificationConfigurationRepository.save(new NotificationConfigurationEntry());
+        }
         schedulerService.addTask(new Task() {
             @Override
             public String getId() {
@@ -143,7 +178,7 @@ public class NotificationServiceImpl implements NotificationService, MasterIniti
 
     @Override
     public void setSnsTopic(String snsTopic) {
-        if(snsTopic != null && !snsTopic.isEmpty()) {
+        if (snsTopic != null && !snsTopic.isEmpty()) {
             checkSnsTopic(snsTopic);
         }
         NotificationConfigurationEntry entry = getNotificationConfiguration();
@@ -178,10 +213,80 @@ public class NotificationServiceImpl implements NotificationService, MasterIniti
         eventsExecutorService.execute(() -> sendSnsEvent(operation, status, volumeId));
     }
 
+    @Override
+    public boolean reconnect() {
+        MailConfigurationDocument configuration = configurationMediator.getMailConfiguration();
+        session = getSession(configuration);
+        if (session == null) {
+            LOG.info("Disconnected from SMTP server");
+            return false;
+        } else {
+            LOG.info("Connected to SMTP server");
+            return true;
+        }
+    }
+
+    @Override
+    public void disconnect() {
+        LOG.info("Disconnected from SMTP server");
+        session = null;
+    }
+
+    @Override
+    public void notifyAboutSuccess(TaskEntry taskEntry) {
+        if (session != null && configurationMediator.getMailConfiguration().getEvents().isSuccess()) {
+            Set<String> recipients = configurationMediator.getMailConfiguration().getRecipients();
+            if (recipients != null && !recipients.isEmpty()) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("domain", configurationMediator.getDomain());
+                data.put("task", taskEntry);
+                try {
+                    notifyViaEmail(data, successSubject, successTemplate, recipients);
+                } catch (EmailNotificationException e) {
+                    LOG.error(e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void notifyAboutError(TaskEntry taskEntry, Exception e) {
+        if (session != null && configurationMediator.getMailConfiguration().getEvents().isError()) {
+            Set<String> recipients = configurationMediator.getMailConfiguration().getRecipients();
+            if (recipients != null && !recipients.isEmpty()) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("domain", configurationMediator.getDomain());
+                data.put("task", taskEntry);
+                data.put("errorMessage", e.getLocalizedMessage());
+                try {
+                    notifyViaEmail(data, errorSubject, failTemplate, recipients);
+                } catch (EmailNotificationException ex) {
+                    LOG.error(e);
+                }
+            }
+        }
+    }
+
+    @Override
+    public void notifyAboutSystemStatus(String message) {
+        if (session != null && configurationMediator.getMailConfiguration().getEvents().isInfo()) {
+            Set<String> recipients = configurationMediator.getMailConfiguration().getRecipients();
+            if (recipients != null && !recipients.isEmpty()) {
+                Map<String, String> data = new HashMap<>();
+                data.put("domain", configurationMediator.getDomain());
+                data.put("message", message);
+                try {
+                    notifyViaEmail(data, infoSubject, infoTemplate, recipients);
+                } catch (EmailNotificationException e) {
+                    LOG.error(e);
+                }
+            }
+        }
+    }
 
     private void sendSnsEvent(TaskEntry.TaskEntryType operation, TaskEntry.TaskEntryStatus status, String volumeId) {
         String snsTopic = getNotificationConfiguration().getSnsTopic();
-        if(snsTopic != null && !snsTopic.isEmpty()) {
+        if (snsTopic != null && !snsTopic.isEmpty()) {
             List<SnsRuleEntry> rules = snsRuleRepository.findByOperationAndStatusAndVolumeId(operation.name(),
                     status.name(),
                     volumeId);
@@ -228,6 +333,7 @@ public class NotificationServiceImpl implements NotificationService, MasterIniti
 
     /**
      * Check is sns topic valid
+     *
      * @param snsTopic topicArn
      * @throws com.sungardas.enhancedsnapshots.exception.SnsNotificationException if topicArn invalid
      */
@@ -255,4 +361,16 @@ public class NotificationServiceImpl implements NotificationService, MasterIniti
         return taskRepository.countByRegularAndTypeAndStatus(Boolean.FALSE.toString(), type.getType(), TaskEntry.TaskEntryStatus.QUEUED.getStatus()) +
                 taskRepository.countByRegularAndTypeAndStatus(Boolean.FALSE.toString(), type.getType(), TaskEntry.TaskEntryStatus.WAITING.getStatus());
     }
+
+    private void notifyViaEmail(Map data, String subject, Template template, Set<String> recipients) {
+        eventsExecutorService.execute(() -> {
+            notifyViaEmail(data, subject, template, recipients, session, configurationMediator.getMailConfiguration().getFromMailAddress());
+            LOG.info("Email to {}  was successfully sent", recipients);
+        });
+    }
+
+    private Session getSession(MailConfigurationDocument configuration) {
+        return getSession(configuration, true);
+    }
+
 }
