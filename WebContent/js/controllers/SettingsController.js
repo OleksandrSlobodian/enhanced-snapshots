@@ -1,8 +1,9 @@
 'use strict';
 
 angular.module('web')
-    .controller('SettingsController', ['$rootScope', '$state', '$scope', 'System', 'currentUser', 'Users', '$modal', 'Configuration',
-        function ($rootScope, $state, $scope, System, currentUser, Users, $modal, Configuration) {
+    .controller('SettingsController', ['$rootScope', '$state', '$scope', 'System', 'currentUser', 'Users', '$modal',
+                'Configuration', 'SnsTopic',
+        function ($rootScope, $state, $scope, System, currentUser, Users, $modal, Configuration, SnsTopic) {
         if($state.current.name == 'app.settings') {
             $state.go('app.settings.systemInfo');
         }
@@ -55,6 +56,15 @@ angular.module('web')
             console.log(e);
             $rootScope.isLoading = false;
         });
+
+        SnsTopic.get().then(function (results) {
+            $scope.SnsTopic = results;
+            //$scope.initialSettings = angular.copy(data)
+        })
+        .finally(function () {
+            $rootScope.isLoading = false;
+        });
+
 
         $scope.backup = function () {
             var modalScope = $scope.$new(true);

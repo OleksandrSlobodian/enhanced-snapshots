@@ -217,7 +217,20 @@
                     </div>
                     <div class="col-sm-12 text-danger small" ng-show="sdfs.sdfsLocalCacheSize.$error.required"> {{STRINGS.sdfs.sdfsLocalCacheSize.empty}} </div>
                     <div class="col-sm-12 text-danger small" ng-show="sdfs.volumeSize.$error.required"> {{STRINGS.sdfs.volumeSize.empty}} </div>
+
                 </form>
+            </div>
+
+            <div class="full-width">
+                <div class="col-sm-offset-5 col-sm-7 text-left">
+                    <button ng-show="isNewValues()"
+                            class="settings btn btn-info" title="Update Settings"
+                            ng-click="updateSettings()"
+                            ng-disabled="otherSettings.$invalid ||
+                                sdfs.$invalid || volumeTypes.$invalid">
+                        Update Settings
+                    </button>
+                </div>
             </div>
 
         </div>
