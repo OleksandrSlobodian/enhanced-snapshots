@@ -2,13 +2,16 @@
     <div class="flex-container">
         <div class="flex-5 card-content flex-center">
             <div class="full-width form-group">
-
                 <div class="col-sm-12">
                     <div class="settings field-label col-sm-4 text-right">SNS topic:</div>
                     <div class="input-group col-sm-4" style="padding: 0px 10px">
-                        <input type="text" class="form-control col-sm-4" placeholder="Type topic...">
+                        <input type="text"
+                               class="form-control col-sm-4"
+                               placeholder="Type topic..."
+                               value={{SnsTopic.topic}}>
                           <span class="input-group-btn">
-                            <button class="btn btn-primary" type="button">Apply</button>
+                              {{notification}}
+                            <button class="btn btn-primary" type="button" ng-click="applyTopic()">Apply</button>
                           </span>
                     </div>
                 </div>
