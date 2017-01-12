@@ -9,7 +9,7 @@ import com.sungardas.enhancedsnapshots.dto.TaskProgressDto;
 
 import java.util.List;
 
-public interface NotificationService {
+public interface NotificationService extends SimpleNotificationService{
 
     /**
      * Send notification to user about running task progress
@@ -59,5 +59,37 @@ public interface NotificationService {
 
     void notifyViaSns(TaskEntry.TaskEntryType operation, TaskEntryStatus status, String volumeId);
 
+    /**
+     * reconnect to mail server
+     *
+     * @return true if connect succeeded
+     */
+    boolean reconnect();
+
+    /**
+     * disconnect from mail server
+     */
+    void disconnect();
+
+    /**
+     * Notify users about completed task
+     * @param taskEntry task
+     */
+    void notifyAboutSuccess(TaskEntry taskEntry);
+
+
+    /**
+     * Notify about error
+     * @param taskEntry task
+     * @param e exception
+     */
+    void notifyAboutError(TaskEntry taskEntry, Exception e);
+
+
+    /**
+     * Notify about system status
+     * @param message system message
+     */
+    void notifyAboutSystemStatus(String message);
 
 }

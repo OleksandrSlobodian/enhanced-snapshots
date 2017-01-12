@@ -7,7 +7,7 @@ import com.sungardas.enhancedsnapshots.dto.MailConfigurationTestDto;
 import com.sungardas.enhancedsnapshots.dto.converter.BucketNameValidationDTO;
 import com.sungardas.enhancedsnapshots.exception.ConfigurationException;
 import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsException;
-import com.sungardas.enhancedsnapshots.service.MailService;
+import com.sungardas.enhancedsnapshots.service.SimpleNotificationService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +36,7 @@ class InitController {
     private InitConfigurationDto configurationDto;
 
     @Autowired
-    private MailService mailService;
+    private SimpleNotificationService notificationService;
 
     @PostConstruct
     private void init() {
@@ -104,7 +104,7 @@ class InitController {
 
     @RequestMapping(value = "/system/mail/configuration/test", method = RequestMethod.POST)
     public ResponseEntity mailConfigurationTest(@RequestBody MailConfigurationTestDto dto) {
-        mailService.testConfiguration(dto.getMailConfiguration(), dto.getTestEmail(), dto.getDomain());
+        notificationService.testConfiguration(dto.getMailConfiguration(), dto.getTestEmail(), dto.getDomain());
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -119,11 +119,11 @@ class InitController {
         if (name.length != 2 && file.length != name.length) {
             return new ResponseEntity<>("Failed to upload files. Saml certificate and IDP metadata should be provided", HttpStatus.BAD_REQUEST);
         }
-        if(name[0].equals(idpMetadata) && name[1].equals(samlCertPem)){
+        if (name[0].equals(idpMetadata) && name[1].equals(samlCertPem)) {
             initConfigurationService.saveAndProcessSAMLFiles(file[1], file[0]);
         } else if (name[0].equals(samlCertPem) && name[0].equals(idpMetadata)) {
             initConfigurationService.saveAndProcessSAMLFiles(file[0], file[1]);
-        } else{
+        } else {
             return new ResponseEntity<>("Failed to upload SAML files. Saml certificate and IDP metadata should be provided", HttpStatus.BAD_REQUEST);
         }
         return new ResponseEntity<>("File uploaded successfully", HttpStatus.OK);

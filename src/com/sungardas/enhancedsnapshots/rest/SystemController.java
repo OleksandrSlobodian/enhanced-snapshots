@@ -3,7 +3,7 @@ package com.sungardas.enhancedsnapshots.rest;
 import com.sungardas.enhancedsnapshots.components.ConfigurationMediator;
 import com.sungardas.enhancedsnapshots.dto.MailConfigurationTestDto;
 import com.sungardas.enhancedsnapshots.dto.SystemConfiguration;
-import com.sungardas.enhancedsnapshots.service.MailService;
+import com.sungardas.enhancedsnapshots.service.NotificationService;
 import com.sungardas.enhancedsnapshots.service.SDFSStateService;
 import com.sungardas.enhancedsnapshots.service.SystemService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,7 +27,7 @@ public class SystemController {
     @Autowired
     private SystemService systemService;
     @Autowired
-    private MailService mailService;
+    private NotificationService mailService;
     @Autowired
     private ConfigurationMediator configurationMediator;
     @Value("${enhancedsnapshots.default.maxIopsPerGb}")

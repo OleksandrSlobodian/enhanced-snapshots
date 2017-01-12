@@ -56,9 +56,6 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
     @Autowired
     private TaskService taskService;
 
-    @Autowired
-    private MailService mailService;
-
     @Override
     public void execute(TaskEntry taskEntry) {
         switch (taskEntry.progress()) {
@@ -127,7 +124,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         } catch (EnhancedSnapshotsTaskInterruptedException e) {
             LOG.info("Restore task was canceled");
             taskRepository.delete(taskEntry);
-            mailService.notifyAboutSystemStatus("Restore task for volume with id" + taskEntry.getVolume() + " was canceled");
+            notificationService.notifyAboutSystemStatus("Restore task for volume with id" + taskEntry.getVolume() + " was canceled");
             setProgress(taskEntry, TaskProgress.DONE);
         }
     }
@@ -319,7 +316,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         taskService.complete(taskEntry);
         LOG.info("{} task {} was completed", taskEntry.getType(), taskEntry.getId());
         notificationService.notifyViaSns(TaskEntry.TaskEntryType.RESTORE, COMPLETE, taskEntry.getVolume());
-        mailService.notifyAboutSuccess(taskEntry);
+        notificationService.notifyAboutSuccess(taskEntry);
     }
 
 
@@ -387,7 +384,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         cleaningStep(taskEntry);
         LOG.info("Restore task was canceled");
         taskRepository.delete(taskEntry);
-        mailService.notifyAboutSystemStatus("Restore task for volume with id" + taskEntry.getVolume() + " was canceled");
+        notificationService.notifyAboutSystemStatus("Restore task for volume with id" + taskEntry.getVolume() + " was canceled");
     }
 
     private void failCleaningStep(TaskEntry taskEntry, Exception e) {
@@ -398,7 +395,7 @@ public class AWSRestoreVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskE
         taskEntry.setStatus(TaskEntry.TaskEntryStatus.ERROR.getStatus());
         taskRepository.save(taskEntry);
         notificationService.notifyViaSns(TaskEntry.TaskEntryType.RESTORE, ERROR, taskEntry.getVolume());
-        mailService.notifyAboutError(taskEntry, e);
+        notificationService.notifyAboutError(taskEntry, e);
     }
 
     private void addTags(String resourceId, BackupEntry backupEntry) {
