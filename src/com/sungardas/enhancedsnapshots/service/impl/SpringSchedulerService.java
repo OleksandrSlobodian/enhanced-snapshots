@@ -133,7 +133,6 @@ public class SpringSchedulerService implements SchedulerService, MasterInitializ
 
                 BeanUtils.copyProperties(taskEntry, newTask);
                 newTask.setId(UUID.randomUUID().toString());
-                newTask.setSchedulerManual(false);
                 newTask.setRegular(false);
                 newTask.setSchedulerTime(String.valueOf(DateTime.now().getMillis()));
 

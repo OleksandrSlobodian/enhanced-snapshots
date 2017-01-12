@@ -1,6 +1,8 @@
 package com.sungardas.enhancedsnapshots.aws.dynamodb.model;
 
-import com.amazonaws.services.dynamodbv2.datamodeling.*;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBHashKey;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTypeConverted;
 import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.util.json.Jackson;
 import com.sungardas.enhancedsnapshots.aws.dynamodb.Marshaller.ListTagDynamoDBTypeConverter;
@@ -18,7 +20,6 @@ public class TaskEntry {
     private String status;
     private String type;
     private String volume;
-    private String schedulerManual;
     private String schedulerName;
     private String schedulerTime;
     private String backupFileName;
@@ -90,18 +91,6 @@ public class TaskEntry {
 
     public void setVolume(String volume) {
         this.volume = volume;
-    }
-
-    public String getSchedulerManual() {
-        return String.valueOf(schedulerManual);
-    }
-
-    public void setSchedulerManual(boolean schedulerManual) {
-        this.schedulerManual = String.valueOf(schedulerManual);
-    }
-
-    public void setSchedulerManual(String schedulerManual) {
-        this.schedulerManual = schedulerManual;
     }
 
     public String getSchedulerName() {

@@ -35,14 +35,11 @@ public class TaskDtoConverterTest {
         taskDto.setType(type);
         taskDto.setStatus(status);
         taskDto.setVolumes(volumes);
-        taskDto.setSchedulerManual(schedulerManual);
         taskDto.setSchedulerTime(schedulerTime);
         taskDto.setSchedulerName(schedulerName);
         taskDto.setBackupFileName(backupFileName);
         taskDto.setCron(cron);
-        taskDto.setZone(zone);
         taskDto.setRegular(regular);
-        taskDto.setEnabled(enabled);
     }
 
     @Test
@@ -58,7 +55,6 @@ public class TaskDtoConverterTest {
             // backup priority is 0
             Assert.assertTrue(taskEntry.getType().equals(type));
             Assert.assertTrue(taskEntry.getStatus().equals(status));
-            Assert.assertTrue(taskEntry.getSchedulerManual().equals(schedulerManual));
             Assert.assertTrue(taskEntry.getSchedulerName().equals(schedulerName));
             //TODO: find out what if instance ids were different while backup of several volumes ???
             Assert.assertTrue(taskEntry.getCron().equals(cron));

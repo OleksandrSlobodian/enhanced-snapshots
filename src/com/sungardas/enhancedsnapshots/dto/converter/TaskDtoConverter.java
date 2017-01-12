@@ -39,7 +39,6 @@ public class TaskDtoConverter {
 		TaskEntry task = new TaskEntry();
 		BeanUtils.copyProperties(taskDto, task);
 		task.setBackupFileName(taskDto.getBackupFileName());
-		task.setAvailabilityZone(taskDto.getZone());
 		return task;
 	}
 

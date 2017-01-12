@@ -76,6 +76,7 @@ public class TaskServiceImpl implements TaskService, ClusterEventListener {
 
     @Override
     public Map<String, String> createTask(TaskDto taskDto) {
+        taskDto.setSchedulerTime(System.currentTimeMillis()+"");
         Map<String, String> messages = new HashMap<>();
         String configurationId = configurationMediator.getConfigurationId();
         List<TaskEntry> validTasks = new ArrayList<>();
@@ -194,6 +195,17 @@ public class TaskServiceImpl implements TaskService, ClusterEventListener {
         try {
             return TaskDtoConverter.convert(taskRepository.findByRegularAndVolume(Boolean.TRUE.toString(),
                     volumeId));
+        } catch (RuntimeException e) {
+            notificationService.notifyAboutError(new ExceptionDto("Getting tasks have failed", "Failed to get tasks."));
+            LOG.error("Failed to get tasks.", e);
+            throw new DataAccessException("Failed to get tasks.", e);
+        }
+    }
+
+    @Override
+    public List<TaskDto> getAllRegularTasks() {
+        try {
+            return TaskDtoConverter.convert(taskRepository.findByRegular(Boolean.TRUE.toString()));
         } catch (RuntimeException e) {
             notificationService.notifyAboutError(new ExceptionDto("Getting tasks have failed", "Failed to get tasks."));
             LOG.error("Failed to get tasks.", e);

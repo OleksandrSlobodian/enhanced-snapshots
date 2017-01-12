@@ -13,6 +13,8 @@ public interface TaskService {
 
     List<TaskDto> getAllRegularTasks(String volumeId);
 
+    List<TaskDto> getAllRegularTasks();
+
     void removeTask(String Id);
 
     boolean exists(String id);

@@ -1,27 +1,19 @@
 package com.sungardas.enhancedsnapshots.rest;
 
-import java.text.ParseException;
-import java.util.UUID;
-
 import com.sungardas.enhancedsnapshots.dto.MessageDto;
 import com.sungardas.enhancedsnapshots.dto.TaskDto;
 import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsException;
 import com.sungardas.enhancedsnapshots.service.SystemService;
 import com.sungardas.enhancedsnapshots.service.TaskService;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
+import java.security.Principal;
+import java.text.ParseException;
+import java.util.UUID;
 
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 import static org.springframework.http.HttpStatus.OK;
@@ -65,10 +57,20 @@ public class TaskController {
     }
 
     @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
-    @RequestMapping(method = RequestMethod.GET, value = "/regular/{valueId}")
-    public ResponseEntity getRegularTasks(@PathVariable String valueId) throws ParseException {
+    @RequestMapping(method = RequestMethod.GET, value = "/regular/{volumeId}")
+    public ResponseEntity getRegularTasks(@PathVariable String volumeId) throws ParseException {
         try {
-            return new ResponseEntity(taskService.getAllRegularTasks(valueId), OK);
+            return new ResponseEntity(taskService.getAllRegularTasks(volumeId), OK);
+        } catch (EnhancedSnapshotsException e) {
+            return new ResponseEntity(e.getMessage(), HttpStatus.NO_CONTENT);
+        }
+    }
+
+    @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
+    @RequestMapping(method = RequestMethod.GET, value = "/regular")
+    public ResponseEntity getRegularTasks() throws ParseException {
+        try {
+            return new ResponseEntity(taskService.getAllRegularTasks(), OK);
         } catch (EnhancedSnapshotsException e) {
             return new ResponseEntity(e.getMessage(), HttpStatus.NO_CONTENT);
         }
@@ -76,7 +78,10 @@ public class TaskController {
 
     @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
     @RequestMapping(method = RequestMethod.POST)
-    public ResponseEntity<MessageDto> addTask(@RequestBody TaskDto taskInfo) {
+    public ResponseEntity<MessageDto> addTask(@RequestBody TaskDto taskInfo, Principal principal) {
+        if(Boolean.FALSE.toString().equals(taskInfo.getRegular())) {
+            taskInfo.setSchedulerName(principal.getName());
+        }
         taskInfo.setId(UUID.randomUUID().toString());
         return new ResponseEntity(new MessageDto(taskService.createTask(taskInfo)), OK);
     }
