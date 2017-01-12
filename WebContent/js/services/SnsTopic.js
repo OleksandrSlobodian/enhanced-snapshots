@@ -13,9 +13,26 @@ angular.module('web')
 
         };
 
+        var _send = function (SnsSettings) {
+            var deferred = $q.defer();
+            $http({
+                url: url,
+                method: "PUT",
+                data: SnsSettings
+            }).then(function (result) {
+                deferred.resolve(result.data);
+            }, function (e) {
+                deferred.reject(e);
+            });
+            return deferred.promise;
+        };
+
         return {
             get: function () {
                 return _get();
+            },
+            send: function (SnsSettings) {
+                return _send(SnsSettings)
             }
         }
     }]);
