@@ -97,6 +97,10 @@ public class TaskDto {
         return enabled;
     }
 
+    public void setEnabled(String enabled) {
+        this.enabled = enabled;
+    }
+
     public static class VolumeInfo {
         public String volumeId;
         public String zone;

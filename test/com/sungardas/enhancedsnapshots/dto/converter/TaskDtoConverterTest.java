@@ -40,6 +40,7 @@ public class TaskDtoConverterTest {
         taskDto.setBackupFileName(backupFileName);
         taskDto.setCron(cron);
         taskDto.setRegular(regular);
+        taskDto.setEnabled(enabled);
     }
 
     @Test
