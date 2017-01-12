@@ -27,20 +27,6 @@ angular.module('web')
             return deferred.promise;
         };
 
-        //var _remove = function (deletionData) {
-        //    var deferred = $q.defer();
-        //    $http({
-        //        url: url,
-        //        method: "DELETE",
-        //        data: deletionData
-        //    }).then(function (deletionData) {
-        //    //$http.post(url + '/delete', deletionData).then(function (result) {
-        //        deferred.resolve(deletionData.data);
-        //    }, function (e) {
-        //        deferred.reject(e);
-        //    });
-        //    return deferred.promise;
-        //};
         var _remove = function (deletionData) {
             return $http.delete(url + '/' + deletionData)
                 .success(function () {

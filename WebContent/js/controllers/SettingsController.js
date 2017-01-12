@@ -60,7 +60,6 @@ angular.module('web')
 
         SnsTopic.get().then(function (results) {
             $scope.SnsTopic = results;
-            //$scope.initialSettings = angular.copy(data)
         })
         .finally(function () {
             $rootScope.isLoading = false;
@@ -68,7 +67,6 @@ angular.module('web')
 
         SnsOperation.get().then(function (results) {
             $scope.SnsOperations = results;
-            //$scope.initialSettings = angular.copy(data)
         })
         .finally(function () {
             $rootScope.isLoading = false;
@@ -76,7 +74,6 @@ angular.module('web')
 
         SnsStatus.get().then(function (results) {
             $scope.SnsStatus = results;
-            //$scope.initialSettings = angular.copy(data)
         })
         .finally(function () {
             $rootScope.isLoading = false;
@@ -84,7 +81,6 @@ angular.module('web')
 
         SnsRule.get().then(function (results) {
             $scope.SnsRule = results;
-            //$scope.initialSettings = angular.copy(data)
         })
         .finally(function () {
             $rootScope.isLoading = false;
@@ -101,7 +97,6 @@ angular.module('web')
             var firstUndefinedVolume = allVolumesIds.sort().indexOf(undefined);
             $scope.volumesIds = allVolumesIds.splice(0, firstUndefinedVolume);
             console.log($scope.volumesIds);
-            //$scope.initialSettings = angular.copy(data)
         })
         .finally(function () {
             $rootScope.isLoading = false;
