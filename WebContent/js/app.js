@@ -168,14 +168,14 @@ app.config(['$stateProvider', '$urlRouterProvider', '$httpProvider', function ($
         .state('app.settings.snsNotification', {
             url: "/settings/snsNotification",
             templateUrl: "partials/settingsSnsNotification.html",
-            controller: "SettingsController",
+            controller: "SettingsSnsNotificationController",
             resolve: {
                 currentUser: currentUser
             }
         }).state('app.settings.emailNotification', {
             url: "/settings/emailNotification",
             templateUrl: "partials/settingsEmailNotification.html",
-            controller: "SettingsController",
+            controller: "SettingsEmailNotificationController",
             resolve: {
                 currentUser: currentUser
             }
