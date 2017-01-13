@@ -19,6 +19,7 @@ public class TaskDto {
     private String regular = Boolean.FALSE.toString();
     private String enabled;
     private String instanceToAttach;
+    private boolean consistentBackup;
 
 
     public TaskDto() {
@@ -118,6 +119,15 @@ public class TaskDto {
     public void setZone(String zone) {
         this.zone = zone;
     }
+
+    public boolean isConsistentBackup() {
+        return consistentBackup;
+    }
+
+    public void setConsistentBackup(boolean consistentBackup) {
+        this.consistentBackup = consistentBackup;
+    }
+
 
 
     public String getInstanceToAttach() {
