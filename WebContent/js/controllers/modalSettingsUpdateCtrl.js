@@ -14,9 +14,17 @@ angular.module('web')
             $rootScope.isLoading = true;
             System.send(newSettings).then(function () {
                 $scope.state = "done";
+
+                $scope.settings.mailConfiguration = '';
+                $scope.settings.domain = '';
+
                 $rootScope.isLoading = false;
             }, function (e) {
                 $scope.state = "failed";
+
+                $scope.settings.mailConfiguration = '';
+                $scope.settings.domain = '';
+
                 $rootScope.isLoading = false;
             });
         };
