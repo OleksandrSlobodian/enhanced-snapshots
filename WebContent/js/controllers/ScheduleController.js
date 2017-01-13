@@ -23,7 +23,9 @@ angular.module('web')
                 schedulerName: schedule.name,
                 status: "waiting",
                 type: "backup",
-                volumes: [$scope.volumeId]
+                volumes: [{
+                    volumeId: $scope.volumeId
+                }]
             }
         };
 
