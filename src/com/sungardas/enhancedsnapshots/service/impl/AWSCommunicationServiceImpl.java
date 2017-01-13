@@ -5,6 +5,10 @@ import com.amazonaws.services.ec2.model.*;
 import com.amazonaws.services.ec2.model.Tag;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.*;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
+import com.amazonaws.services.simplesystemsmanagement.model.DescribeInstanceInformationRequest;
+import com.amazonaws.services.simplesystemsmanagement.model.InstanceInformation;
+import com.amazonaws.services.simplesystemsmanagement.model.InstanceInformationFilter;
 import com.sungardas.enhancedsnapshots.components.ConfigurationMediator;
 import com.sungardas.enhancedsnapshots.exception.EnhancedSnapshotsException;
 import com.sungardas.enhancedsnapshots.service.AWSCommunicationService;
@@ -35,6 +39,9 @@ public class AWSCommunicationServiceImpl implements AWSCommunicationService {
     private final static int MAX_IOPS_VALUE = 20_000;
     private final static String INSTANCE_RUNNING_STATE = "running";
     private final static String INSTANCE_STOPPED_STATE = "stopped";
+
+    @Autowired
+    private AWSSimpleSystemsManagement awsSimpleSystemsManagement;
 
     @Autowired
     private AmazonS3 amazonS3;
@@ -273,6 +280,34 @@ public class AWSCommunicationServiceImpl implements AWSCommunicationService {
         }
         LOG.error("Failed to sync volume {}. Volume does not exist.", volume.getVolumeId());
         throw new AWSCommunicationServiceException("Can not sync volume. Volume " + volume.getVolumeId() + " does not exist.");
+    }
+
+    @Override
+    public boolean isRootVolume(String volumeId) {
+        String instanceId = getInstanceVolumeBelongsTo(volumeId);
+        if (instanceId != null) {
+            getInstance(instanceId).getRootDeviceName().equals(getVolume(volumeId).getAttachments().get(0).getDevice());
+        }
+        return false;
+    }
+
+    @Override
+    public InstanceInformation getSSMInstanceInformation(String instanceId) {
+        List<InstanceInformation> list = awsSimpleSystemsManagement.describeInstanceInformation(new DescribeInstanceInformationRequest()
+                .withInstanceInformationFilterList(new InstanceInformationFilter().withKey("InstanceIds").withValueSet(instanceId))).getInstanceInformationList();
+        if (!list.isEmpty()) {
+            return list.get(0);
+        }
+        return null;
+    }
+
+    @Override
+    public String getInstanceVolumeBelongsTo(String volumeId) {
+        Volume volume = getVolume(volumeId);
+        if (volume.getAttachments().size() > 0) {
+            return volume.getAttachments().get(0).getInstanceId();
+        }
+        return null;
     }
 
     @Override

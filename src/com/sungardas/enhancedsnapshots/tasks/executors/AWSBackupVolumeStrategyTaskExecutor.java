@@ -45,6 +45,9 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
     private BackupRepository backupRepository;
 
     @Autowired
+    private BackupService backupService;
+
+    @Autowired
     private SnapshotService snapshotService;
 
     @Autowired
@@ -75,6 +78,11 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
     public void execute(final TaskEntry taskEntry) {
         Volume tempVolume = taskEntry.getTempVolumeId() != null ? awsCommunication.getVolume(taskEntry.getTempVolumeId()) : null;
         try {
+            if (taskEntry.getProgress().equals(TaskProgress.NONE) && taskEntry.isConsistentBackup()) {
+                if (taskEntry.isConsistentBackup() && taskEntry.isConsistentBackup() != backupService.consistentBackupSupported(taskEntry.getVolume())) {
+                    taskEntry.setConsistentBackup(false);
+                }
+            }
             LOG.info("Starting backup process for volume {}", taskEntry.getVolume());
             LOG.info("{} task state was changed to 'in progress'", taskEntry.getId());
             // change task status
@@ -141,6 +149,11 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
                     notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Starting backup task", 0);
                     startedStep(taskEntry);
                 }
+                case FS_FREEZED:{
+                    if(taskEntry.isConsistentBackup()){
+
+                    }
+                }
                 case CREATING_SNAPSHOT: {
                     notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Creating snapshot", 5);
                     creatingSnapshotStep(taskEntry);
@@ -148,6 +161,9 @@ public class AWSBackupVolumeStrategyTaskExecutor extends AbstractAWSVolumeTaskEx
                 case WAITING_SNAPSHOT: {
                     notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Waiting snapshot", 10);
                     waitingSnapshotStep(taskEntry);
+                }
+                case FS_UNFREEZED:{
+
                 }
                 case CREATING_TEMP_VOLUME: {
                     notificationService.notifyAboutRunningTaskProgress(taskEntry.getId(), "Creating temp volume", 15);

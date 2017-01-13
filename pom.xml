@@ -136,7 +136,11 @@
             <artifactId>aws-java-sdk-elasticloadbalancing</artifactId>
             <version>${amazonaws.sdk.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>com.amazonaws</groupId>
+            <artifactId>aws-java-sdk-ssm</artifactId>
+            <version>${amazonaws.sdk.version}</version>
+        </dependency>
 
         <!--AWS dependencies-->
         <dependency>

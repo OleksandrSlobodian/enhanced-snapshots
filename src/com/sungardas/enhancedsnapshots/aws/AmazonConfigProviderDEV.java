@@ -19,6 +19,8 @@ import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClient;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sqs.AmazonSQS;
@@ -58,7 +60,7 @@ public class AmazonConfigProviderDEV extends AmazonConfigProvider {
 
     @Bean
     public AWSCredentials awsCredentials() {
-        if(awsCredentials == null) {
+        if (awsCredentials == null) {
             String accessKey = cryptoService.decrypt(configurationId, amazonAWSAccessKey);
             String secretKey = cryptoService.decrypt(configurationId, amazonAWSSecretKey);
             awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
@@ -84,6 +86,13 @@ public class AmazonConfigProviderDEV extends AmazonConfigProvider {
         AmazonEC2 amazonEC2 = new AmazonEC2Client(awsCredentials());
         amazonEC2.setRegion(getRegion());
         return amazonEC2;
+    }
+
+    @Override
+    protected AWSSimpleSystemsManagement awsSimpleSystemsManagement () {
+        AWSSimpleSystemsManagement awsSimpleSystemsManagement = new AWSSimpleSystemsManagementClient(awsCredentials());
+        awsSimpleSystemsManagement.setRegion(getRegion());
+        return awsSimpleSystemsManagement;
     }
 
     @Override

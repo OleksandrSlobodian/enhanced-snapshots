@@ -12,4 +12,6 @@ public interface BackupService {
     List<BackupEntry> getBackupList(String volumeId);
 
     void deleteBackup(Collection<BackupEntry> backupEntries);
+
+    boolean consistentBackupSupported (String volumeId);
 }

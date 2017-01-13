@@ -37,6 +37,7 @@ public class TaskEntry {
     private String enabled;
     @DynamoDBTypeConverted(converter = ListTagDynamoDBTypeConverter.class)
     private List<Tag> tags;
+    private boolean consistentBackup;
 
     // for restore tasks only
     private String restoreVolumeType;
@@ -202,6 +203,13 @@ public class TaskEntry {
         return restoreVolumeType;
     }
 
+    public boolean isConsistentBackup() {
+        return consistentBackup;
+    }
+
+    public void setConsistentBackup(boolean consistentBackup) {
+        this.consistentBackup = consistentBackup;
+    }
 
     public void setRestoreVolumeType(String restoreVolumeType) {
         this.restoreVolumeType = restoreVolumeType;

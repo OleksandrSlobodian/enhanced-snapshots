@@ -3,8 +3,10 @@ package com.sungardas.enhancedsnapshots.enumeration;
 public enum TaskProgress {
     NONE,
     STARTED,
+    FS_FREEZED,
     CREATING_SNAPSHOT,
     WAITING_SNAPSHOT,
+    FS_UNFREEZED,
     CREATING_TEMP_VOLUME,
     WAITING_TEMP_VOLUME,
     ATTACHING_VOLUME,

@@ -1,6 +1,8 @@
 package com.sungardas.enhancedsnapshots.rest;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.BackupEntry;
 import com.sungardas.enhancedsnapshots.exception.DataAccessException;
@@ -14,13 +16,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.security.RolesAllowed;
 
@@ -60,6 +56,16 @@ public class BackupController {
             backupsJSONArray.put(backupItem);
         }
         return backupsJSONArray;
+    }
+
+    @RolesAllowed({"ROLE_ADMIN", "ROLE_USER"})
+    @RequestMapping(value = "/consistent", method = RequestMethod.POST)
+    public ResponseEntity checkConsistentBackupSupport (@RequestBody String[] volumeIds) {
+        Map<String, Boolean> result = new HashMap<>();
+        for(String volumeId: volumeIds) {
+            result.put(volumeId, backupService.consistentBackupSupported(volumeId));
+        }
+        return new ResponseEntity<>(result, HttpStatus.OK);
     }
 
 

@@ -1,6 +1,8 @@
 package com.sungardas.enhancedsnapshots.service;
 
+import com.amazonaws.SdkClientException;
 import com.amazonaws.services.ec2.model.*;
+import com.amazonaws.services.simplesystemsmanagement.model.InstanceInformation;
 
 import java.util.List;
 
@@ -19,6 +21,28 @@ public interface AWSCommunicationService {
     Volume waitForVolumeState(Volume volume, VolumeState expectedState);
 
     Volume syncVolume(Volume volume);
+
+    /**
+     * Checks whether volume is root volume
+     * @param volumeId
+     * @return
+     */
+    boolean isRootVolume(String volumeId);
+
+    /**
+     * Returns InstanceInformation in case AWS SSM service is supported in region and enabled on instance
+     * Throws SdkClientException in case operation is not supported for current region
+     * @param instanceId
+     * @return
+     */
+    InstanceInformation getSSMInstanceInformation(String instanceId) throws SdkClientException;
+
+    /**
+     * Returns instance id of instance volume belongs to
+     * @param volumeId
+     * @return instance id of instance volume belongs to or null in case volume is not atttached
+     */
+    String getInstanceVolumeBelongsTo(String volumeId);
 
     /**
      * iopsPerGb paramenter is only required for io1 volume type, for other volume types it will be skipped

@@ -19,6 +19,8 @@ import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancing;
 import com.amazonaws.services.elasticloadbalancing.AmazonElasticLoadBalancingClient;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagement;
+import com.amazonaws.services.simplesystemsmanagement.AWSSimpleSystemsManagementClient;
 import com.amazonaws.services.sns.AmazonSNS;
 import com.amazonaws.services.sns.AmazonSNSClient;
 import com.amazonaws.services.sqs.AmazonSQS;
@@ -160,6 +162,20 @@ public class AmazonConfigProvider {
         proxyFactoryBean.setTarget(amazonCloudFormationClient());
         proxyFactoryBean.setInterceptorNames("retryInterceptor");
         return proxyFactoryBean;
+    }
+
+    @Bean
+    public ProxyFactoryBean amazonSimpleSystemsManagement() {
+        ProxyFactoryBean proxyFactoryBean = new ProxyFactoryBean();
+        proxyFactoryBean.setTarget(awsSimpleSystemsManagement());
+        proxyFactoryBean.setInterceptorNames("retryInterceptor");
+        return proxyFactoryBean;
+    }
+
+    protected AWSSimpleSystemsManagement awsSimpleSystemsManagement () {
+        AWSSimpleSystemsManagement awsSimpleSystemsManagement = new AWSSimpleSystemsManagementClient(amazonCredentialsProvider());
+        awsSimpleSystemsManagement.setRegion(getRegion());
+        return awsSimpleSystemsManagement;
     }
 
     protected AmazonEC2 amazonEC2() {
