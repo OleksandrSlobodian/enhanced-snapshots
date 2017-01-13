@@ -1,5 +1,5 @@
 angular.module('web')
-    .service('SnsRule', ['$q', '$http', 'BASE_URL', function ($q, $http, BASE_URL) {
+    .service('SnsRule', ['$q', '$http', 'BASE_URL', 'toastr', function ($q, $http, BASE_URL, toastr) {
         var url = BASE_URL + 'rest/notification/sns/rule';
 
         var _get = function () {
@@ -30,10 +30,11 @@ angular.module('web')
         var _remove = function (deletionData) {
             return $http.delete(url + '/' + deletionData)
                 .success(function () {
-                    // backup deleted
+                    toastr.info(({}).localizedMessage || "Rule removed successfully");
                 })
                 .error(function (msg) {
                     // TODO: handle 406
+                    toastr.error(({}).localizedMessage || "Something went wrong");
                 });
         };
 

@@ -92,35 +92,6 @@ angular.module('web')
 
         };
 
-        //$scope.emailNotifications = function () {
-        //    $scope.connectionStatus = null;
-        //    var emailNotificationsModalInstance = $modal.open({
-        //        animation: true,
-        //        templateUrl: './partials/modal.email-notifications.html',
-        //        scope: $scope
-        //    });
-        //
-        //    emailNotificationsModalInstance.result.then(function () {
-        //        $scope.settings.mailConfiguration.recipients = $scope.emails;
-        //    }, function () {
-        //        $scope.settings = angular.copy($scope.initialSettings);
-        //    })
-        //};
-        //
-        //$scope.testConnection = function () {
-        //    var testData = {
-        //        testEmail: $scope.testEmail,
-        //        domain: $scope.settings.domain,
-        //        mailConfiguration: $scope.settings.mailConfiguration
-        //    };
-        //
-        //    Configuration.check(testData).then(function (response) {
-        //        $scope.connectionStatus = response.status;
-        //    }, function (error) {
-        //        $scope.connectionStatus = error.status;
-        //    });
-        //};
-
         $scope.isNewValues = function () {
            return JSON.stringify($scope.settings) !== JSON.stringify($scope.initialSettings);
         };

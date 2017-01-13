@@ -23,7 +23,6 @@ angular.module('web')
             allVolumesIds.splice(0, 0, "All");
             var firstUndefinedVolume = allVolumesIds.sort().indexOf(undefined);
             $scope.volumesIds = allVolumesIds.splice(0, firstUndefinedVolume);
-            console.log($scope.volumesIds);
         })
         .finally(function () {
             $rootScope.isLoading = false;
