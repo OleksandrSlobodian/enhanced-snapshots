@@ -2,6 +2,7 @@ package com.sungardas.enhancedsnapshots.aws;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.regions.Region;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.autoscaling.AmazonAutoScaling;
@@ -63,6 +64,11 @@ public class AmazonConfigProviderDEV extends AmazonConfigProvider {
             awsCredentials = new BasicAWSCredentials(accessKey, secretKey);
         }
         return awsCredentials;
+    }
+
+    @Bean
+    public InstanceProfileCredentialsProvider amazonCredentialsProvider() {
+        return null;
     }
 
     @Bean(name = "dynamoDB")
