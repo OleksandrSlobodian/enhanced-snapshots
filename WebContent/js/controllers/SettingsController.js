@@ -146,7 +146,7 @@ angular.module('web')
             }, function (e) {
                 $scope.state = "failed";
                 $rootScope.isLoading = false;
-                toastr.error(({}).localizedMessage || "Invalid SNS topic ARN or you haven`t permission");
+                toastr.error(({}).localizedMessage || "Invalid SNS topic name or you haven`t permission");
             });
         };
 
@@ -161,10 +161,12 @@ angular.module('web')
             SnsRule.send(newSnsRule).then(function () {
                 $scope.state = "done";
                 $rootScope.isLoading = false;
-                $scope.SnsRule.push(newSnsRule);
                 $scope.SnsRule.operation = '';
                 $scope.SnsRule.status = '';
                 $scope.SnsRule.volumeId = '';
+                SnsRule.get().then(function (results) {
+                    $scope.SnsRule = results;
+                })
             }, function (e) {
                 $scope.state = "failed";
                 $rootScope.isLoading = false;
@@ -181,7 +183,9 @@ angular.module('web')
             SnsRule.remove(deletionData).then(function () {
                 $scope.state = "done";
                 $rootScope.isLoading = false;
-                $scope.SnsRule.splice(index, 1);
+                SnsRule.get().then(function (results) {
+                    $scope.SnsRule = results;
+                })
             }, function(e){
                 $scope.state = "failed";
                 $rootScope.isLoading = false;
