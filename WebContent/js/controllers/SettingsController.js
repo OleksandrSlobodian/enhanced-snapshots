@@ -4,7 +4,7 @@ angular.module('web')
     .controller('SettingsController', ['$rootScope', '$state', '$scope', 'System', 'currentUser', 'Users', '$modal',
                 'Configuration',
         function ($rootScope, $state, $scope, System, currentUser, Users, $modal, Configuration) {
-        if($state.current.name == 'app.settings') {
+        if($state.current.name === 'app.settings') {
             $state.go('app.settings.systemInfo');
         }
         $rootScope.isLoading = false;
