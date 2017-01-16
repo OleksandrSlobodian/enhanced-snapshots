@@ -33,21 +33,6 @@ angular.module('web')
         $rootScope.isLoading = false;
     });
 
-    $scope.emailNotifications = function () {
-        $scope.connectionStatus = null;
-        var emailNotificationsModalInstance = $modal.open({
-            animation: true,
-            templateUrl: './partials/modal.email-notifications.html',
-            scope: $scope
-        });
-
-        emailNotificationsModalInstance.result.then(function () {
-            $scope.settings.mailConfiguration.recipients = $scope.emails;
-        }, function () {
-            $scope.settings = angular.copy($scope.initialSettings);
-        })
-    };
-
     $scope.updateSettings = function () {
         var settingsUpdateModal = $modal.open({
             animation: true,
@@ -55,7 +40,7 @@ angular.module('web')
             templateUrl: './partials/modal.settings-update.html',
             controller: 'modalSettingsUpdateCtrl'
         });
-
+        $scope.settings.mailConfiguration.recipients = $scope.emails;
         settingsUpdateModal.result.then(function () {
             $scope.initialSettings = angular.copy($scope.settings);
         }, function () {
