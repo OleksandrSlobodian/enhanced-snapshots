@@ -509,7 +509,7 @@ class InitConfigurationServiceImpl implements InitConfigurationService {
         configuration.setSdfsSize(config.getVolumeSize());
         configuration.setSsoLoginMode(config.isSsoMode());
         configuration.setEntityId(config.getSpEntityId());
-        configuration.setMailConfigurationDocument(MailConfigurationDocumentConverter.toMailConfigurationDocument(config.getMailConfiguration(), cryptoService, configuration.getConfigurationId(), ""));
+        configuration.setMailConfigurationDocument(MailConfigurationDocumentConverter.toMailConfigurationDocument(config.getMailConfiguration(), cryptoService, configuration.getConfigurationId(), null));
         configuration.setDomain(config.getDomain());
         // set default properties
         configuration.setRestoreVolumeIopsPerGb(restoreVolumeIopsPerGb);

@@ -301,7 +301,7 @@ public class SystemServiceImpl implements SystemService {
             notificationService.disconnect();
         } else {
             currentConfiguration.setMailConfigurationDocument(MailConfigurationDocumentConverter.toMailConfigurationDocument(configuration.getMailConfiguration(),
-                    cryptoService, currentConfiguration.getConfigurationId(), currentConfiguration.getMailConfigurationDocument().getPassword()));
+                    cryptoService, currentConfiguration.getConfigurationId(), currentConfiguration.getMailConfigurationDocument()));
             mailReconnect = true;
         }
         // update system properties

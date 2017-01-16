@@ -169,7 +169,7 @@ class InitConfigurationServiceDev extends InitConfigurationServiceImpl {
 
     private void storeSettings(final ConfigDto config) {
         Configuration configuration = getDevConf();
-        configuration.setMailConfigurationDocument(MailConfigurationDocumentConverter.toMailConfigurationDocument(config.getMailConfiguration(), cryptoService, "DEV", ""));
+        configuration.setMailConfigurationDocument(MailConfigurationDocumentConverter.toMailConfigurationDocument(config.getMailConfiguration(), cryptoService, "DEV", null));
         configuration.setDomain(config.getDomain());
         if (SystemUtils.clusterMode()) {
             configuration.setClusterMode(true);

@@ -2,6 +2,7 @@ package com.sungardas.enhancedsnapshots.dto.converter;
 
 import com.sungardas.enhancedsnapshots.aws.dynamodb.model.MailConfigurationDocument;
 import com.sungardas.enhancedsnapshots.dto.MailConfigurationDto;
+import com.sungardas.enhancedsnapshots.exception.ConfigurationException;
 import com.sungardas.enhancedsnapshots.service.CryptoService;
 import org.springframework.beans.BeanUtils;
 
@@ -9,7 +10,7 @@ public class MailConfigurationDocumentConverter {
     private MailConfigurationDocumentConverter() {
     }
 
-    public static MailConfigurationDocument toMailConfigurationDocument(MailConfigurationDto dto, CryptoService cryptoService, String configurationId, String oldPassword) {
+    public static MailConfigurationDocument toMailConfigurationDocument(MailConfigurationDto dto, CryptoService cryptoService, String configurationId, MailConfigurationDocument oldConfig) {
         if (dto != null) {
             MailConfigurationDocument configurationDocument = new MailConfigurationDocument();
             BeanUtils.copyProperties(dto, configurationDocument);
@@ -19,10 +20,13 @@ public class MailConfigurationDocumentConverter {
             if (configurationDocument.getPassword() != null) {
                 configurationDocument.setPassword(cryptoService.encrypt(configurationId, configurationDocument.getPassword()));
             } else {
-                configurationDocument.setPassword(oldPassword);
+                if(oldConfig == null) {
+                    throw new ConfigurationException("Password cannot be null");
+                }
+                configurationDocument.setPassword(oldConfig.getPassword());
             }
             //DynamoDB does not support empty sets
-            if (configurationDocument.getRecipients().isEmpty()) {
+            if (configurationDocument.getRecipients() == null || configurationDocument.getRecipients().isEmpty()) {
                 configurationDocument.setRecipients(null);
             }
             return configurationDocument;
