@@ -150,11 +150,11 @@ angular.module('web')
                 };
                 //if "Attach to instance"
                 if ($scope.restoreAction === $scope.restoreActions[1]) {
-                    newTask.volumes[0].instance = $scope.instance;
+                    newTask.volumes[0].instanceId = $scope.instance;
                     newTask.volumes[0].zone = null;
                 } else { //"Restore in AZ"
                     newTask.volumes[0].zone = $scope.selectedZone;
-                    newTask.volumes[0].instance = null;
+                    newTask.volumes[0].instanceId = null;
                 }
                 Tasks.insert(newTask).then(function () {
                     var successInstance = $modal.open({
